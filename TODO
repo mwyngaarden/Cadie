@@ -1,0 +1,18 @@
+add multipv
+move move generator related stuff to gen.cpp
+add bound to uci output
+node type negated
+extensions for pawn push to 7th rank
+need regression tests
+
+for testing
+    score += rand(-5, 5)
+    w/o always see in search
+    search reductions
+
+nullify eval terms that should obviously be zero or opposite sign and long test
+
+try see ordering at greater depths and not always
+reduce under promotions in search
+try see also in sort if pv
+retry simple tt scheme dl

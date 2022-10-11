@@ -1,0 +1,10 @@
+bin/
+build/
+*.gcda
+.debug_time
+.release_time
+perf.data
+*.pgn
+tags
+cadie*
+debug

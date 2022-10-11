@@ -1,0 +1,4998 @@
+ucinewgame
+position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 1b5q/3B4/1k6/8/2P1pN2/1K6/8/8 b - -
+go depth 7
+ucinewgame
+position fen 5kr1/4q1nb/1pB1p1p1/4B2P/p4P1P/N2RQ3/1P1N4/5K1R b - -
+go depth 7
+ucinewgame
+position fen 7n/8/1P1kN3/P2p3P/5pb1/1p1P2R1/6K1/7N b - -
+go depth 7
+ucinewgame
+position fen r5kr/1b2p3/1Nn2ppb/pPpP1Q2/5P1p/P3PN2/RP4Pn/2B1K2R w - -
+go depth 7
+ucinewgame
+position fen 1n1rkb1r/1p1bN3/1q1pp2p/2p3p1/1nQ1p2P/P1PP1P2/1P2N1P1/R1BB1K1R b - -
+go depth 7
+ucinewgame
+position fen B1k5/1r6/P4r2/P7/1P5P/7K/4NB2/8 b - -
+go depth 7
+ucinewgame
+position fen n1kq4/4Q3/3p3b/r2P1bpp/p1P1NPP1/pP2P2P/4K3/2R1NBR1 w - -
+go depth 7
+ucinewgame
+position fen 6b1/4bk2/1pq1p1pr/p1pn3p/P2P1PPP/1QN3N1/1P4BR/R3BK2 w - -
+go depth 7
+ucinewgame
+position fen 1k6/8/r2P1pP1/p1p5/P1P2B2/1Pq2p2/N7/1R3KR1 b - -
+go depth 7
+ucinewgame
+position fen 2k2b2/1p5p/3pp2n/4Qp1P/r1pP3B/7R/2K1P3/6RB w - -
+go depth 7
+ucinewgame
+position fen 8/6b1/r2n2Bp/P1k1p1p1/6P1/2PPP2P/1R2b2N/B3K3 b - -
+go depth 7
+ucinewgame
+position fen 2r5/p1k5/2b4n/2Pqp3/Q1PPNp1p/4RPpB/1K2RP2/8 b - -
+go depth 7
+ucinewgame
+position fen rb4R1/8/1pr5/p1PbP3/Pp2p3/3k3P/3P4/1N1K4 b - -
+go depth 7
+ucinewgame
+position fen 2r5/2k4p/7P/8/3R4/8/1p1b3K/8 b - -
+go depth 7
+ucinewgame
+position fen r7/8/5b1k/1p6/2Np2P1/1R4B1/8/1r3K2 w - -
+go depth 7
+ucinewgame
+position fen 2r5/1p2pk1p/7n/3p1Pp1/2P3b1/2B1R1P1/5N1P/2K2B1R w - -
+go depth 7
+ucinewgame
+position fen 1bb1r3/3k3P/4n2p/2P1B2P/2N1p3/8/PR1P3N/4K3 w - -
+go depth 7
+ucinewgame
+position fen 1k4r1/1b1B3P/p7/Ppp2nR1/1P6/1P5P/1N3K2/1rBr4 b - -
+go depth 7
+ucinewgame
+position fen 1q2kbnr/1rp4b/p2p3p/nN2pp2/1P5p/P4PP1/3P1KB1/R1B2QNR w k -
+go depth 7
+ucinewgame
+position fen 8/2k4p/7P/8/1r6/5Rb1/8/1q5K w - -
+go depth 7
+ucinewgame
+position fen 1n2Bbnr/p2r1p1p/1p3kb1/2p5/3pPBPq/2QP1K1P/P1P5/RN4R1 w - -
+go depth 7
+ucinewgame
+position fen 1r1k3N/1n1b3p/3b1Pr1/p1ppp2p/1p1P1PPP/2P4R/2K1B2B/8 b - -
+go depth 7
+ucinewgame
+position fen 7k/7n/1p1R3P/1b1B4/4bK2/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1kb1nb2/8/3p3b/3P1Pp1/p1P3Pp/4K2P/3R1N2/4N1RB w - -
+go depth 7
+ucinewgame
+position fen 2kN1b2/2n5/3p4/3P1bp1/prP1qPPp/7P/p1NR1K2/6RB b - -
+go depth 7
+ucinewgame
+position fen 1rr3n1/1p5k/1Pn1p1p1/1Pb2p1p/5P1P/1R6/2K5/7b b - -
+go depth 7
+ucinewgame
+position fen 5R2/6bk/3Q4/4P2p/PN2P2P/3N4/6K1/8 b - -
+go depth 7
+ucinewgame
+position fen 6k1/8/4P3/8/P3P3/7N/N7/6K1 w - -
+go depth 7
+ucinewgame
+position fen rq5r/pb1k2bp/P1p2B2/3pp3/1PBPP3/6P1/1P1NKn1P/6NR b - -
+go depth 7
+ucinewgame
+position fen 3N2r1/2kN4/2nb4/8/3p4/8/8/2K2n2 w - -
+go depth 7
+ucinewgame
+position fen 8/q7/5k2/p2r3r/PP2p1P1/1K1P1N2/2R1p1B1/1n2N3 w - -
+go depth 7
+ucinewgame
+position fen 2N4R/1K6/p3k3/p7/P5N1/N7/3n4/7r b - -
+go depth 7
+ucinewgame
+position fen 3rnb2/3kp2p/7n/p7/2p2prP/2pp1R1K/PB1NB3/RN2Q3 w - -
+go depth 7
+ucinewgame
+position fen 5N2/k5b1/8/1P3R2/1K4nP/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen 8/8/r1Nk4/PB6/8/1P3PRp/2K4P/8 w - -
+go depth 7
+ucinewgame
+position fen 1nb4k/4p1r1/5pp1/1Ppp3p/5PPP/Bp2P1K1/3bq1BN/1NR4R w - -
+go depth 7
+ucinewgame
+position fen 3n4/5k2/p2p4/P2PB3/P1p4Q/2N2K2/4Bb2/4R3 b - -
+go depth 7
+ucinewgame
+position fen 8/2R4p/7P/3K1nkP/5r2/2p2p2/8/8 b - -
+go depth 7
+ucinewgame
+position fen 4n2k/7r/5RBp/ppbp2pP/3P2p1/8/R1P2KQ1/7N b - -
+go depth 7
+ucinewgame
+position fen r2k1bnr/pp2qp2/B6p/1Pp1p1pQ/P3p1bP/R1PP4/3K4/1NB3NR b - -
+go depth 7
+ucinewgame
+position fen 8/3rk3/4n3/5P2/2p4n/2N5/3R4/2K2B2 w - -
+go depth 7
+ucinewgame
+position fen 7k/8/5N2/2P5/B7/8/K7/8 w - -
+go depth 7
+ucinewgame
+position fen 5R2/2B4n/2r1kbp1/5p1r/1P5P/p1P5/2N5/2R3K1 b - -
+go depth 7
+ucinewgame
+position fen b1r3n1/p2k4/2qN3P/2P1p3/p1PP1p1p/4RPp1/1K3P2/3QRB2 w - -
+go depth 7
+ucinewgame
+position fen 6n1/8/B4n2/Pp1p1P1p/1k6/1P2R2P/2p4b/2K2RN1 b - -
+go depth 7
+ucinewgame
+position fen 5k2/2R2N2/1p2B3/1P1r4/P7/8/5K1b/b7 w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pp2p1pp/8/2p2p2/N1Pp1PP1/P2P3P/1P2PK2/R1BQ1BNR w kq -
+go depth 7
+ucinewgame
+position fen 3N3Q/3k4/n7/1r5p/2RB3P/8/8/3K4 w - -
+go depth 7
+ucinewgame
+position fen b1N1k3/8/8/6r1/2pB1P1n/4p2B/p7/2KR4 w - -
+go depth 7
+ucinewgame
+position fen k5nr/r2N4/8/np1P2Pp/1p1P3P/1P3N2/3q1K2/6RR w - -
+go depth 7
+ucinewgame
+position fen Rr6/2k1b3/7r/p4p2/4p2p/1RP5/4NP1P/4KB2 w - -
+go depth 7
+ucinewgame
+position fen 2k5/8/6n1/7N/8/3K1N2/8/8 b - -
+go depth 7
+ucinewgame
+position fen 4r2r/Qppk1n1p/3b1p2/2B2n2/PP1ppP1q/6P1/R3P2P/1N1K1bR1 b - -
+go depth 7
+ucinewgame
+position fen r1r3n1/1p5k/1PP1p1p1/5p1p/R4P1P/6b1/2K5/7b b - -
+go depth 7
+ucinewgame
+position fen B1k2r2/n6r/p7/PP2B3/1P5P/8/4N2K/8 w - -
+go depth 7
+ucinewgame
+position fen r3kbr1/2p1pp2/2nqb1p1/pp5n/1PPp4/B2PPP1P/P2N2BR/1R1Q1KN1 b - -
+go depth 7
+ucinewgame
+position fen 8/1k6/6pr/7p/PBR1pP1P/3p4/6KR/8 w - -
+go depth 7
+ucinewgame
+position fen 7k/8/8/1p6/1n2b3/8/7n/4K3 w - -
+go depth 7
+ucinewgame
+position fen r4b1r/p2bpk2/2qp1ppn/1pPP3p/2P1N2P/N3P1P1/P4P2/R1B1KBR1 w Q -
+go depth 7
+ucinewgame
+position fen 8/k2n4/8/2R5/1K6/8/2p1b2P/8 w - -
+go depth 7
+ucinewgame
+position fen 8/8/5k2/p1q1N2r/PP1rp1P1/3P4/2RKp3/6N1 w - -
+go depth 7
+ucinewgame
+position fen 8/8/8/1P6/1K6/2N4k/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1k3b2/8/1p3p2/pPn1p1r1/B7/2RN4/P1R4K/8 b - -
+go depth 7
+ucinewgame
+position fen 8/1B3n1n/8/Pp1p1P1p/1k2R3/1P5P/2p4b/2K2RN1 b - -
+go depth 7
+ucinewgame
+position fen 8/8/3k4/1p4r1/2nK2p1/7R/8/r7 b - -
+go depth 7
+ucinewgame
+position fen 6k1/2n2Rbr/1p1p2Bp/Pp4pP/3P2p1/1R2K3/2P3Q1/5N2 b - -
+go depth 7
+ucinewgame
+position fen 6k1/8/5PP1/7P/2p3K1/8/8/R6b w - -
+go depth 7
+ucinewgame
+position fen 7R/8/6k1/2PP4/K3p3/5rp1/8/6q1 w - -
+go depth 7
+ucinewgame
+position fen 1n5r/7k/1p1Bbp1P/1P1p2R1/1p1p3N/5B2/7K/1r6 b - -
+go depth 7
+ucinewgame
+position fen 8/7p/R6P/3K2kP/4r2n/2p2p2/8/8 b - -
+go depth 7
+ucinewgame
+position fen bn5r/3k3p/2p5/p1Pp2q1/P5n1/2Np3R/3P4/2B3nK w - -
+go depth 7
+ucinewgame
+position fen rk3b1N/q7/1p1p1n2/1b1Pp1pp/1pn1Pp2/2B2PPB/2RNK3/5R2 b - -
+go depth 7
+ucinewgame
+position fen r1bqkbn1/pppp1ppr/2n1p3/7p/1PP2B2/3P4/P3PPPP/RN1QKBNR b KQq -
+go depth 7
+ucinewgame
+position fen 1nq1k2N/8/r2P4/R3KP1p/1P6/2Rp1P2/8/5B1q b - -
+go depth 7
+ucinewgame
+position fen rn3b1r/p3p2p/B1pk3n/5pN1/8/8/PPpP1PPP/R1B1K2R w - -
+go depth 7
+ucinewgame
+position fen 8/5bk1/B3RN2/6P1/1P6/p5B1/6K1/7R b - -
+go depth 7
+ucinewgame
+position fen rn2b1n1/4b1kr/3pP2p/8/pP2PppP/p1R3P1/2KB1P2/1NN4R b - -
+go depth 7
+ucinewgame
+position fen rnkq1bnr/4pp2/2pQ2pp/pp6/1P5N/2P4P/P2PPP2/RNB1KB1b w Q -
+go depth 7
+ucinewgame
+position fen Q1b5/q3b1k1/pp2p3/1Pp1P2p/P1K1B2P/1n6/2P1P1NB/3r1N2 w - -
+go depth 7
+ucinewgame
+position fen 1n1B4/rb4b1/1P4k1/pP2p3/2P1P1p1/1N2r1P1/1R4BP/5K1R b - -
+go depth 7
+ucinewgame
+position fen 3kN3/1B4Bb/3R4/1p2p1P1/1P4R1/p7/8/6K1 b - -
+go depth 7
+ucinewgame
+position fen r3B1nr/ppp2p1p/4k1bq/2b5/1n1pPpp1/3P1PP1/P1PNQ2P/R1B2K1R b - -
+go depth 7
+ucinewgame
+position fen 2k5/4B1Q1/p3b3/P7/1r6/3p4/8/R1K5 w - -
+go depth 7
+ucinewgame
+position fen 2r3nr/4kp1p/N3p1pb/7P/b1p1PqP1/B4P2/P2P1K1R/RQ6 b - -
+go depth 7
+ucinewgame
+position fen 3n1N2/1r2k3/B7/8/P2P4/1P3P1p/K1pQ3P/5R2 w - -
+go depth 7
+ucinewgame
+position fen rnbq3r/p2p3k/1p3p2/1Pbpp2p/3P1NP1/P1P2K2/3BB3/2R4R b - -
+go depth 7
+ucinewgame
+position fen 3k4/8/8/2PBb3/4p3/2K1N3/8/8 w - -
+go depth 7
+ucinewgame
+position fen rn1q1b1r/pkp2ppp/1p2pn2/3p4/2P1PP1P/6P1/PP1PbNB1/RNBQK2R w KQ -
+go depth 7
+ucinewgame
+position fen 2K5/8/8/1k5P/3b4/8/b7/R7 b - -
+go depth 7
+ucinewgame
+position fen b1N3n1/8/4P3/P1k5/5RP1/7p/8/1K6 b - -
+go depth 7
+ucinewgame
+position fen 8/n6B/r4b2/P1k1p1pp/1R4bP/2PPP3/8/B3KN2 w - -
+go depth 7
+ucinewgame
+position fen 2kN4/8/3r4/1Q1n3p/7P/3RB3/2K5/8 b - -
+go depth 7
+ucinewgame
+position fen 8/3R3N/8/8/1k5b/5n2/K7/8 w - -
+go depth 7
+ucinewgame
+position fen Nnb3nr/r1ppk3/5pp1/pPb3p1/3p1P2/1Q2B2P/P2qP3/2R1KBNR w K -
+go depth 7
+ucinewgame
+position fen 1r1k3N/pn1b2rp/2pb4/3ppP1p/1p1P1P1P/2P3PR/4B2B/1K6 b - -
+go depth 7
+ucinewgame
+position fen bb1N4/8/1k6/7P/P3p3/3r4/5K2/8 w - -
+go depth 7
+ucinewgame
+position fen r1b1kb2/3ppprp/pqp3pn/1p2n3/2PPP3/NP3Q2/P4PPP/R1B1KBNR b KQq -
+go depth 7
+ucinewgame
+position fen 3k2n1/r4b2/p2p4/P3P3/1Rp1P2p/2K4N/B3Q1P1/3N2R1 w - -
+go depth 7
+ucinewgame
+position fen 5kn1/2n3r1/5pr1/1P1PR3/3B1P1P/2pP4/2Q2K2/1N5R w - -
+go depth 7
+ucinewgame
+position fen rnbq1b1r/pp1ppk1p/2p2p2/2N3p1/1P1PP3/P1N4P/2P2n2/R1BQKB1R w KQ -
+go depth 7
+ucinewgame
+position fen 7k/2n5/1p6/8/8/8/1Kb4n/8 w - -
+go depth 7
+ucinewgame
+position fen 3Q4/4p2k/Nn6/p1K2P1P/8/7p/1R1r4/1r1b3n w - -
+go depth 7
+ucinewgame
+position fen 1n1qNbr1/1b1kpBp1/2N2n2/2ppP2p/P2P1p2/B1r3P1/5P2/2RQK1R1 b - -
+go depth 7
+ucinewgame
+position fen 3krb2/2pbp3/6r1/p1q2pp1/p1Pp1P2/2NP1P1P/PBK2RB1/6NR w - -
+go depth 7
+ucinewgame
+position fen 8/1b6/2k5/8/6pp/2Q5/5r2/1K6 b - -
+go depth 7
+ucinewgame
+position fen r1b1kbnr/2q1p3/5p1p/ppppP1p1/P1Pn3P/NPN2PP1/R2PQ3/2B1KB1R b Kkq -
+go depth 7
+ucinewgame
+position fen 5k2/6p1/6q1/pp2Kp2/P1R1PP1p/1b3N1n/7P/3R1q2 b - -
+go depth 7
+ucinewgame
+position fen 1r6/1k6/8/4BPpp/Pq5P/8/1R4KR/8 w - -
+go depth 7
+ucinewgame
+position fen 4k3/3b4/7P/P3P1B1/6P1/3K4/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/1Pk5/8/2P2p1p/N2B4/8/5r2/7K w - -
+go depth 7
+ucinewgame
+position fen 5k2/3P4/8/2P4r/1R6/1K4p1/4p3/8 b - -
+go depth 7
+ucinewgame
+position fen 4r3/2NkN3/8/1pK1P3/2P2R1P/5p2/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/2Pk4/n4b1Q/1r5p/3p3P/6B1/8/2RK4 b - -
+go depth 7
+ucinewgame
+position fen 4k3/8/p2R3p/P4R2/6b1/2Q5/7K/8 b - -
+go depth 7
+ucinewgame
+position fen 2b2b1r/1r1k3p/p5Q1/npp1p1PP/2Pp4/PN3K2/RP2B3/6N1 w - -
+go depth 7
+ucinewgame
+position fen 5N2/2k3r1/3N4/n7/3p4/8/K2n4/8 b - -
+go depth 7
+ucinewgame
+position fen 3R4/4k1p1/8/5q2/b4P2/N3K1Pn/8/8 b - -
+go depth 7
+ucinewgame
+position fen 1rb1qbn1/ppppp1p1/6k1/P7/P6p/B1Pr1P1P/3P2PN/RN1Q1KR1 w - -
+go depth 7
+ucinewgame
+position fen 8/8/4P1k1/4K1B1/8/8/8/5q2 w - -
+go depth 7
+ucinewgame
+position fen 8/7N/3r4/5k2/8/1P3P1p/4K2P/8 w - -
+go depth 7
+ucinewgame
+position fen 7k/8/3R3P/3B1bn1/5K2/3b4/8/8 w - -
+go depth 7
+ucinewgame
+position fen 3rn3/4p1n1/2k5/p4N1p/2B4r/4BK2/1b6/1N6 b - -
+go depth 7
+ucinewgame
+position fen 6n1/r4b2/p2p4/Pk2P3/2p1P2p/7N/B2K2P1/3NQ1R1 w - -
+go depth 7
+ucinewgame
+position fen rn2b1nr/4b2k/1R1pP3/7p/pP2PP1P/p5p1/2KB1P1R/1NN5 w - -
+go depth 7
+ucinewgame
+position fen rRbb4/6kr/3pP3/1P2N2P/p3nP1P/p1N5/8/1KB4R b - -
+go depth 7
+ucinewgame
+position fen 1K6/5k2/p1N5/p7/P7/8/1N6/4r3 w - -
+go depth 7
+ucinewgame
+position fen 2r5/1k2bR2/1p6/1P3p2/p3p3/6K1/PNR5/1n1B4 w - -
+go depth 7
+ucinewgame
+position fen 8/r3b1kB/8/7n/3p4/2p4r/1n3KbR/8 b - -
+go depth 7
+ucinewgame
+position fen 2bq1b2/4k1p1/1p1p1p1r/2p2Q1N/3p3P/N1P5/Pp3PP1/1RB1KBR1 b - -
+go depth 7
+ucinewgame
+position fen 8/k5b1/7N/2b5/8/1K3N2/8/4R3 w - -
+go depth 7
+ucinewgame
+position fen 3rk2r/p4p1Q/3p1npb/1pp3P1/P2pP3/4qR1b/1PKN3P/2B4R w k -
+go depth 7
+ucinewgame
+position fen 2bk4/r3b1rp/p1n2pp1/2PppP1P/Q1p1P3/N5R1/P2P1B2/3R1KN1 b - -
+go depth 7
+ucinewgame
+position fen 8/5k2/4r3/B4P2/8/7p/N2R4/5K2 w - -
+go depth 7
+ucinewgame
+position fen 2bQ4/5n2/2P2rk1/3p1p2/Pp3PPp/1P5P/2K2n2/R7 w - -
+go depth 7
+ucinewgame
+position fen 6nr/2p3r1/P2k2Pp/P2p4/1n1Pp1bP/1P2K3/BB6/5RR1 w - -
+go depth 7
+ucinewgame
+position fen b1k5/3n3p/2Pq4/R2p4/P1Nr4/3p3K/3P3n/2B5 b - -
+go depth 7
+ucinewgame
+position fen 4k3/r7/p2P2B1/p1p3n1/P7/N6P/1b6/1n2KR1N b - -
+go depth 7
+ucinewgame
+position fen 4R3/7k/5n1p/8/1Q1P2p1/1n2K1p1/2P5/6R1 b - -
+go depth 7
+ucinewgame
+position fen 8/k2rN3/5r2/1P6/K5p1/8/8/6n1 w - -
+go depth 7
+ucinewgame
+position fen 1n4nr/2k4r/1p1q4/P2p3p/Rp1PPPPP/1P6/3N3R/2N2K2 b - -
+go depth 7
+ucinewgame
+position fen 5b1r/5qk1/ppnpb1np/1P4pP/P2P2p1/5P2/2PKrR1N/1RQ2B2 w - -
+go depth 7
+ucinewgame
+position fen r1k2bn1/p1r5/1PB2p1B/P1p1p2P/2P5/2R2N2/8/4K1NR w - -
+go depth 7
+ucinewgame
+position fen 8/4k3/n7/7P/3PK3/8/2N5/8 w - -
+go depth 7
+ucinewgame
+position fen 2k5/7b/8/p7/8/6K1/2r5/8 b - -
+go depth 7
+ucinewgame
+position fen 1rbQ4/8/1Nn1k1pn/pP1p1p2/P4P1P/3p3R/3BP3/2RK1BN1 w - -
+go depth 7
+ucinewgame
+position fen 1N4Q1/1b6/5k2/r7/2Np2K1/3P4/8/QR6 w - -
+go depth 7
+ucinewgame
+position fen 8/r3kb2/np5N/4PP2/P2P2P1/6BK/b1B2R2/8 w - -
+go depth 7
+ucinewgame
+position fen qbn4r/1bN4k/8/p2P1N2/2PBp2p/3BPP2/P3K1p1/4RR2 b - -
+go depth 7
+ucinewgame
+position fen 8/4Q3/4p3/1kB3bP/2RP4/8/8/1K6 w - -
+go depth 7
+ucinewgame
+position fen 7k/5R2/6P1/2p2P1P/8/5K2/2b5/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/p1Knk3/pN5r/P7/8/8/3N4 b - -
+go depth 7
+ucinewgame
+position fen 7q/k4r2/4p1p1/p2n3p/PBp4P/2rR1PK1/1R6/5B2 b - -
+go depth 7
+ucinewgame
+position fen 6k1/3P4/p7/P7/N3p1BQ/2p5/4R3/4K3 w - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/ppp2ppp/2np4/4p3/3PPB2/8/PPP2PPP/RN1QKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 3k4/8/2B5/2P5/2K1pN1b/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/3N1B2/P5P1/2b4k/3p3P/8/1KR3N1/4r3 b - -
+go depth 7
+ucinewgame
+position fen 1r3rk1/npq1ppb1/1p3np1/2p2b1p/P1PB1N1P/3P1PP1/1P1NB3/2RKR3 w - -
+go depth 7
+ucinewgame
+position fen 7b/5P2/4Q3/5B2/rp4Pk/8/2R1K3/8 b - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/pppppppp/2n5/8/3P4/2N5/PPP1PPPP/R1BQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 3k4/3P4/8/2P5/7R/1K6/8/4b1b1 w - -
+go depth 7
+ucinewgame
+position fen kr1b4/8/1p3R2/1P3p2/4p3/nB4K1/PN6/4R3 b - -
+go depth 7
+ucinewgame
+position fen 6R1/6rk/3Q3b/p3p2p/PR2PP1P/2N2N2/5K2/8 b - -
+go depth 7
+ucinewgame
+position fen rn2qb2/N2k1br1/Qpp1p3/5Ppp/B2PPP2/2p4P/PP5N/1RB1KR2 w - -
+go depth 7
+ucinewgame
+position fen 7R/7b/k4P1N/7r/1Np2K2/2P5/3r4/8 b - -
+go depth 7
+ucinewgame
+position fen n5n1/r4k2/2B2pr1/1P1Pp3/3B1P1P/2pP4/6q1/1NR1KQ1R b K -
+go depth 7
+ucinewgame
+position fen 7k/8/1p3n1P/1P1p1bKb/8/5B2/3Rr3/8 w - -
+go depth 7
+ucinewgame
+position fen 3k4/5K2/1r6/8/3P2R1/P7/8/6N1 w - -
+go depth 7
+ucinewgame
+position fen 1rbq2n1/pppp1rp1/P2bp3/5Pk1/P1P3Pp/B6P/R2P1KRN/1NQ5 b - -
+go depth 7
+ucinewgame
+position fen 8/8/1k6/8/6pp/8/K7/3r3b b - -
+go depth 7
+ucinewgame
+position fen k7/8/6B1/8/5n1b/8/8/6K1 b - -
+go depth 7
+ucinewgame
+position fen 7r/7p/3b2kP/pb1pP1r1/B1p2Pp1/2p5/6R1/3K2B1 b - -
+go depth 7
+ucinewgame
+position fen 8/8/8/2kr4/6p1/7r/8/6K1 w - -
+go depth 7
+ucinewgame
+position fen 6n1/8/B4n2/Pp1p1P1p/1k6/1P2pRbP/2p1R3/2K3N1 w - -
+go depth 7
+ucinewgame
+position fen 8/5k2/p2p1n2/P1bP2Q1/P1p5/5KB1/4BN1R/8 w - -
+go depth 7
+ucinewgame
+position fen r1b1kbnr/pp1ppp1p/1qp3p1/2n1P3/3P1PP1/P4N1B/1PPQ3P/RNB1K2R w KQk -
+go depth 7
+ucinewgame
+position fen 8/7b/p1P1Pn2/P1k3N1/7p/K1p5/4B1P1/3N2R1 w - -
+go depth 7
+ucinewgame
+position fen rqb1k1r1/pp1p1p2/1N1P4/2Q2PN1/4p1Pp/P6P/1P1BPKn1/R4B1R w - -
+go depth 7
+ucinewgame
+position fen B4b2/p2k1r2/1P3p1n/P1p1p2P/2P2N2/2R2N2/8/4K2R w - -
+go depth 7
+ucinewgame
+position fen 1rbqkbnr/p1Q1p1p1/n2p1p2/1p4Np/7P/3P2P1/PPP1PP2/RNB1KB1R w KQ -
+go depth 7
+ucinewgame
+position fen 2k5/8/8/1q5n/2B4b/8/5N1K/8 w - -
+go depth 7
+ucinewgame
+position fen 1b6/k7/8/8/3K2Q1/8/6PQ/5B2 b - -
+go depth 7
+ucinewgame
+position fen 8/8/5k2/p1q5/PP1rp1P1/3P1N1B/2RKp2r/6N1 b - -
+go depth 7
+ucinewgame
+position fen 1n6/2p5/1p3N2/2k2K2/1p3P2/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen N7/6nr/5P1k/1p2B3/2Pb2P1/1pRB4/P2q4/RK6 b - -
+go depth 7
+ucinewgame
+position fen 8/8/7r/k7/4b1p1/1K6/8/7r w - -
+go depth 7
+ucinewgame
+position fen 2k2r2/6p1/4P3/r5pP/1P1P4/7N/n2K4/8 b - -
+go depth 7
+ucinewgame
+position fen 5b2/6P1/p6p/P3k2P/6R1/1b1p2P1/3R4/4K3 w - -
+go depth 7
+ucinewgame
+position fen 6nr/1pq1b1k1/1N6/5Ppp/pp2B1P1/B1P4P/P2pK3/3R2NR b - -
+go depth 7
+ucinewgame
+position fen 5k2/4PB2/7R/5P2/1p3B1K/8/8/2n5 b - -
+go depth 7
+ucinewgame
+position fen 1rb1k2r/1p1p2Qp/p1p2n2/qB2p3/3P1p1P/bPPKP3/P4PP1/RN4NR w k -
+go depth 7
+ucinewgame
+position fen 1n1rkb2/p7/2n5/3b4/pP1p4/1R1N1pK1/5P2/B5n1 w - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/pppp1ppp/8/4pn2/P2PP3/8/1PP2PPP/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 8/rk6/2p2pr1/p2P1P2/P1P1P1q1/1P3p2/N7/1RBK2R1 w - -
+go depth 7
+ucinewgame
+position fen 1r3B2/4r3/p3N1kp/P2B4/1PpbP3/3p4/3K4/2R5 b - -
+go depth 7
+ucinewgame
+position fen 2k5/4Br1Q/p3b3/P7/1P6/3p4/8/R1K5 b - -
+go depth 7
+ucinewgame
+position fen 6nr/k1r5/8/np1P2Pp/1p1P3P/RP2KN2/8/1qN3R1 b - -
+go depth 7
+ucinewgame
+position fen 2kbR3/8/8/8/2Bp2PP/b2K4/4N1b1/8 b - -
+go depth 7
+ucinewgame
+position fen 2Rr4/p4k2/1N6/n1n5/pP1p1K1b/5p2/5P2/B5n1 w - -
+go depth 7
+ucinewgame
+position fen 5n2/8/P2R4/k7/1p6/6nP/2B3KR/6N1 w - -
+go depth 7
+ucinewgame
+position fen 3k4/rb2b1rp/p1n2pp1/2PppP1P/Q1p1P1R1/N7/P2PKB2/3R1nN1 w - -
+go depth 7
+ucinewgame
+position fen r1bNk3/p2p1r2/n6p/1B1pp1pP/1b3p2/P1B1P2R/Q1P3P1/R3K1N1 b Qq -
+go depth 7
+ucinewgame
+position fen 6k1/6P1/n7/r6n/1p1p1p1p/1P5P/3K4/5b2 b - -
+go depth 7
+ucinewgame
+position fen 1r1qkb1r/2p4b/p2p3p/P2npp2/3P1P2/P4Qp1/6BR/R1B1K1N1 w k -
+go depth 7
+ucinewgame
+position fen 4kbr1/1b1n4/3rn3/1pB1p1pp/pPpP4/P4PPN/4P2R/RNK2B2 w - -
+go depth 7
+ucinewgame
+position fen rnNk4/5r1b/1p6/3Q2N1/1b1PPPPp/PP2B3/b6K/3B3R b - -
+go depth 7
+ucinewgame
+position fen rn1kqb2/NQ3b1r/1pp1p3/5Ppp/3PPP2/2p4P/PPB1K2N/1RB2R2 w - -
+go depth 7
+ucinewgame
+position fen 8/k7/5n2/8/1K2R3/8/2p1b2P/8 w - -
+go depth 7
+ucinewgame
+position fen 4r3/n2k2b1/p2p4/P1pP4/2K5/P3Q2N/3BB2R/8 w - -
+go depth 7
+ucinewgame
+position fen 1R6/r3k3/2Q3p1/pp1p1p2/Pb3P2/5qP1/2pB2P1/R1K1N3 w - -
+go depth 7
+ucinewgame
+position fen 5k2/6p1/pp1N2q1/1R3pn1/P2KPP1p/1b5B/2q4P/4R3 b - -
+go depth 7
+ucinewgame
+position fen r1bqkb1r/pppp1p1p/2n1p2n/6p1/3P4/6P1/PPPQPP1P/RNB1KBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 3k4/8/1n6/1P1P4/3Pn2P/2p3R1/5KQr/1N6 w - -
+go depth 7
+ucinewgame
+position fen q1b2bnr/r3p2k/p2N4/2PP1pp1/2P4P/N3P1P1/PB1KBP2/R5R1 w - -
+go depth 7
+ucinewgame
+position fen 8/2r2P2/2R5/8/1pQ1B1Pk/8/1b2K3/8 b - -
+go depth 7
+ucinewgame
+position fen 4R3/8/8/r4k1n/5p1p/3p3P/3nb3/2K5 b - -
+go depth 7
+ucinewgame
+position fen r1b2knr/ppqp2bp/1N3pp1/2p1p3/1n4P1/4PP1P/PPPP4/R1BQKBNR w KQ -
+go depth 7
+ucinewgame
+position fen r4bk1/1b2p3/1Nn3p1/pPpP1p1r/1P3P1p/P3PN1Q/R5Pn/2B1K1R1 w - -
+go depth 7
+ucinewgame
+position fen 1n2K3/8/2k5/2p5/2bp3B/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1n6/2k5/1p6/6N1/2p2P2/1p6/3K4/8 w - -
+go depth 7
+ucinewgame
+position fen 3N4/1r5k/2BB4/Pp1R3p/8/8/2K5/2b5 b - -
+go depth 7
+ucinewgame
+position fen rn1q4/p2p2p1/1pp1p1k1/3b1p1n/Pb1R4/4PR1B/3P1P2/1NBQK1N1 w - -
+go depth 7
+ucinewgame
+position fen 1n1r2kr/8/2b4p/pR6/2p4p/2b1Pp2/2N5/5RKB b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/ppp1pppp/8/3p4/1P6/5P2/P1PPP1PP/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen rn4n1/4b2r/3pPk1p/pb3p2/1P2P1pP/p2R2P1/2K1NP2/1N2B2R w - -
+go depth 7
+ucinewgame
+position fen r1b2kn1/1p2q2r/p2p4/1N3pN1/PbP1p2p/3PPP1Q/1P1B2PP/1R1K1B1R b - -
+go depth 7
+ucinewgame
+position fen 1nb4r/7k/1p1p1p1P/rP1p4/1p1p3N/5BB1/7K/1RR5 b - -
+go depth 7
+ucinewgame
+position fen 8/8/4k2p/rp1r3P/6p1/n1R1K3/8/8 w - -
+go depth 7
+ucinewgame
+position fen R1b3R1/7k/8/2p2PPP/8/r7/6rp/7K b - -
+go depth 7
+ucinewgame
+position fen 1n6/B6k/bP3rR1/4p3/2pp1P1P/4Pp2/3n4/4R1K1 w - -
+go depth 7
+ucinewgame
+position fen 8/2n3k1/8/rb3pP1/1pRp3p/1P4nP/8/1K6 b - -
+go depth 7
+ucinewgame
+position fen 2r4r/1q2pk2/5n2/2p1P3/R3BPpP/3bb1P1/6K1/6NR w - -
+go depth 7
+ucinewgame
+position fen q4bn1/2p1pkpb/rp3P1r/p2P3p/5PPP/NQ1P3R/PP4B1/R1BK2N1 w - -
+go depth 7
+ucinewgame
+position fen 5k2/2R3q1/8/3r4/P3pN2/1p1P4/7K/1r6 w - -
+go depth 7
+ucinewgame
+position fen 2b1k3/p3p1rp/1r2P3/1np3p1/1P3nP1/PQNP1P2/5K1P/3R3R b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/p1pppppp/1p6/8/8/5PP1/PPPPP2P/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen B7/2r1b3/7k/6r1/4b3/2p5/1n3n2/5K2 w - -
+go depth 7
+ucinewgame
+position fen 1r2kb1r/p3pbpp/n4p2/1pppNn2/4P2P/2PP4/PB4P1/RN1QKB1R w KQk -
+go depth 7
+ucinewgame
+position fen r4b1r/p3pkpp/n2P1nb1/2p5/3Q1P1P/P2P4/1N2P2R/R1B1KBN1 b - -
+go depth 7
+ucinewgame
+position fen 1r2kbr1/p3p1pp/n7/1pp2p2/1QN3nP/2PpR3/PB4K1/RN3B2 w - -
+go depth 7
+ucinewgame
+position fen 1r2rb2/np2p1k1/1p3pp1/Pqpn3p/1P5P/3P1PPb/1R2B3/2K1R3 b - -
+go depth 7
+ucinewgame
+position fen r4bn1/2q1k1pr/B4n2/1pp1pp1P/p2PPPb1/P1P2Q2/1P5P/RNB1K1NR b KQ -
+go depth 7
+ucinewgame
+position fen 8/3b4/1k4P1/2R5/8/1Nb3N1/8/2K1b3 w - -
+go depth 7
+ucinewgame
+position fen 1n1rkb2/p7/2n1b3/8/pP1p4/4RpK1/1N3P2/B5n1 b - -
+go depth 7
+ucinewgame
+position fen k5r1/8/8/6K1/2p5/2PN4/8/8 w - -
+go depth 7
+ucinewgame
+position fen rnR1b2r/4b2k/3pPn1p/8/pP2PPpP/p7/2KB1P2/1NN4R w - -
+go depth 7
+ucinewgame
+position fen 8/8/1P1k4/3n2Q1/3P3P/8/8/1N3K2 b - -
+go depth 7
+ucinewgame
+position fen rnbk4/1p1qbppr/2p1p2n/3p3p/Pp3N1P/3P1P2/2P1P3/RNBQKB1R b KQ -
+go depth 7
+ucinewgame
+position fen 3k2r1/6N1/2n2P2/3p4/8/6b1/7n/3K4 b - -
+go depth 7
+ucinewgame
+position fen 6r1/2p5/1p5N/1p2np2/5P1K/2k5/8/8 b - -
+go depth 7
+ucinewgame
+position fen 1N1k4/6b1/P3p1p1/2PPr2p/5R1P/4B3/2nKb2R/2r5 w - -
+go depth 7
+ucinewgame
+position fen 1R6/8/8/3N3p/5P1k/B5p1/3R2K1/3r4 b - -
+go depth 7
+ucinewgame
+position fen r1b1k1r1/p1p1bppp/n2p4/1N2p1B1/P2PP3/8/1PP2PPQ/R4KNq w q -
+go depth 7
+ucinewgame
+position fen 6R1/7n/2r1kbp1/BP5r/5p1P/p1P5/2N5/2R3K1 b - -
+go depth 7
+ucinewgame
+position fen 8/8/3N4/3k4/8/rP3P1p/4K2P/8 b - -
+go depth 7
+ucinewgame
+position fen 3kR3/8/6r1/3B4/p4P1p/4K1b1/8/6r1 b - -
+go depth 7
+ucinewgame
+position fen rnNk4/4b1rb/1p6/6pp/Q2PPPP1/P3BN2/bP4K1/3B3R b - -
+go depth 7
+ucinewgame
+position fen 4bB2/2k5/P6P/2K1P3/6P1/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen 3q1Q2/8/2P5/8/6k1/pK5p/8/8 w - -
+go depth 7
+ucinewgame
+position fen 2k5/K2R4/2N5/8/7P/5p2/1b5r/8 b - -
+go depth 7
+ucinewgame
+position fen 2RK4/8/P7/8/b7/8/8/7k b - -
+go depth 7
+ucinewgame
+position fen b7/n1k2N2/P7/2p3b1/2PpP3/3P2K1/1p5n/8 w - -
+go depth 7
+ucinewgame
+position fen rnbqk1nr/pppp3p/7b/3Pppp1/8/P1N5/1PPQPPPP/R1B1KBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 3rkbr1/2pbpp1p/nN3npB/pp1p2q1/1P1P4/P1P4Q/5P1P/1RN1KB1R w - -
+go depth 7
+ucinewgame
+position fen 1r2kb1r/p2bp3/2qp1ppn/1pP4p/2PPN2P/N3P1P1/P4P2/R1B1KBR1 b Q -
+go depth 7
+ucinewgame
+position fen 3R1q2/4k1p1/8/8/b1N1KP2/6Pn/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1n1Qk3/r4N2/P2P1q2/R4P1p/1P6/2Rp1PK1/8/5B1q b - -
+go depth 7
+ucinewgame
+position fen k7/8/p1b5/Pr6/1R6/8/3p1B2/3K4 w - -
+go depth 7
+ucinewgame
+position fen B4B2/3r1r2/p3Nbkp/PP6/4P3/2Rp4/8/4K3 w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/p1pppp2/1p4p1/7p/8/2P1P3/PP1PBPPP/RNBQK1NR w KQkq -
+go depth 7
+ucinewgame
+position fen 8/8/k5pr/B3p2p/P3RP1P/3p4/6KR/8 w - -
+go depth 7
+ucinewgame
+position fen Q7/3P4/p3k3/P1n1p3/P1p5/2N1bK2/8/3R1B2 w - -
+go depth 7
+ucinewgame
+position fen k4N2/r7/2P4n/1p1PK1Rp/1p5P/1P4q1/8/7R w - -
+go depth 7
+ucinewgame
+position fen 8/8/q4k2/p5r1/PP1rp1PN/1KnPp3/R2N2B1/1R6 b - -
+go depth 7
+ucinewgame
+position fen 5k2/2b5/1p3b1N/PP6/8/5K2/6R1/5B2 w - -
+go depth 7
+ucinewgame
+position fen 8/8/8/6k1/8/1B1p2K1/8/8 b - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/p5p1/1p1pp3/2pn2pp/PP1P1P1P/7R/2PKP3/RNBQ1BN1 w kq -
+go depth 7
+ucinewgame
+position fen 4k1r1/3n4/1Bb1n3/1p1r2p1/p1p2P1p/b3p1P1/2KN1N2/R4BR1 w - -
+go depth 7
+ucinewgame
+position fen 8/4r3/8/p7/P2b1P2/4k3/6N1/1K6 b - -
+go depth 7
+ucinewgame
+position fen rnbq1bn1/p2ppkp1/1pp5/5p2/P1P5/1R6/RP1PPP2/1NBQKBN1 b - -
+go depth 7
+ucinewgame
+position fen rk6/2p1r3/5pp1/p2PpP1p/P1P1PqP1/4Q2B/1P1K2R1/RNB5 b - -
+go depth 7
+ucinewgame
+position fen 7k/8/6KP/8/8/3B4/7n/6R1 b - -
+go depth 7
+ucinewgame
+position fen rqb1k3/1p1N1N2/3P4/p4P2/4p1rp/P3Q2P/1P1BPK2/R4B1R w - -
+go depth 7
+ucinewgame
+position fen 4kb2/1b2p1rp/1Bp2np1/Pr1PP3/2P5/1N4PB/p3KP1P/3R3R b - -
+go depth 7
+ucinewgame
+position fen rnbqk2r/1p1pbpp1/p1p1p2n/6Pp/8/P2PB2P/1PP1PP2/RN1QKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 1rb1k2r/1p1qppb1/1pn1Pnp1/2p4p/2Pp3P/PN1P1PP1/1P2K3/R1B2BNR w k -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/pppppppp/7n/8/P2P4/8/1PP1PPPP/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 5R2/4k3/2r5/B4P2/8/7p/N7/3R1K2 w - -
+go depth 7
+ucinewgame
+position fen 5k2/n6B/p2p4/P2P4/2p4Q/P3K2N/1b5R/4B3 b - -
+go depth 7
+ucinewgame
+position fen 8/P5kB/8/8/1p3K2/2r4p/4N3/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/K3k3/4N3/3b3P/5p2/3r4/8 w - -
+go depth 7
+ucinewgame
+position fen 3n1kr1/3N4/5n2/1B6/8/8/1K6/8 b - -
+go depth 7
+ucinewgame
+position fen 5R2/6p1/3q3n/8/2K1bk2/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/1k6/1P5p/5p2/7r/b2P4/4N1K1/B7 b - -
+go depth 7
+ucinewgame
+position fen 8/8/1Pk5/5p1p/7r/b2P4/4N3/B4K2 w - -
+go depth 7
+ucinewgame
+position fen B4n1k/8/3b2p1/4p2p/7P/8/7K/8 b - -
+go depth 7
+ucinewgame
+position fen rnbq3r/p2p3k/1pp2p2/1PbNp1pp/3PnN1Q/P6P/2PB4/2R1KB1R b K -
+go depth 7
+ucinewgame
+position fen 8/8/k7/2R5/N2p2PP/3K2b1/8/5b2 w - -
+go depth 7
+ucinewgame
+position fen 4k3/8/2r5/4N3/P7/1P1B1PRp/1Kp4P/8 b - -
+go depth 7
+ucinewgame
+position fen 1r3bn1/5k1r/5p1p/pp1p3P/P5P1/2p2P2/1R1P2B1/1NB2RK1 b - -
+go depth 7
+ucinewgame
+position fen 3r4/3npk2/p2p2r1/P1p5/Rb2b1Pp/4P2N/5PP1/1BKN2QR w - -
+go depth 7
+ucinewgame
+position fen 2k5/8/8/1K3n2/8/7r/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1r1k2nN/6b1/3p4/2qPpB2/R4p1p/3n1PR1/4K3/8 w - -
+go depth 7
+ucinewgame
+position fen rn3k2/p6p/2pb1B2/1r3p2/1P4PP/8/5PR1/K7 w - -
+go depth 7
+ucinewgame
+position fen r6r/1b1Bb2p/p1p3kB/3Np3/1PPp4/5q2/P2KP3/R5NR w - -
+go depth 7
+ucinewgame
+position fen rnbq2r1/p2pb3/1p3p1k/1P1p3p/3p2P1/2P3K1/4BBN1/2R4R w - -
+go depth 7
+ucinewgame
+position fen 7k/1K6/5N2/1P6/6r1/5n2/8/8 w - -
+go depth 7
+ucinewgame
+position fen 2q5/2k1r3/p3pnp1/7p/P1pP3P/4rP2/3RRK2/2B2B2 b - -
+go depth 7
+ucinewgame
+position fen 6R1/1r5k/3Q3b/3Np2p/Pp2PP1P/5N2/5K2/8 w - -
+go depth 7
+ucinewgame
+position fen 8/1pp5/3R2P1/1pkn1p1p/5P2/r6b/8/1N2K1N1 b - -
+go depth 7
+ucinewgame
+position fen rnb1qbkr/2ppp3/p7/1p3ppp/P1PP4/4P3/NPK2PPP/RQn2BNR w - -
+go depth 7
+ucinewgame
+position fen 2r1kb1r/p3p1pp/n4p1n/1pp5/1QN1p1PP/2PP4/PB6/RN2KBR1 b Qk -
+go depth 7
+ucinewgame
+position fen 1r6/8/R4P1k/2p2P2/7P/1b4Pp/7K/r1R5 b - -
+go depth 7
+ucinewgame
+position fen 1n1q1b1r/1b2pkpp/8/1pppPp2/rPNP2n1/pB3NP1/PBP2P2/2RQK1R1 w - -
+go depth 7
+ucinewgame
+position fen 7k/5R2/8/2p2PPP/b7/8/5K2/8 w - -
+go depth 7
+ucinewgame
+position fen r1br4/2k3p1/6p1/pn3pR1/1Q1PP2P/1P6/2P1N3/4K1n1 b - -
+go depth 7
+ucinewgame
+position fen 1n2k3/N1bb4/pp1n1r1p/1B1pp3/3pPp1q/PPP2K1P/3B4/1R4NR b - -
+go depth 7
+ucinewgame
+position fen 1nb3nr/2p1p3/P4rk1/bpP2pq1/3pP1Q1/N2B1KPP/P4P1R/1RB3N1 w - -
+go depth 7
+ucinewgame
+position fen 1rb2rk1/np2ppb1/1p1qPnp1/2p4p/2Pp3P/PN1PBPP1/1P2N3/R2K1B1R w - -
+go depth 7
+ucinewgame
+position fen 2b1kr2/p6N/B2pp3/P3r3/5bPp/NR5P/2P2BK1/3Q2R1 b - -
+go depth 7
+ucinewgame
+position fen 3k2b1/6P1/8/1P3B2/8/p7/4KB2/4R3 b - -
+go depth 7
+ucinewgame
+position fen 7k/8/pp1Qp2n/PP2P2p/4B2P/2p1P3/3NK3/4N3 w - -
+go depth 7
+ucinewgame
+position fen k4Nr1/r7/2P1K2n/1p1P2Pp/1p5P/1Pq5/8/5R1R w - -
+go depth 7
+ucinewgame
+position fen 6kr/1n4n1/8/8/2p5/2N5/6R1/1K3B2 b - -
+go depth 7
+ucinewgame
+position fen 5N2/1r3k2/B3n3/8/P2P4/1Pp2P1p/K6P/3Q3R b - -
+go depth 7
+ucinewgame
+position fen 8/1pp3R1/1k4P1/1p3p1p/r4P2/P4P1b/n7/1N1Kn1N1 b - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/3p1p2/pP2p3/2p2NpQ/1P3P1p/3PP3/1BPK2PP/RN3B1R b kq -
+go depth 7
+ucinewgame
+position fen 7R/P7/1P4P1/3b4/3p1k2/3P3K/1r6/3N4 w - -
+go depth 7
+ucinewgame
+position fen 2bk1b1r/1p2qp2/rn1pp1pp/pPp5/3P1nP1/B1N2Q1P/P1PNP3/3RKB1R b - -
+go depth 7
+ucinewgame
+position fen r1b2b1r/pp2p1kp/2n3pn/2pN1p2/P4B1P/2PP4/4PPP1/R2QKBNR w KQ -
+go depth 7
+ucinewgame
+position fen rnbqkbn1/ppppppp1/8/8/2P5/8/PP1PPP1r/RNBQKBNR w KQq -
+go depth 7
+ucinewgame
+position fen 6n1/r5r1/5p1p/B1k4P/P5P1/3P1P2/2N2b1K/6RB w - -
+go depth 7
+ucinewgame
+position fen BN2rR2/8/6k1/6P1/2B5/8/K7/3bN3 w - -
+go depth 7
+ucinewgame
+position fen 3b1r2/5k2/6p1/p3p2p/P3PPBP/Q7/3p1K1R/1RrN2N1 w - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/pp2pppp/2n5/2pp4/2P5/P6P/1P1PPPP1/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 1n3R2/3k4/3r3b/2pp2pn/P1p2P2/7r/1K6/1b3B2 w - -
+go depth 7
+ucinewgame
+position fen 1k6/8/3r1pP1/p1p5/P1P2q2/1P3p2/N4K2/R1R5 b - -
+go depth 7
+ucinewgame
+position fen 1n1q1r1k/1b1pnQ1p/rp1P2p1/P1p3BP/3N1p2/5R2/P3PPP1/R2K1BN1 w - -
+go depth 7
+ucinewgame
+position fen 8/2k5/1n3B1p/P4prP/5R2/3P4/4NK2/2b5 w - -
+go depth 7
+ucinewgame
+position fen k5nr/r7/8/np1PN1Pp/1p1Pq2P/1P3N2/5K2/6RR b - -
+go depth 7
+ucinewgame
+position fen 8/r1k4b/np5N/6Q1/3PPPPp/PP6/b4B1K/3Bb2R w - -
+go depth 7
+ucinewgame
+position fen 6r1/1kb5/p2B2PQ/PppR1p2/2r5/RP5b/8/4K3 b - -
+go depth 7
+ucinewgame
+position fen 4k1nr/2p5/P1r4p/P2p1ppq/1n1P1P1P/1P1bP3/R2KR3/1BBN4 b - -
+go depth 7
+ucinewgame
+position fen 1k6/3B4/4p3/4P2p/4P2P/1K6/7N/8 b - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/pp1ppp1p/5np1/2p2P2/3P4/8/PPP1P1PP/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen r3q2r/pb1k2bp/P1pp1p1n/4p1B1/2pPP3/6P1/1PP1BP1P/nN1K2NR b - -
+go depth 7
+ucinewgame
+position fen q2k1r2/1pN2p1p/3ppn1b/P2n2p1/P1p3BP/3P4/1BQ1P3/R3K1NR w K -
+go depth 7
+ucinewgame
+position fen 8/8/2K2k2/5r2/7p/p7/8/3R2b1 b - -
+go depth 7
+ucinewgame
+position fen 5bk1/2n2R1r/1p4Bp/Pp1p2pP/3P2p1/R3K3/2P3Q1/5N2 w - -
+go depth 7
+ucinewgame
+position fen b4rn1/p3k3/2qN3P/2P1p3/p1P2ppp/Q2PRP2/1K3P2/R4B2 b - -
+go depth 7
+ucinewgame
+position fen 8/5k2/6R1/1KPP4/4p3/6p1/3q4/2r5 w - -
+go depth 7
+ucinewgame
+position fen 8/7k/np6/8/8/5p2/1K6/6n1 b - -
+go depth 7
+ucinewgame
+position fen rnkq4/p4r2/b1p3pp/1p3p2/1P2P1P1/1PK2pnP/P2PN1R1/R1B2B2 w - -
+go depth 7
+ucinewgame
+position fen rnb1k1r1/p2p1p2/1p6/2b3pp/2P2qP1/1PNPP2n/P1RK3P/1QN1BR2 b - -
+go depth 7
+ucinewgame
+position fen 7k/8/1P4P1/p4r2/8/2K5/6B1/1R6 w - -
+go depth 7
+ucinewgame
+position fen 3k4/pr6/b2p3p/5P1P/PbBp4/6pR/1QPR2P1/3K4 w - -
+go depth 7
+ucinewgame
+position fen rn3kr1/pb2pp2/1N4pb/1PpP3p/5P2/P3P3/RP2K1Pn/2BQ2NR w - -
+go depth 7
+ucinewgame
+position fen 4k1r1/1b1n4/1B2n3/1p1r2pp/pbpp4/P3PPP1/5N1R/RNK2B2 w - -
+go depth 7
+ucinewgame
+position fen 1k6/2b4r/p3Q3/Ppp2pP1/3R1B2/3K3b/RP5r/8 b - -
+go depth 7
+ucinewgame
+position fen 8/4k3/1P5Q/3n4/3P3P/8/4K3/1N6 w - -
+go depth 7
+ucinewgame
+position fen rq2k2r/p1pp1pbp/b6n/np1Qp1B1/3PP3/6P1/PPP2P1P/RN1K1BNR b kq -
+go depth 7
+ucinewgame
+position fen q5n1/p2r4/P1P2P2/Bp1p2pk/3P3p/7P/1R6/1Q1b2KN w - -
+go depth 7
+ucinewgame
+position fen 4k3/8/8/2K1P3/1N3R1P/2p2p2/8/7r b - -
+go depth 7
+ucinewgame
+position fen 8/8/P4n2/1k6/1pR4n/1B5P/7R/3K2N1 w - -
+go depth 7
+ucinewgame
+position fen 6kr/3n3p/3b2b1/B1p1n3/PpPpP3/3P2K1/8/1NR5 w - -
+go depth 7
+ucinewgame
+position fen 8/1r6/8/k7/N2P1K2/P7/3R4/6r1 b - -
+go depth 7
+ucinewgame
+position fen B5r1/4k2b/n7/7K/8/2Bp4/8/R2r4 w - -
+go depth 7
+ucinewgame
+position fen 7q/p1rbn1p1/P1ppR3/1PP2P1k/1B1P3p/1Q5P/1R2K3/1N6 w - -
+go depth 7
+ucinewgame
+position fen 1n2rk2/7p/rpb1p3/p4N2/P1P1pP1p/8/1b2PKB1/3R2nR b - -
+go depth 7
+ucinewgame
+position fen 2k5/1p2B1bp/3pp2n/3Q1p1P/2pP4/r6R/2K1P1B1/6R1 w - -
+go depth 7
+ucinewgame
+position fen 6k1/8/n5P1/r7/1p1p1p1p/1P4nP/8/2K2b2 w - -
+go depth 7
+ucinewgame
+position fen rnbq1bnr/4k1pp/Pp2p3/2pp1p2/P1P3P1/B4P1P/3PP1B1/RN1QK1NR b KQ -
+go depth 7
+ucinewgame
+position fen 6n1/2prk2r/P6p/P2p1pP1/1n1PP2P/1P2K2b/B7/R1B2qR1 w - -
+go depth 7
+ucinewgame
+position fen 8/2NB2k1/8/2P5/8/8/K7/8 w - -
+go depth 7
+ucinewgame
+position fen rnbq1b1r/2pk2p1/1p1p1p1n/1N2p2p/p2P3P/2P1PQ2/PP3PP1/R1B1KBNR w Q -
+go depth 7
+ucinewgame
+position fen 1R6/7k/3Q3b/4P2p/PN2P2P/8/6K1/4N3 w - -
+go depth 7
+ucinewgame
+position fen 3n4/k5r1/3r4/p3p3/B5p1/3Kb1B1/8/3N4 w - -
+go depth 7
+ucinewgame
+position fen rnbqk1nr/p1pp1pp1/1p5p/4p3/1b1P2P1/2N5/PPPBPP1P/R2QKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen r4bk1/1p1bp1Bp/3p3n/2R3p1/2P1pP2/6PN/3K3P/5B1R b - -
+go depth 7
+ucinewgame
+position fen 3qkb1r/1rp1n2b/p2p3p/PN2pp2/3P4/P4Pp1/6B1/R1B1KQNR w k -
+go depth 7
+ucinewgame
+position fen 3r4/1k6/pb4P1/PppR1p2/8/R1r1B2b/1P1QK3/8 w - -
+go depth 7
+ucinewgame
+position fen 1kN5/8/P7/1pr5/4r3/1p5K/1b6/8 b - -
+go depth 7
+ucinewgame
+position fen 1n3k2/7p/2bn4/2p5/P1PpP1KN/1pBP4/7b/4R3 b - -
+go depth 7
+ucinewgame
+position fen 8/r7/2k5/8/pR3K2/Pb1P4/2Nr4/8 b - -
+go depth 7
+ucinewgame
+position fen 6q1/7r/1k2p1p1/p2n3p/P1p4P/B3rPK1/3R3R/5B2 w - -
+go depth 7
+ucinewgame
+position fen 7k/rp6/1P2p1p1/2Rn1p1p/5b1P/2r5/6b1/4K3 w - -
+go depth 7
+ucinewgame
+position fen 2k5/P1P3b1/2N1p1p1/3P2rp/R4B1P/3b4/2nK3R/1r6 w - -
+go depth 7
+ucinewgame
+position fen 6b1/1r1Bk3/1p2P2N/P4P1K/6P1/n5R1/8/4Bb2 w - -
+go depth 7
+ucinewgame
+position fen 4B3/8/7B/2K1PkP1/pp6/P7/1P5p/2R5 w - -
+go depth 7
+ucinewgame
+position fen bn3R1r/3k3p/2p5/p1Pp4/P7/3p4/3P3n/1NB2qnK w - -
+go depth 7
+ucinewgame
+position fen 4k1n1/8/2N5/1K3P2/pb4p1/P7/1R3r2/5N2 b - -
+go depth 7
+ucinewgame
+position fen r1bqkb1r/ppp1p2p/2n5/3p1PB1/2P4P/3P1K2/PP1N1nP1/R2Q1BN1 w kq -
+go depth 7
+ucinewgame
+position fen R7/8/8/2p4K/2P5/5N2/2q3R1/2k5 w - -
+go depth 7
+ucinewgame
+position fen 2b4k/5n2/1QP2r2/p2p1p2/P4PPp/1P1N3P/5n2/R1K5 w - -
+go depth 7
+ucinewgame
+position fen R7/2k1b3/8/p4p2/3Np2p/R1r4B/5P1P/1r2K3 w - -
+go depth 7
+ucinewgame
+position fen 5k2/8/4p1b1/4PB1p/1p2P2P/8/4N3/3K4 w - -
+go depth 7
+ucinewgame
+position fen 2rk2n1/7q/5np1/1B3p1r/p1p1PP1P/b1P1B3/1P2b2R/RN2K3 w Q -
+go depth 7
+ucinewgame
+position fen 5b2/6k1/8/3QP2p/PN2P2P/3N4/6K1/8 w - -
+go depth 7
+ucinewgame
+position fen k7/8/P7/2p5/PNP2p2/7K/8/2R5 w - -
+go depth 7
+ucinewgame
+position fen r1b2br1/1p1k4/p4Q2/q1p1P2p/P4pnP/1PPK1P2/4N3/RN1R4 b - -
+go depth 7
+ucinewgame
+position fen b4rn1/p3k3/q2pn2P/2P1pp2/p1P1NpPp/Q2PR3/2K1PP2/R4B2 w - -
+go depth 7
+ucinewgame
+position fen 2K5/6b1/k7/8/7P/8/b7/R7 b - -
+go depth 7
+ucinewgame
+position fen Q1bq1b1r/6p1/np1pkp1n/2p1p2p/3P3P/NpP1P3/P3NPP1/1RB1KB1R b - -
+go depth 7
+ucinewgame
+position fen 3nkN2/1r6/B7/8/PQ1P4/1P3P1p/K1p4P/6R1 b - -
+go depth 7
+ucinewgame
+position fen 2k5/4B2Q/3pp3/7P/2pPn2b/8/8/K1R4B b - -
+go depth 7
+ucinewgame
+position fen r5k1/2q5/1pn1p3/pp1pBpp1/P4P2/3QK3/2N3b1/6N1 w - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/pppppp1p/5n2/6p1/5B2/3P2P1/PPP1PP1P/RN1QKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen rn1qk1nr/pb1pppb1/2p5/Qp4p1/8/NP1P4/P1P1PPP1/R3KBNR w KQq -
+go depth 7
+ucinewgame
+position fen 1r1k2nN/7B/3p3b/2qPp3/5R1p/3n1PR1/4K3/8 b - -
+go depth 7
+ucinewgame
+position fen r2r4/p1p2kpp/n3b3/P3PNb1/4P3/1PP2PP1/4N1q1/R3K3 b - -
+go depth 7
+ucinewgame
+position fen 2b1k3/r2qbpr1/n1p1p2n/1p1p4/Pp5P/2PP1P1B/4P3/RNBQK2R w KQ -
+go depth 7
+ucinewgame
+position fen r7/2k2n2/2qN4/2PPp3/Q1P1R2p/K4Pp1/8/R7 w - -
+go depth 7
+ucinewgame
+position fen 1rb1r3/2Np3k/8/p4p2/P1P2PPp/1P1n3P/2QK4/R1N3n1 w - -
+go depth 7
+ucinewgame
+position fen 8/1r3P1k/4b3/1rp2P1P/8/6P1/7p/R6K w - -
+go depth 7
+ucinewgame
+position fen 6r1/rkp5/5pp1/p2P1P1P/P1P1P3/1P3p1q/N1K3R1/1RB5 w - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/p2ppppp/1pp2n2/8/3N4/4P3/PPPP1PPP/RNBQKB1R w KQkq -
+go depth 7
+ucinewgame
+position fen 8/3b2r1/rpk5/p3bpR1/PpPpPN2/R2B3P/2QPK3/1Nq5 w - -
+go depth 7
+ucinewgame
+position fen 2N3n1/8/4P3/P1k2bN1/8/1K2N2p/6P1/6R1 w - -
+go depth 7
+ucinewgame
+position fen rnbqk1nr/ppppb1pp/4p3/5p2/2P5/1P2P3/P2P1PPP/1RBQKBNR w Kkq -
+go depth 7
+ucinewgame
+position fen 8/3k4/n4P1p/rp4p1/7P/8/2r2RK1/8 w - -
+go depth 7
+ucinewgame
+position fen 7k/3n4/1p3B1P/1P1p3b/4r1R1/3b1BK1/3p4/8 b - -
+go depth 7
+ucinewgame
+position fen 1Nb1kb2/2B5/P3p1p1/3Pr2p/2P2P1P/8/4R1r1/n1K4R w - -
+go depth 7
+ucinewgame
+position fen 5n2/5k2/8/8/3P3P/N4K2/8/6Q1 w - -
+go depth 7
+ucinewgame
+position fen 2bq1bn1/1ppp1p1r/r2kp1p1/p6p/1nP5/P2P1P2/R1QNP1PP/4KBNR b K -
+go depth 7
+ucinewgame
+position fen 2b5/7r/rp1b2N1/p1k2pq1/PpPpP3/1Q3P1P/3PK3/RN3B1R b - -
+go depth 7
+ucinewgame
+position fen q2k4/4r3/p3pnp1/7p/P1pPPB1P/4rP1B/R4K2/2B1R3 w - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/2ppp2p/1pn3p1/p4p2/P1PP4/4P3/1P3PPP/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 8/8/1k6/1p6/8/K3n1p1/7r/8 b - -
+go depth 7
+ucinewgame
+position fen 8/1R6/3r1k2/2K2P2/7p/p5b1/8/8 b - -
+go depth 7
+ucinewgame
+position fen 7r/7p/2bb2kP/p2pP1r1/B1p2P2/2p1B1p1/6R1/3K4 w - -
+go depth 7
+ucinewgame
+position fen 1B1R2n1/4k1b1/2r3p1/5p1r/pPN4P/2P2Kn1/8/2R5 b - -
+go depth 7
+ucinewgame
+position fen 8/2k2r2/2N5/Pp6/7Q/1p5K/1b2r3/8 w - -
+go depth 7
+ucinewgame
+position fen b1N1k2B/8/2r5/8/2p2p1n/p3p1PB/8/2KR4 w - -
+go depth 7
+ucinewgame
+position fen 1R6/6k1/3Q4/3NP2p/Pp2Pb1P/5N2/5K2/8 w - -
+go depth 7
+ucinewgame
+position fen 3k1br1/rp3p2/1n1p2pp/pPp1pP2/3P1Q1R/P1N5/1BPNP3/3RKB2 b - -
+go depth 7
+ucinewgame
+position fen 1r2kbn1/p3qbp1/n1pp1p1r/P3Q2p/Rp2P2P/1P1P2P1/2P2P2/1N2KBNR w K -
+go depth 7
+ucinewgame
+position fen r1b3r1/1p1k4/p2b1Q2/q1p1P2p/P4pnP/1PP2P2/3KN3/RN5R w - -
+go depth 7
+ucinewgame
+position fen 1k3br1/8/1p3p2/pP2p3/B3n3/2R5/P1R2N1K/8 w - -
+go depth 7
+ucinewgame
+position fen 6nQ/3k1p1p/N3p1pb/2r4P/2p1PqP1/B4P2/P1bP1K1R/R7 w - -
+go depth 7
+ucinewgame
+position fen r4br1/8/3k2pp/P1nnp3/6P1/2PPP2P/4b1B1/RNB1K3 b Q -
+go depth 7
+ucinewgame
+position fen 3r4/3n1k2/p2p4/P1pbp3/R4Nrp/4PP2/B2K1QP1/3N3R b - -
+go depth 7
+ucinewgame
+position fen r3k1n1/p2p2p1/1pr3N1/5pq1/2b2PPp/b1pQ4/P3PB1P/R3KB1R w KQq -
+go depth 7
+ucinewgame
+position fen r4b1r/1k2p3/n1p2npp/Pp3b2/5Q2/2PPP1qP/P4P2/RNB1KB2 w Q -
+go depth 7
+ucinewgame
+position fen 6k1/8/n6p/Pp1p3P/P2pPp1B/2R2R1N/b4PP1/3K4 w - -
+go depth 7
+ucinewgame
+position fen k7/8/2b5/p3r3/8/8/7K/8 b - -
+go depth 7
+ucinewgame
+position fen 1r2kbnr/p1q1p3/3p1pp1/1pn4p/1PPPN1bP/4P1P1/P4P2/RNB1KB1R b KQ -
+go depth 7
+ucinewgame
+position fen 3k3r/1R6/2P4n/3p1PN1/8/3K1Nr1/7P/n3b3 w - -
+go depth 7
+ucinewgame
+position fen 4Bbnr/p1pr1p1p/1p4bq/4k3/1n1pPpp1/3PQPPP/P1P5/RNB2KR1 w - -
+go depth 7
+ucinewgame
+position fen 8/p1P4k/P7/2P5/4r1R1/1P4K1/8/5r2 b - -
+go depth 7
+ucinewgame
+position fen r3r3/pb1k4/P6B/2PPb3/1PB1n1q1/6P1/1P5P/1N2KR2 b - -
+go depth 7
+ucinewgame
+position fen 7R/1K6/p2Nk3/pN6/P3n3/8/5N2/5r2 b - -
+go depth 7
+ucinewgame
+position fen rn3bnr/1kq1p3/2pQ2pp/Pp6/8/N1PPPb1P/P4P2/R1B1KB2 b Q -
+go depth 7
+ucinewgame
+position fen 1rb1kbnr/p3ppp1/np6/2pp4/P1PPBq2/2N1P3/1P3PPP/R1BQK1NR b Kk -
+go depth 7
+ucinewgame
+position fen 8/8/4P1k1/P3P3/8/3N4/7K/6N1 w - -
+go depth 7
+ucinewgame
+position fen 2k5/8/4p3/4P2p/1KB1P2P/5N2/8/8 b - -
+go depth 7
+ucinewgame
+position fen rqbk2r1/pp1p1p2/1N1P4/2p2PNp/4p1Pn/Q6P/PP2PK2/R3BB1R b - -
+go depth 7
+ucinewgame
+position fen 3rkb2/p7/n1n5/3b4/pP1p4/2QN1p2/5P1K/BR4n1 w - -
+go depth 7
+ucinewgame
+position fen 1n6/BP3k2/b7/2n1PP2/2p4P/5pr1/5K2/6R1 w - -
+go depth 7
+ucinewgame
+position fen 6k1/7R/1P6/p2b2PB/P3Ppn1/8/1b2K3/8 w - -
+go depth 7
+ucinewgame
+position fen 2r5/k4Nr1/5P2/8/2p1K3/2P5/8/4N3 w - -
+go depth 7
+ucinewgame
+position fen 3qkbnr/r1p2p2/p1np3p/1p2p3/1P5p/P4PPB/2bPK2R/RNBQ2N1 w k -
+go depth 7
+ucinewgame
+position fen 3k4/8/8/2PP2R1/2K1p3/5Pp1/5rp1/8 w - -
+go depth 7
+ucinewgame
+position fen 1r1k1b2/p3p3/n1Q5/p2b1n2/1P1pp3/B2N1N1p/5PPR/R5K1 b - -
+go depth 7
+ucinewgame
+position fen 6k1/8/1p6/3n1b2/8/8/7n/3K4 w - -
+go depth 7
+ucinewgame
+position fen 3r4/p1p2kp1/n3P2p/P1r3P1/2bbP3/1P3PN1/2K1N2q/1R6 b - -
+go depth 7
+ucinewgame
+position fen B4B2/2k5/2b4P/2K1P1P1/8/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 1n1r4/p4k2/2n1R3/8/pP1p1K1b/5p2/1N3P2/B5n1 b - -
+go depth 7
+ucinewgame
+position fen 8/2k2N2/np6/2p5/1p3P2/8/4K3/8 w - -
+go depth 7
+ucinewgame
+position fen 8/2B2B1k/4PR2/1p3P1K/8/8/8/2n5 b - -
+go depth 7
+ucinewgame
+position fen 8/8/k2P4/1p2n3/1p2NK1P/1P1R1R2/8/r7 w - -
+go depth 7
+ucinewgame
+position fen 2kr1b1r/1b1p4/2p1p1np/P4pp1/p2BP1P1/N1P2QP1/3PB3/RN4KR b - -
+go depth 7
+ucinewgame
+position fen 5n2/5k1p/r1p4P/p6P/K4p2/3R4/8/4B3 b - -
+go depth 7
+ucinewgame
+position fen 8/8/3p4/K3k3/3n4/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen rnb1k3/p5R1/Pqppp3/1p1nPp2/1P4p1/3P2b1/2PRN1P1/2K2BQ1 w q -
+go depth 7
+ucinewgame
+position fen 3k4/R7/Pprn4/2p4P/2P1B3/3R2p1/2N5/3K4 b - -
+go depth 7
+ucinewgame
+position fen 1n3r1k/2qpP2p/B5p1/Pp1b2BP/3pPp2/5R2/P4PP1/R3K1N1 w - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/3ppppp/ppn5/2p5/1PP3PP/4P3/P2P1P2/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 1q3bnr/p2k2p1/nrppb3/P6p/1p2P1QP/1P1P1PPB/R1P2K2/1N4NR b - -
+go depth 7
+ucinewgame
+position fen 8/p5k1/P7/1p1p4/3P3p/7P/3qN2K/B7 w - -
+go depth 7
+ucinewgame
+position fen 8/k7/7Q/4b3/8/3K1Q2/6P1/5B2 b - -
+go depth 7
+ucinewgame
+position fen 8/2PkP1b1/8/1p1pP3/1p3r2/3K4/3n4/7q w - -
+go depth 7
+ucinewgame
+position fen k5N1/5n1p/P1bq4/3p4/7B/3p3K/8/5n2 w - -
+go depth 7
+ucinewgame
+position fen r1bk1b1r/1p2pP1p/pq1p2p1/3p2P1/nP3PR1/P1PKQ2B/2N4P/RNB5 b - -
+go depth 7
+ucinewgame
+position fen 7k/rpr5/1P2p1p1/R2n1p1p/5b1P/5b2/8/4K3 b - -
+go depth 7
+ucinewgame
+position fen 8/8/1kb5/r7/3Q2pp/8/B7/2K5 b - -
+go depth 7
+ucinewgame
+position fen 8/k7/2B1P3/8/6p1/KQb2R2/6P1/8 b - -
+go depth 7
+ucinewgame
+position fen rn3b1r/1bq1pk2/p2p4/2p2p1p/P2P4/4P1P1/2K1NPP1/Rr1NQB1R b - -
+go depth 7
+ucinewgame
+position fen 8/7k/3R1nBp/pp1p2pP/3P2p1/6N1/2P2KQ1/R7 b - -
+go depth 7
+ucinewgame
+position fen r2nkr2/7p/1p2p3/5Pp1/P5P1/5b1P/1R2K2R/1r6 w - -
+go depth 7
+ucinewgame
+position fen 3r2k1/p7/PRP5/2PqB2r/8/5KP1/1PB5/8 w - -
+go depth 7
+ucinewgame
+position fen 1rb1k2r/1p1p2Q1/p1pb1n2/qB2P2p/5p1P/1PP1PP2/P2K2P1/RN4NR w k -
+go depth 7
+ucinewgame
+position fen r2n1r2/1bNk2pp/6P1/pP3p2/3pPq1P/1P1PBR2/2P3p1/Q3K1N1 b - -
+go depth 7
+ucinewgame
+position fen 4k1r1/8/2N5/2B2np1/ppp2P2/4p1P1/Kb4b1/R4BR1 w - -
+go depth 7
+ucinewgame
+position fen 1nb1kr2/r2pbp1p/6N1/QPP2P2/1P1p4/5P2/3pK1Bq/R1R5 w - -
+go depth 7
+ucinewgame
+position fen r2b1qr1/p1Bn1k1p/1p2p1p1/2p5/P1bQPp1P/1P3P2/1R1P2B1/2BK1R2 b - -
+go depth 7
+ucinewgame
+position fen k7/8/5P1N/7P/2pNb1K1/2P1p3/4rPR1/8 w - -
+go depth 7
+ucinewgame
+position fen 1B3k1r/6r1/8/1p1ppK2/4n3/6P1/Rp1N2N1/6b1 b - -
+go depth 7
+ucinewgame
+position fen 8/N7/3p1N2/8/2b2k2/4R3/8/2Kn4 b - -
+go depth 7
+ucinewgame
+position fen 1n4nr/p2r1B1p/1p3kbb/2p5/3pPBPq/2QP1K1P/P1P5/RNR5 b - -
+go depth 7
+ucinewgame
+position fen 8/P7/4R3/2p5/2P5/5p1N/2k4K/8 w - -
+go depth 7
+ucinewgame
+position fen r4bnr/ppp2p1p/2n1k3/1B1qpb2/1P1pP1p1/3P1P1N/P1PNQ1PP/R1B2KR1 b - -
+go depth 7
+ucinewgame
+position fen rn4n1/4b1kr/3pP2p/1b6/pP2PppP/p1R3P1/2K1NP2/1N2B2R w - -
+go depth 7
+ucinewgame
+position fen r3kb1r/4pppp/2p5/p1p4n/q1Pn1P2/R3P2N/3P3P/1NB1KB1R b kq -
+go depth 7
+ucinewgame
+position fen 5rn1/p1n1k3/q1bp3P/2P1pp2/p1P2pPp/Q2PR3/2KNPP2/R4B2 b - -
+go depth 7
+ucinewgame
+position fen 1r1k4/8/8/2PP2R1/4p3/2K2Pp1/6p1/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/3k2N1/1K5P/8/8/3r1p2/6b1 w - -
+go depth 7
+ucinewgame
+position fen 7k/4r3/nP2Nb1P/2R1P3/3K2p1/6P1/4b3/4R3 b - -
+go depth 7
+ucinewgame
+position fen 2N2R2/5k2/pK3N2/p7/P7/N7/8/2r2n2 b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pppppp1p/6p1/8/8/3P2P1/PPP1PP1P/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 3r4/8/6KP/5n2/7k/2p5/5p2/8 b - -
+go depth 7
+ucinewgame
+position fen 4n3/2b5/bpN2n1p/2kp1P2/P1B1pp2/1Pp1B2P/5K2/R5NR b - -
+go depth 7
+ucinewgame
+position fen r4bnr/4pk2/4bp1p/ppppq3/PPPn2pP/N1NQ1PP1/R2P4/2B1KB1R w K -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pppp1ppp/8/4p3/5P2/P7/1PPPP1PP/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 1n1b4/6K1/1k2P3/2p1n3/2Pp4/8/8/5b2 b - -
+go depth 7
+ucinewgame
+position fen r7/2b3r1/1N2P3/2p5/P2kb2P/4p3/1p1PR3/3K4 b - -
+go depth 7
+ucinewgame
+position fen 6N1/r2r4/2p1k2p/P2p2nb/3Pp3/1P2K3/1BB2R1R/8 b - -
+go depth 7
+ucinewgame
+position fen 4B3/8/7B/4P1P1/ppK1k2q/PP6/8/R7 w - -
+go depth 7
+ucinewgame
+position fen r7/2b3r1/1N6/2p1PR2/P3b2P/3kp3/1p1P4/3K4 b - -
+go depth 7
+ucinewgame
+position fen rnb2bnr/2pkp1Q1/p2p2qp/1pP2p2/2N5/4P3/PP1P1PPP/R1B1KBNR w KQ -
+go depth 7
+ucinewgame
+position fen r4B1r/2k1p2p/1n4pb/pP2p1P1/1P1q1PBP/P2p2R1/6N1/RNB1K3 b - -
+go depth 7
+ucinewgame
+position fen 8/7k/3bP3/7p/P3P2P/2NN4/8/6K1 b - -
+go depth 7
+ucinewgame
+position fen 1n6/p6k/P4P2/1pqp2p1/3P3p/2B4P/5NR1/4Q1K1 w - -
+go depth 7
+ucinewgame
+position fen 8/P1n5/3k4/1R6/1p1N4/4K1nP/B7/2R5 w - -
+go depth 7
+ucinewgame
+position fen r1b1kbnr/p2p1ppp/2p1p3/1p2n3/1PN1P2q/7P/P1PPNPP1/R1BQKB1R w KQkq -
+go depth 7
+ucinewgame
+position fen rn1qkbr1/1pp1pppp/4b3/p2p4/3Pn1P1/P4Q2/1PPN1P1P/R1B1KBNR w KQq -
+go depth 7
+ucinewgame
+position fen 8/8/1k2P3/4b3/4B3/1K3p2/Q5P1/8 w - -
+go depth 7
+ucinewgame
+position fen 8/4k3/8/2n2Q1p/7P/1r4R1/8/2K5 b - -
+go depth 7
+ucinewgame
+position fen 1b3k2/8/1p2B2N/PP6/6K1/2R5/1b6/8 w - -
+go depth 7
+ucinewgame
+position fen 7k/8/1p6/3n4/8/8/2bK3n/8 b - -
+go depth 7
+ucinewgame
+position fen rn3b1r/1bq1pk2/p2p4/2p2p1p/P2P4/4P1P1/1rK1NPPR/R2NQB2 w - -
+go depth 7
+ucinewgame
+position fen 4k3/1r2p3/3nP1r1/p5pP/bN6/3n1P2/4KQ1P/5R1R w - -
+go depth 7
+ucinewgame
+position fen 1rb2rk1/np1qppb1/1p2Pnp1/2p4p/2Pp1N1P/P2PBPP1/1P1N4/R2K1B1R b - -
+go depth 7
+ucinewgame
+position fen 8/B7/5Q1P/8/k2P4/2R5/8/1Kb5 b - -
+go depth 7
+ucinewgame
+position fen 3r4/6k1/8/6N1/Pp1qp2N/2RP4/6K1/1r6 b - -
+go depth 7
+ucinewgame
+position fen 1n1qk3/R4N2/2rP4/3K1P1p/1PR2P2/3p4/4B3/2q5 b - -
+go depth 7
+ucinewgame
+position fen 7k/8/4P3/6N1/P3P2p/6b1/N5K1/8 b - -
+go depth 7
+ucinewgame
+position fen 8/2B2Bk1/4P2R/5P1K/1p6/8/8/2n5 w - -
+go depth 7
+ucinewgame
+position fen r4qr1/p1B2k1p/1p2p1p1/2p1n1b1/3QPp1P/PP1b1P2/1R1P2B1/2B1K2R b K -
+go depth 7
+ucinewgame
+position fen 1r4nr/2p1p3/n6k/1p2Pbq1/1b2B1pP/3B2P1/P1N1pPK1/4R1NR b - -
+go depth 7
+ucinewgame
+position fen r3kbn1/8/B4npq/5p1r/pP2PP1P/2P1B3/R3R3/1N1K4 b - -
+go depth 7
+ucinewgame
+position fen k5n1/4b3/3pb3/3PbPp1/2P2RPp/p1N1KN1P/8/1B4R1 w - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/1ppppp1p/6pn/p7/4P1P1/7N/PPPP1P1P/RNBQKB1R w KQkq -
+go depth 7
+ucinewgame
+position fen 8/k7/2B1p3/4P2p/K3P2P/8/8/5N2 w - -
+go depth 7
+ucinewgame
+position fen 2k5/2P1qrb1/3N3r/1p1ppb2/Bp1P2n1/8/6PR/5KB1 b - -
+go depth 7
+ucinewgame
+position fen 2b1q1r1/1r1p1pk1/1N6/p7/PnP2PPp/1P1P4/1R1K1B1P/Q1N3n1 b - -
+go depth 7
+ucinewgame
+position fen rn4k1/7q/1pppp3/pR1Q1pp1/P4P2/B4P2/2NK2b1/6N1 w - -
+go depth 7
+ucinewgame
+position fen 8/8/8/1pk5/8/4n1pr/8/1K6 b - -
+go depth 7
+ucinewgame
+position fen 8/7r/7k/8/n1R1q3/3B2K1/8/1b6 b - -
+go depth 7
+ucinewgame
+position fen 5nkr/7p/3b2b1/Bpp1n3/P1PpP3/3P2K1/8/1N2R3 b - -
+go depth 7
+ucinewgame
+position fen 2b1qb2/4n1kr/ppnp3p/6pP/P2P2p1/1P2rP2/2P1P1RN/2RQKB2 w - -
+go depth 7
+ucinewgame
+position fen 1rbkr3/p1p1p2p/Qpqn3b/1n1pP1p1/1PP2pP1/3PBP2/PN2N2P/2R1K2R b - -
+go depth 7
+ucinewgame
+position fen 2b1kbnr/rppqp3/n2p3p/5pp1/p1PP2P1/PP2P2P/1B2QP2/RN2KBNR w KQk -
+go depth 7
+ucinewgame
+position fen 4B3/8/k3p3/4P2p/4P2P/8/1K5N/8 w - -
+go depth 7
+ucinewgame
+position fen 8/8/4k2p/rp5P/3r2p1/2R5/2n1K3/8 b - -
+go depth 7
+ucinewgame
+position fen 7r/pk1n1p2/1p2p2b/1Pp5/B5K1/2n5/Pr1N4/4R2R b - -
+go depth 7
+ucinewgame
+position fen 1b2Q3/5b2/8/2P4P/3kr3/r7/4p1K1/8 w - -
+go depth 7
+ucinewgame
+position fen 2b2kr1/p7/B2ppn1b/Pr1PP1N1/6Pp/R1p4P/2P5/1N1QBK1R w - -
+go depth 7
+ucinewgame
+position fen rnb1kbnr/pp1pp1pp/1q3p2/2p5/4P3/2P4P/PP1P1PP1/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen k7/7r/8/8/2pK4/2P5/4N3/8 b - -
+go depth 7
+ucinewgame
+position fen rnbr4/1ppp2k1/1b2pq2/pP4p1/P2Pp2p/1QB1nP1K/1RPNB1PP/6NR w - -
+go depth 7
+ucinewgame
+position fen r1Q5/5P2/8/4bBk1/1p4P1/8/4K3/2R5 b - -
+go depth 7
+ucinewgame
+position fen 8/1B1k3N/p2p1b2/P3p1P1/1Qr4p/N1P4P/8/1R3K1R b - -
+go depth 7
+ucinewgame
+position fen 5N2/2k5/8/1P6/7P/pK6/4Rn2/8 b - -
+go depth 7
+ucinewgame
+position fen 1rb1kb1r/pp2p1pp/n4p2/2pp1n2/4P3/2PP1N1P/Pq4P1/RNBQKB1R w KQk -
+go depth 7
+ucinewgame
+position fen K6k/8/8/1P6/n7/6N1/8/8 b - -
+go depth 7
+ucinewgame
+position fen 2k2b2/1p3p1p/r2pp3/4Qn1P/P1pP3B/R7/2K1P1B1/6R1 w - -
+go depth 7
+ucinewgame
+position fen 1b2b3/8/8/3k3P/3Q4/r7/4p1K1/8 b - -
+go depth 7
+ucinewgame
+position fen 7n/2q5/3p4/3Bk1N1/8/3K4/8/8 b - -
+go depth 7
+ucinewgame
+position fen 1n1rkb2/1q1b4/2Npp2r/1pp5/2n1P2p/PPPP4/4N1P1/1RBB1K1R w - -
+go depth 7
+ucinewgame
+position fen r1bq1bn1/pppk1p1r/3p4/6pp/3PPpnP/N1P2PPR/PP2K3/2RQ1BN1 b - -
+go depth 7
+ucinewgame
+position fen 8/2k5/5pP1/P1p1r3/PNP4K/8/8/R7 b - -
+go depth 7
+ucinewgame
+position fen 8/3P3k/p7/P2Q4/N7/2p4B/2R1p3/4K3 w - -
+go depth 7
+ucinewgame
+position fen 1k4n1/1p2B1bp/3pp3/3Q1p1P/2pP4/1R6/4P1B1/K5R1 b - -
+go depth 7
+ucinewgame
+position fen 5R2/1k6/3P1Nn1/1p6/1p1R3P/1P4K1/4q3/7r b - -
+go depth 7
+ucinewgame
+position fen rn4r1/p2k3p/2pb4/rB2Bp2/7P/8/1P3PPR/2K3R1 w - -
+go depth 7
+ucinewgame
+position fen 1q6/8/1k6/1pN5/1p1p4/3K4/3nB3/8 w - -
+go depth 7
+ucinewgame
+position fen 1kn3b1/7P/pr6/P1p3B1/1P6/1P2RB1P/1N2K3/r6r w - -
+go depth 7
+ucinewgame
+position fen 8/p6k/P7/1p1p2Q1/q2Pn1Rp/7P/8/B1N3K1 w - -
+go depth 7
+ucinewgame
+position fen 3k1B2/7p/7P/7r/5Pp1/2Rp4/N1Rp2K1/2B5 w - -
+go depth 7
+ucinewgame
+position fen rnb1qbkr/2ppp3/p7/5ppp/P1pP1N2/4P3/NPK2PPP/RQn2B1R b - -
+go depth 7
+ucinewgame
+position fen 8/8/8/4n1N1/1k5b/4R3/K7/8 w - -
+go depth 7
+ucinewgame
+position fen 8/5k2/3r4/5PR1/1B6/7p/N7/5K2 w - -
+go depth 7
+ucinewgame
+position fen 7R/8/1B3N2/5k2/5P2/r6p/4KR2/6b1 w - -
+go depth 7
+ucinewgame
+position fen 2b2kn1/8/1n1P1N2/1Pr2P2/p5p1/PNR1K3/1r6/4b3 w - -
+go depth 7
+ucinewgame
+position fen 1n2rk2/r7/1pb1p2p/p2R1N2/P1P1pP1p/8/4PKB1/b5nR b - -
+go depth 7
+ucinewgame
+position fen r3kb1r/pbnpp2p/2p2p1p/Rp6/1q1PPP2/4B3/2P3PP/1NK2BNR w q -
+go depth 7
+ucinewgame
+position fen 7k/7n/R3b2P/3B4/5K2/8/2b5/8 w - -
+go depth 7
+ucinewgame
+position fen r1b1kbnr/1p1p3p/6p1/pqp2p2/2P1PB2/P4N2/n2QKPPP/R4B1R b kq -
+go depth 7
+ucinewgame
+position fen 1b2B3/8/1k6/8/4pN2/1KP5/8/7q w - -
+go depth 7
+ucinewgame
+position fen 2k5/1N6/8/1Q1n3p/7P/3RBr2/2K5/8 w - -
+go depth 7
+ucinewgame
+position fen rn1qk2r/p2bp1bp/1pp2p2/3p1np1/2B2P2/N1PPP1PP/PP6/R1BQK1NR w KQkq -
+go depth 7
+ucinewgame
+position fen 3r4/p1p3p1/n3P1kp/P1r1P1P1/3b2q1/1P1b1PN1/4N3/2RK4 b - -
+go depth 7
+ucinewgame
+position fen 3r4/p1p3p1/n3P1kp/Pr4P1/3bP1q1/1P1b1PN1/3KN3/2R5 w - -
+go depth 7
+ucinewgame
+position fen 1nb1qbn1/4rk1r/ppNp3p/5ppP/P5P1/1P3P2/2PPP1RN/1R1QKB2 b - -
+go depth 7
+ucinewgame
+position fen 8/8/1K6/4k3/8/3p1n2/8/8 b - -
+go depth 7
+ucinewgame
+position fen rnk2bnr/2q1pp2/2pQ2pp/pp6/1P5N/2PPP2P/P4P2/RNB1KB1b b Q -
+go depth 7
+ucinewgame
+position fen r4b2/2pkp1r1/2n1b1p1/pPq2p2/p1Pp1P2/B2P1P1P/P2N1KB1/5RNR w - -
+go depth 7
+ucinewgame
+position fen rb6/5b2/1pr5/p3P3/PpP1p3/3k3P/3P2R1/1N1K4 w - -
+go depth 7
+ucinewgame
+position fen 8/7p/8/3N4/1R3P1k/B2R2p1/6K1/B6r b - -
+go depth 7
+ucinewgame
+position fen k7/8/8/4K3/2p5/2P3r1/8/4N3 w - -
+go depth 7
+ucinewgame
+position fen 1R6/p2r1k2/PN1n4/8/3p2K1/B4p2/8/4b1n1 b - -
+go depth 7
+ucinewgame
+position fen k7/7r/8/8/2pK4/2PN4/8/8 w - -
+go depth 7
+ucinewgame
+position fen 7R/p7/1kB1P2Q/3q4/1P3bp1/8/2KR2P1/8 b - -
+go depth 7
+ucinewgame
+position fen rn1q1b2/p2p2p1/1pp1pnk1/3b1p2/PP1R4/5R1B/3PPP2/1NBQK1N1 b - -
+go depth 7
+ucinewgame
+position fen Q7/5k2/p2Pn3/P3p3/P1p5/2N1bK2/8/3R1B2 b - -
+go depth 7
+ucinewgame
+position fen 4k3/7p/2b4P/3p4/p1p2R2/1Bb3p1/4K3/7r b - -
+go depth 7
+ucinewgame
+position fen 8/4kb2/3B3P/P1K1P3/6P1/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/1N6/3p1P2/8/1K3kn1/r4b1R/7p/7n w - -
+go depth 7
+ucinewgame
+position fen 1n6/4Nnkp/2bb4/2p2r2/P1PpP3/1pBP3K/8/4R3 b - -
+go depth 7
+ucinewgame
+position fen 1rkb4/8/1p3R2/1P3p2/B7/3Np2K/P2n4/3R4 w - -
+go depth 7
+ucinewgame
+position fen 1B3k2/2r5/1b6/1p1pp1N1/6K1/R5P1/1p4N1/7r w - -
+go depth 7
+ucinewgame
+position fen 1R5k/3b4/5PP1/2p4P/5K2/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 2k5/5n2/8/8/2K5/3r4/8/8 b - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/pppppppp/2n5/8/4PP2/8/PPPP2PP/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen r2k1br1/2p1p3/2n1b1p1/pPq2p2/p1Pp1P2/B2P1P1P/P2N1KB1/1R4NR b - -
+go depth 7
+ucinewgame
+position fen 8/k7/8/8/B3K3/6p1/1r1b4/1N6 w - -
+go depth 7
+ucinewgame
+position fen 1nb1qbn1/rp3k1r/p2p3p/N4ppP/P2N2P1/1P6/2PPPP2/1R1QKBR1 w - -
+go depth 7
+ucinewgame
+position fen 3R4/1N6/3p1P1k/4r3/6n1/2K5/7p/3b3n b - -
+go depth 7
+ucinewgame
+position fen b3k3/8/1N4r1/4bnp1/pBp2P2/4p1PB/8/1K1R4 b - -
+go depth 7
+ucinewgame
+position fen 6nr/1k1r4/2n5/Pp1p2Pp/1p1PP2P/1P3N2/8/RqN1K2R w - -
+go depth 7
+ucinewgame
+position fen 1b4r1/5P2/8/2P3k1/1p2B1P1/8/5K2/6R1 b - -
+go depth 7
+ucinewgame
+position fen 4k1B1/P7/P7/1P3r2/3N3P/8/8/6BK b - -
+go depth 7
+ucinewgame
+position fen 7R/k3n3/2qPK2N/1p5R/1p5P/1P6/8/r7 w - -
+go depth 7
+ucinewgame
+position fen 8/8/1k6/8/1n6/1K4p1/4r3/8 b - -
+go depth 7
+ucinewgame
+position fen b3nbr1/k5p1/4B3/3p3p/P2P4/5n2/KR1Q4/8 b - -
+go depth 7
+ucinewgame
+position fen 1r2kbnr/pb2ppp1/np6/2pP4/P2PB2P/q7/NP3PP1/R1BQ1KNR w k -
+go depth 7
+ucinewgame
+position fen 3r4/1k6/8/6b1/8/2K3p1/4B3/8 w - -
+go depth 7
+ucinewgame
+position fen 5rk1/8/3R3P/1pp1Q2r/8/Ppb3KB/2N3n1/8 w - -
+go depth 7
+ucinewgame
+position fen 2b3n1/r1Npk2r/2n3p1/pPb2pp1/P2p1P2/2R3QP/3BP3/4KBNR w K -
+go depth 7
+ucinewgame
+position fen r1bqk2r/1p1p1pbp/4p3/p1P1nPp1/3p4/5P1N/PP1K2BP/RNBQR3 b kq -
+go depth 7
+ucinewgame
+position fen 4n1r1/k7/8/p3p3/2B3p1/8/1b2K2B/1N1r4 w - -
+go depth 7
+ucinewgame
+position fen 1r1q1kr1/1bp1p1bp/1p4p1/p2BP3/P1P1N3/1PK1BP2/2n3PP/RN1Q3R w - -
+go depth 7
+ucinewgame
+position fen 6n1/8/P7/1k6/1pR4n/1B5P/5K1R/6N1 b - -
+go depth 7
+ucinewgame
+position fen 8/7Q/4pb2/2Bp3P/k1BP4/8/2R5/K7 w - -
+go depth 7
+ucinewgame
+position fen r3r3/p2k2B1/P1b5/2PPbq2/BP2n3/6P1/1P5P/1N2KR2 b - -
+go depth 7
+ucinewgame
+position fen 2b1kb2/r3p1rp/2p3pn/P2P4/2PBP3/N5P1/p4P1P/R1N1KB1R w KQ -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/pp1pp2p/2p2n2/3B1pp1/P3P3/5P1P/1PPPN1PR/RNBQK3 b Q -
+go depth 7
+ucinewgame
+position fen 1r6/7n/4kbp1/BP5r/5p1P/p1P5/2N5/2R3K1 w - -
+go depth 7
+ucinewgame
+position fen 2bQ4/5n1k/2P2r2/p2p1p2/PN3PPp/1P5P/5n2/R1K5 b - -
+go depth 7
+ucinewgame
+position fen 5k2/n7/p2p4/P2Pb1Q1/2p5/P3K2N/2B4R/4B3 w - -
+go depth 7
+ucinewgame
+position fen r3kbn1/pB5r/1P3p1p/2p1p3/P1P4P/2R2N2/8/2B1K1NR b - -
+go depth 7
+ucinewgame
+position fen 8/4k2N/2Bp1b1n/8/3qp3/8/4K2n/8 w - -
+go depth 7
+ucinewgame
+position fen 3N4/7k/7B/P2pP2P/bp6/3pP3/3K2P1/8 w - -
+go depth 7
+ucinewgame
+position fen 5Bq1/k4r2/4p1p1/p2n3p/P1p4P/2rR1PK1/7R/5B2 w - -
+go depth 7
+ucinewgame
+position fen 8/2r5/3Np1k1/p4p2/P4Pp1/3N4/8/4K3 b - -
+go depth 7
+ucinewgame
+position fen 2k3r1/3n4/1p3p1b/pPN1p3/B7/2R4K/P7/2R5 w - -
+go depth 7
+ucinewgame
+position fen R7/7p/2K4P/6kP/1rp4n/5pB1/8/8 w - -
+go depth 7
+ucinewgame
+position fen b6b/1n6/P1pBkP2/8/2P3P1/p1N3p1/3RK3/1N6 w - -
+go depth 7
+ucinewgame
+position fen 1B6/3n1k2/1r6/5P1P/2KB1n2/5p2/8/8 b - -
+go depth 7
+ucinewgame
+position fen 3N2r1/2kN4/2n5/8/3p4/6b1/8/3K1n2 b - -
+go depth 7
+ucinewgame
+position fen rnbqk1nr/pppp3p/6pB/2b1pp2/7P/2PPR3/PP2PPP1/RN1QKBN1 w Qkq -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pppp3p/6pB/4pp2/7P/3P4/PPP1PPP1/RN1QKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 4k1b1/1NB3r1/3r4/6b1/p1Pp1p2/P2P3N/4K3/7R b - -
+go depth 7
+ucinewgame
+position fen r4b1r/2qb2k1/pp2p3/1PpQp2p/P1K1BP1P/5N2/2P1P2B/RNn5 w - -
+go depth 7
+ucinewgame
+position fen 5k2/8/8/r2n1pP1/1p1p3p/1P1b2nP/2R5/1K6 b - -
+go depth 7
+ucinewgame
+position fen 8/7R/b7/k7/N5PP/2K5/8/8 b - -
+go depth 7
+ucinewgame
+position fen R7/2k5/3b4/p4p2/4p2p/R1r2N1B/3K1P1P/1r6 b - -
+go depth 7
+ucinewgame
+position fen rn1qkbnr/1b1pp1pp/p1p5/6B1/2P5/7B/PP2PP1P/RN1QK1NR b KQkq -
+go depth 7
+ucinewgame
+position fen 1nbq1r1k/2ppn2p/rp1P2p1/P4pB1/3N3P/5R2/P3PPP1/R2QKBN1 b Q -
+go depth 7
+ucinewgame
+position fen rnbk3r/pp1pb2p/2p1p3/6qn/P7/NPPp2Nn/3P2KR/RQB5 b - -
+go depth 7
+ucinewgame
+position fen 1r4k1/p7/PRP5/2P4r/B7/4q1P1/1P3K2/8 w - -
+go depth 7
+ucinewgame
+position fen 2n3k1/1Q2p3/N7/p4P1P/3K4/1b5p/1R1r4/1r5n w - -
+go depth 7
+ucinewgame
+position fen rb4b1/r7/1p6/pNP1P3/Pp6/3kp2P/3P3R/3K4 w - -
+go depth 7
+ucinewgame
+position fen 8/1B5k/2b4P/6R1/7K/8/8/5n2 b - -
+go depth 7
+ucinewgame
+position fen RB6/7p/2K4P/6kP/2p4n/1r3p2/8/8 b - -
+go depth 7
+ucinewgame
+position fen 5Br1/3k3p/7P/2R1R1pP/2rp1P2/2Np4/6K1/2B5 w - -
+go depth 7
+ucinewgame
+position fen rn1qkbnr/p1p1pp1p/4b3/1p1p2p1/2P5/NQ2P3/PP1P1PPP/R1B1KBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 2b2b1N/7r/rp6/p1k2pq1/PpPpP3/1Q3P1P/3P4/RN2KB1R w KQ -
+go depth 7
+ucinewgame
+position fen 2k5/6br/2bN4/2B5/8/3K4/8/8 b - -
+go depth 7
+ucinewgame
+position fen 1n2k3/rb1p2br/1PQPp1pn/5p2/pP2P3/5NP1/P3K3/RNB2B1R w - -
+go depth 7
+ucinewgame
+position fen 6n1/5k2/1P6/8/3P3P/8/3N2K1/2Q5 b - -
+go depth 7
+ucinewgame
+position fen 2N4R/5k2/p1K5/p7/P7/N1p3N1/8/3n4 w - -
+go depth 7
+ucinewgame
+position fen 4N1k1/5b2/B3R3/6P1/1P6/p5B1/5K2/7R w - -
+go depth 7
+ucinewgame
+position fen 2b1kr2/r2pbp1p/2n3N1/QpP1qP2/PP1p4/4pP2/3NK1BP/R1R5 w - b6
+go depth 7
+ucinewgame
+position fen 8/8/1r3P1k/2p2P2/1rR4P/1b4Pp/8/R6K b - -
+go depth 7
+ucinewgame
+position fen 8/5N2/r3k3/8/8/1P1K1P1p/7P/8 b - -
+go depth 7
+ucinewgame
+position fen 8/5k2/8/N7/6Pb/3p2B1/5K2/8 b - -
+go depth 7
+ucinewgame
+position fen rn4r1/p2Np2p/2p1k3/rBb2p2/5B1P/8/1P3PPR/4K1R1 w - -
+go depth 7
+ucinewgame
+position fen Q7/5k2/p2Pn3/P3p3/P1pb4/2N2K2/8/4RB2 w - -
+go depth 7
+ucinewgame
+position fen 8/N3n2R/b2kP3/P7/6P1/7p/8/1K6 w - -
+go depth 7
+ucinewgame
+position fen 1k6/1p2B2p/3pp3/4QpRP/2pPn3/1R2b3/8/K6B w - -
+go depth 7
+ucinewgame
+position fen 7R/6p1/3q3n/8/4b3/1K4k1/8/8 w - -
+go depth 7
+ucinewgame
+position fen 2r3k1/2q5/1pn1p3/pp1NBp2/P4Pp1/3Q3b/5K2/6N1 w - -
+go depth 7
+ucinewgame
+position fen r4n2/6kp/2p4b/p5PP/5p2/K7/5B2/4R3 b - -
+go depth 7
+ucinewgame
+position fen 2k4r/p2n1p2/1pp1p2b/1n5p/2B2B2/2P2rPb/PP5K/R5NR w - -
+go depth 7
+ucinewgame
+position fen 1r1q1b1r/2n3kb/p2p3p/P1p1pp1R/3P1P2/PQK3p1/6B1/R1B3N1 b - -
+go depth 7
+ucinewgame
+position fen 8/5k2/4R3/2PP4/1K2p3/6p1/8/2r5 b - -
+go depth 7
+ucinewgame
+position fen 2b5/8/4nr1k/P2p1p2/1p3PPp/1P2R2P/3K1n2/8 b - -
+go depth 7
+ucinewgame
+position fen 8/Q1b5/1k2P3/8/8/1K3B2/6P1/8 b - -
+go depth 7
+ucinewgame
+position fen 1n2k3/N1bb4/pp3r1p/1B1ppn2/3p1p1q/PPP1PK1P/3B4/5RNR w - -
+go depth 7
+ucinewgame
+position fen 3k1q2/r5b1/2P4r/1pNppb2/Bp1P2n1/8/6PR/5KB1 b - -
+go depth 7
+ucinewgame
+position fen 1r2kb1r/p3p1pp/n4p1n/1pp5/1QN3PP/2Pp4/PB3K2/RN3BR1 w k -
+go depth 7
+ucinewgame
+position fen 3n4/k5r1/4B3/p3p3/2r3p1/4K1B1/1b6/3N4 b - -
+go depth 7
+ucinewgame
+position fen 6rr/1pp1k2p/5p1n/Q4n2/PP3bP1/2p1B2q/4P2P/3RKbR1 w - -
+go depth 7
+ucinewgame
+position fen r1b2r2/1ppp2k1/nb2p3/pP4p1/P2qp2p/2B1nPPK/QRP4P/1N3BNR b - -
+go depth 7
+ucinewgame
+position fen 1nb3nr/2p1p3/r3k3/ppP2pq1/1P1pP1Q1/N5PP/P2bKP2/R1B2BNR w - -
+go depth 7
+ucinewgame
+position fen r1b1kb1r/1pq1n1p1/2npp2p/p1p2p2/4P2P/2PP1P1N/PP1NB1P1/R1BQ1K1R b kq -
+go depth 7
+ucinewgame
+position fen 7r/5k1b/1p1bpnp1/p6p/qQ1p1PPP/N1B3N1/1P4BR/R4K2 w - -
+go depth 7
+ucinewgame
+position fen r2qk1n1/p2p2p1/1prb2N1/5p2/2bp1PPp/2p1B3/P1Q1P2P/RN2KB1R w KQq -
+go depth 7
+ucinewgame
+position fen 1r2kqr1/2B5/p3pnp1/2p2B1p/P3Pp1P/1P3P2/1RKP4/2B1Rb2 w - -
+go depth 7
+ucinewgame
+position fen 8/3k3p/8/rp3Pp1/4r2P/3n1K2/8/4R3 b - -
+go depth 7
+ucinewgame
+position fen 8/k5b1/2B1P3/8/8/1Q3p2/K5P1/8 w - -
+go depth 7
+ucinewgame
+position fen 1n2rk2/r2b4/1p5p/p2RpN2/P1P1pP1p/8/4P1B1/b3K1nR w - -
+go depth 7
+ucinewgame
+position fen 5k1b/2b5/1p5N/PP6/4K3/8/4R3/5B2 b - -
+go depth 7
+ucinewgame
+position fen r1bq1bn1/ppppp1p1/4k1r1/P4p1p/P3P3/B1P2N2/3P1PPP/RN1QKBR1 w Q -
+go depth 7
+ucinewgame
+position fen 8/6N1/1p6/8/5k2/8/8/3K4 b - -
+go depth 7
+ucinewgame
+position fen 8/8/4n2k/7p/7p/3BP3/1R6/6K1 b - -
+go depth 7
+ucinewgame
+position fen 2r5/3n1k2/p2p4/P1pbp3/R3PP1p/6QN/B2K2P1/3N3R w - -
+go depth 7
+ucinewgame
+position fen 6k1/3Pb3/4r1pr/p3p2p/5P1P/P1pQP3/3B3R/2RNKBN1 b - -
+go depth 7
+ucinewgame
+position fen r6r/1bpk1npp/6P1/pP1N1p2/1b1p2nP/BP1P1pqR/2P1P1B1/Q3RKN1 b - -
+go depth 7
+ucinewgame
+position fen k7/6b1/7N/2b5/3N4/1K6/8/7R b - -
+go depth 7
+ucinewgame
+position fen Bnbqk2r/2pppp2/pp4p1/7p/P2b2Q1/2P1P3/1P1P1PPP/RNB2KNR w k -
+go depth 7
+ucinewgame
+position fen 8/8/1n1k4/Rp4r1/6p1/2K5/r7/8 w - -
+go depth 7
+ucinewgame
+position fen rn1qkbnr/p1p1p2p/4bp2/1p4p1/2p1P3/NQ6/PP1P1PPP/R1B1KBNR w KQkq -
+go depth 7
+ucinewgame
+position fen k4Nr1/8/2n5/6N1/3p4/6b1/7n/3K4 w - -
+go depth 7
+ucinewgame
+position fen 2k1nr2/8/7n/7B/1K6/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/p1pppppp/1p6/8/3P4/4B3/PPP1PPPP/RN1QKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 2K5/8/8/1k5P/3b4/1b6/8/R7 b - -
+go depth 7
+ucinewgame
+position fen rn1qkb1r/3b3p/pp2pp2/1Npp1np1/2B2P2/1PPPP1PP/P4Q2/R1B2KNR b kq -
+go depth 7
+ucinewgame
+position fen 5k2/8/np6/3K2b1/3p4/5p2/8/6n1 w - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/pp1pppp1/2p4n/6Pp/8/3PB2P/PPP1PP2/RN1QKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 8/3K4/6pP/5nk1/2r5/2p2p2/8/8 w - -
+go depth 7
+ucinewgame
+position fen r3kN2/2qb1N2/3P4/pp6/4B1rp/P3Q2P/1P1BPK2/R5R1 b - -
+go depth 7
+ucinewgame
+position fen br4r1/3B2B1/p1p4p/1N5k/1P2P3/3p4/P7/2RK2b1 w - -
+go depth 7
+ucinewgame
+position fen 7k/8/8/1p4n1/8/8/nK6/7b b - -
+go depth 7
+ucinewgame
+position fen r7/n3b1kr/b5p1/pP1PNp2/PP1p1P1p/4P2Q/5KPn/R1B3R1 b - -
+go depth 7
+ucinewgame
+position fen 1rB3nr/q3p3/6Bk/1bp1P3/6pP/6P1/3b1P1K/5RNR w - -
+go depth 7
+ucinewgame
+position fen 5rk1/8/3r4/1p6/3NQ3/Ppb3KB/6n1/8 w - -
+go depth 7
+ucinewgame
+position fen 1B6/1r1N3r/nP3bk1/1b2P3/3K2pP/6P1/2R5/4R3 w - -
+go depth 7
+ucinewgame
+position fen B1k5/8/P4r2/P7/1P5P/3r3K/4N3/6B1 w - -
+go depth 7
+ucinewgame
+position fen 8/8/5P2/p4N2/Pb1K4/5r2/8/4k3 w - -
+go depth 7
+ucinewgame
+position fen rn1qkbr1/1pp1pp1p/4b1p1/p2p4/3Pn1P1/P4Q2/1PPNNP1P/R1BK1B1R b q -
+go depth 7
+ucinewgame
+position fen 3k4/6R1/8/4P3/1NpK3P/5p2/r7/8 w - -
+go depth 7
+ucinewgame
+position fen 8/k7/4P3/8/6B1/2Q5/6P1/1Kb5 b - -
+go depth 7
+ucinewgame
+position fen rn6/p2p2p1/1pp1pqk1/5p2/P2R1n2/N3Pb2/3K1PB1/2BQ2N1 w - -
+go depth 7
+ucinewgame
+position fen 4n3/R7/P1p5/5kp1/r7/1PB5/2N1K3/b4N2 b - -
+go depth 7
+ucinewgame
+position fen 1k6/8/3r1pP1/p1p5/P1P5/1P6/N4K2/R1R5 b - -
+go depth 7
+ucinewgame
+position fen 2r1k3/8/1N6/8/2pB1P1n/7B/1K6/n3R2b b - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/p2ppppp/np6/2p5/1P6/5PP1/P1PPP2P/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 8/6n1/1p1kN3/8/5P2/2K5/8/8 b - -
+go depth 7
+ucinewgame
+position fen 3N3k/B4P2/2r4P/1bn5/3K2p1/6P1/8/4R3 b - -
+go depth 7
+ucinewgame
+position fen 8/3kb2r/5pRp/Bn5P/P4N2/3P4/4K3/8 w - -
+go depth 7
+ucinewgame
+position fen 1n2kb1r/1bB2ppp/r7/1p5n/p1pP3q/1P3P1P/P3P1P1/RNQK1BNR b k -
+go depth 7
+ucinewgame
+position fen 6rk/rp6/n7/2bpp1B1/P6N/1p3qPK/7P/RN6 w - -
+go depth 7
+ucinewgame
+position fen 8/r7/1r6/k7/N2P1K2/P7/R7/8 b - -
+go depth 7
+ucinewgame
+position fen 8/3k3p/8/rpn2Pp1/7P/5K2/4r3/5R2 w - -
+go depth 7
+ucinewgame
+position fen 1r6/3r1b2/2p2k1p/P2p2n1/3PpK2/1P6/2B1R2R/B7 w - -
+go depth 7
+ucinewgame
+position fen 1r1qkbnr/1p1bpppp/1pn5/2p5/2PpP3/P2P2PP/1P1N1P2/R1B1KBNR w KQk -
+go depth 7
+ucinewgame
+position fen 8/p6k/P4n2/qp1p2Q1/3P3p/7P/6R1/B1N3K1 b - -
+go depth 7
+ucinewgame
+position fen 8/8/b1kb2P1/8/8/1p5N/3K1b2/N5R1 b - -
+go depth 7
+ucinewgame
+position fen r2n3r/1bp3pp/1N1k2Pn/pP3p2/1b1ppq1P/BP3P1R/2PPPK2/1Q2RBN1 w - -
+go depth 7
+ucinewgame
+position fen 6n1/2p2r1r/P2k2Pp/P2p4/1n1Pp1bP/1P2K3/BB6/R4qR1 b - -
+go depth 7
+ucinewgame
+position fen N2Qr3/8/6Bk/8/7K/1p5p/8/8 b - -
+go depth 7
+ucinewgame
+position fen 2k1r3/3Rn3/2Pb4/3p1P2/3N4/8/8/3K1n2 w - -
+go depth 7
+ucinewgame
+position fen 1n3r2/1k3p2/1p5b/pPp1p3/B5K1/2n3R1/PN6/2R5 w - -
+go depth 7
+ucinewgame
+position fen 1k6/8/1q1N3n/1QPPp1r1/1KP2R2/5Ppp/8/3R4 b - -
+go depth 7
+ucinewgame
+position fen 6R1/4r2k/3Q3b/p3p2p/PR2PP1P/2N5/4K3/6N1 w - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/p3pppp/np6/2pp4/P1PP4/R2BP3/1P3PPP/1NBQK1NR w Kkq -
+go depth 7
+ucinewgame
+position fen rnbqk1nr/1ppp1p2/p2bp2p/6pQ/8/2N1P2N/PPPP1PPP/R1B1KB1R w KQkq -
+go depth 7
+ucinewgame
+position fen 1nr2k2/1r6/1p5p/p7/b1P1pp1p/6N1/4PKB1/b4RnR w - -
+go depth 7
+ucinewgame
+position fen 4k2r/6pp/5n2/p2p1P2/1bP1N3/7N/2Rp1K1P/1r4R1 w - -
+go depth 7
+ucinewgame
+position fen 5R2/1k2n3/3P1N2/1p6/1p1RK2P/1P6/4q3/7r w - -
+go depth 7
+ucinewgame
+position fen 8/5k2/8/3K4/3Q4/6B1/8/6q1 b - -
+go depth 7
+ucinewgame
+position fen 1r5k/5b2/1p3R1P/1Pnp2B1/6p1/3p2K1/8/1b3B2 w - -
+go depth 7
+ucinewgame
+position fen 3K4/8/2q5/P7/2b2R2/8/7k/8 b - -
+go depth 7
+ucinewgame
+position fen k7/2r5/8/8/2p2K2/2PN4/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/2P2P2/8/1K4kp/p7/7q/8 w - -
+go depth 7
+ucinewgame
+position fen rnb1k2r/p2p1p1p/1p6/6p1/1bP2qP1/1PNPP2n/P2KN2P/R2QB2R b - -
+go depth 7
+ucinewgame
+position fen 3k3r/7R/8/2Pp1P2/p5n1/3K1N1N/3b3P/6r1 w - -
+go depth 7
+ucinewgame
+position fen 5r2/3rk2p/p6P/1pp1p1K1/1PnN4/P6Q/R7/N4Bb1 b - -
+go depth 7
+ucinewgame
+position fen 4r2r/4p3/b4P1k/2p2P2/R5pP/4b1PN/6K1/1q5R w - -
+go depth 7
+ucinewgame
+position fen 1r6/P1pr2Pn/4k2p/P2p3P/3Pp3/1P2K2R/1BB2R2/3b4 b - -
+go depth 7
+ucinewgame
+position fen 2n5/3r4/3b1pRp/3k3P/P7/3P3N/3B4/5K2 b - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/1pppp1pp/2n5/p4p2/2PP4/4P3/PP3PPP/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 1n6/3q1k2/3r4/4KP1p/8/7R/8/8 b - -
+go depth 7
+ucinewgame
+position fen B5r1/7k/8/2n5/8/7K/2bp4/3R4 w - -
+go depth 7
+ucinewgame
+position fen 3Q4/4p2k/Nn1r1P2/p1K4P/8/7p/R7/1r1b3n b - -
+go depth 7
+ucinewgame
+position fen rnb1kbnr/ppq1ppp1/2pp4/7p/B5P1/P3P3/1PPP1P1P/RNBQK1NR b KQkq -
+go depth 7
+ucinewgame
+position fen 8/8/4k3/8/1p1p4/1p6/8/5B1K b - -
+go depth 7
+ucinewgame
+position fen 8/rk6/5pP1/p1pP4/P1P1P1q1/1P3p2/N7/1RBK3R b - -
+go depth 7
+ucinewgame
+position fen 8/4k3/p2R3p/P7/5R2/2Q5/4b3/6K1 b - -
+go depth 7
+ucinewgame
+position fen 4r2r/4p3/b4P1k/2p2P2/7P/1q4Pp/R6K/6R1 w - -
+go depth 7
+ucinewgame
+position fen 4b3/8/7P/8/3k4/r5b1/4p1K1/8 w - -
+go depth 7
+ucinewgame
+position fen q7/4k1r1/p3pnpB/7p/P1pPP2P/1r3P1B/R4K2/2B1R3 w - -
+go depth 7
+ucinewgame
+position fen 6r1/3k1n2/4Nn2/8/8/8/1K6/3B4 w - -
+go depth 7
+ucinewgame
+position fen rn1qk1nr/p1pp2pp/b2b1p2/1p2p3/4P1P1/1QPK3P/PP1P1P2/R1B2BNR b kq -
+go depth 7
+ucinewgame
+position fen 1r1rk2B/p4R2/P1P5/1nPP4/B4b2/N5P1/1P2K2P/2q5 w - -
+go depth 7
+ucinewgame
+position fen 6n1/r2k1b2/p2p4/PR2P3/2p1P2p/2K4N/B5P1/3NQ1R1 b - -
+go depth 7
+ucinewgame
+position fen 4b3/1k6/p7/Pr4B1/8/3p4/8/1R1K4 w - -
+go depth 7
+ucinewgame
+position fen 8/5B1n/6n1/Pk3Pb1/1p1R4/5R1P/8/1K4N1 b - -
+go depth 7
+ucinewgame
+position fen 1n2Bbnr/p1pr1p1p/1p4b1/4k3/3pPpPq/2QP1K1P/P1P5/RNB3R1 b - -
+go depth 7
+ucinewgame
+position fen 5N2/b1R2B2/P5Pk/8/3p4/7P/4p3/2K1N3 w - -
+go depth 7
+ucinewgame
+position fen r3kb1r/pbnpp2p/2p2p2/R6p/1p1PPP2/4BN2/2P1B1PP/1K5R w q -
+go depth 7
+ucinewgame
+position fen 1N6/8/2nk4/4R2K/4P3/5Q2/8/8 b - -
+go depth 7
+ucinewgame
+position fen 4k2r/B1pR1rn1/5p1p/Q7/PP3Rn1/2p4q/4P2P/4K3 w - -
+go depth 7
+ucinewgame
+position fen 1k6/5n2/1p2r3/6p1/1K4P1/1Rpp3N/7P/7b b - -
+go depth 7
+ucinewgame
+position fen r1bqkbr1/p2p2p1/1p2pn2/2n4p/P1pP4/N6P/RPP1P1P1/2BQKBNR b Kq -
+go depth 7
+ucinewgame
+position fen r4bkr/1b2p3/1Nn2pp1/pPpP4/1P3P1p/P3PN1Q/R5Pn/2B1K2R b - -
+go depth 7
+ucinewgame
+position fen 2N2knr/3n3p/p7/p1pP4/P1rb2p1/3RPP2/1q3N1P/2B1KBR1 w - -
+go depth 7
+ucinewgame
+position fen rnbq3r/p2p3k/1p3p2/1Pbpp1pp/3P1N2/P1P4P/3BBK2/2R4R w - -
+go depth 7
+ucinewgame
+position fen r2nk1nr/p3p3/b1qp1p1b/1pp4p/1P3pPP/P1PP1N2/4PP1R/RNQK1B2 w kq -
+go depth 7
+ucinewgame
+position fen rnb1kr2/p2p1p2/1p6/2b3pp/2P2qP1/1PNPP2n/P1RKN2P/1Q2B1R1 w - -
+go depth 7
+ucinewgame
+position fen 6k1/8/8/8/1K3b2/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen k7/bb5P/4N3/8/8/r7/3Kp3/8 w - -
+go depth 7
+ucinewgame
+position fen 2N4k/4q2r/N2p4/1p3n2/P1P3Pp/1P1P1P2/3BQ2P/2K1RB1R w - -
+go depth 7
+ucinewgame
+position fen 3rkbnr/pb2ppp1/np6/2pp4/P1PPBq2/4P3/NP3PPP/R1BQK1NR w Kk -
+go depth 7
+ucinewgame
+position fen r4bnr/1Bq1k1p1/5n2/1pp1pp1P/p2PPPb1/P1P5/1P3Q1P/RNB1K1NR w KQ -
+go depth 7
+ucinewgame
+position fen 7r/6kp/p4n2/pNpPn3/P5P1/2rR3N/1q4BP/2bK3R b - -
+go depth 7
+ucinewgame
+position fen 8/1bp5/1p3N2/1p3p2/1k3P1p/1n5K/8/r7 w - -
+go depth 7
+ucinewgame
+position fen 6k1/8/2n1K2P/1B6/8/8/8/4R3 b - -
+go depth 7
+ucinewgame
+position fen 8/6k1/n7/rb3pP1/1pRp3p/1P4nP/8/2K5 b - -
+go depth 7
+ucinewgame
+position fen 5B1r/5b1k/1p4RP/1Pnp1p2/6N1/1p1p4/6BK/8 w - -
+go depth 7
+ucinewgame
+position fen B4r2/4k2b/n6p/8/6K1/2Bp4/8/R2r4 b - -
+go depth 7
+ucinewgame
+position fen 8/R7/1n1k4/1p4r1/6p1/1K6/6r1/8 b - -
+go depth 7
+ucinewgame
+position fen 5Br1/3k3p/7P/2RpR1p1/3r1P1P/2Np4/6K1/2B5 b - -
+go depth 7
+ucinewgame
+position fen 3n4/4Bk2/PPp2b2/6pN/2r5/N7/5K2/8 w - -
+go depth 7
+ucinewgame
+position fen 3k3r/1R6/2P4n/3p1PN1/8/5NP1/2n1K3/4b3 b - -
+go depth 7
+ucinewgame
+position fen 5k2/pr1R2p1/1p5q/5pn1/P1N1PP1p/1bp4B/1b5P/5K1R b - -
+go depth 7
+ucinewgame
+position fen 5k1b/1n6/P1p5/6p1/1P6/6N1/2NB1r2/3K4 w - -
+go depth 7
+ucinewgame
+position fen 1n1q1br1/1b1kpBp1/2NN1n2/2ppP2p/P2P1p2/Br4P1/2P2P2/2RQK1R1 w - -
+go depth 7
+ucinewgame
+position fen N5nr/bp6/7k/5Ppp/pp1q2PN/2PB3P/P7/R1BK3R w - -
+go depth 7
+ucinewgame
+position fen 5k1r/1n6/8/7n/2B5/2N5/6R1/1K6 w - -
+go depth 7
+ucinewgame
+position fen 6k1/4n3/7P/1B3K2/8/8/8/7R w - -
+go depth 7
+ucinewgame
+position fen rnb1k1nr/2ppbpp1/1p3q1p/pQ6/NP1p1PP1/4B3/P1P1P2P/2R1KBNR w Kkq -
+go depth 7
+ucinewgame
+position fen BN6/8/3Pk2B/pp6/3K2Pp/P7/1P2P3/R7 b - -
+go depth 7
+ucinewgame
+position fen 1r1k3b/R6p/7P/3p4/8/pp4K1/8/8 b - -
+go depth 7
+ucinewgame
+position fen rb6/5b2/1pr5/p1k1P3/PpP1p3/5R1P/3P2R1/1N1K4 b - -
+go depth 7
+ucinewgame
+position fen 1r1k1bnN/8/3p4/1q1Pp1p1/2R2pBP/3n1P2/4K1R1/8 b - -
+go depth 7
+ucinewgame
+position fen 2k5/4n3/5P2/2bb4/3p1bP1/3K2NP/8/1B6 b - -
+go depth 7
+ucinewgame
+position fen r1b1kb1r/ppnpp1pp/2p2p1Q/8/1q1PPP2/4B3/2P1B1PP/RN1K2NR w q -
+go depth 7
+ucinewgame
+position fen 2k2r2/6p1/6p1/r6P/1P1PP3/8/3K4/3n2N1 b - -
+go depth 7
+ucinewgame
+position fen r1bqkb2/p1pppprp/6pn/1p2n3/2PP2Q1/N7/PP2PPPP/R1B1KBNR b KQq -
+go depth 7
+ucinewgame
+position fen rnbq1b1r/pp1pp3/2p2pkp/1P4p1/3Pn1Q1/P1NN3P/2P5/R1B1KB1R w KQ -
+go depth 7
+ucinewgame
+position fen 5k2/1pB5/r7/3pp1K1/R7/6Pr/1p5P/nN2N1b1 b - -
+go depth 7
+ucinewgame
+position fen 8/7k/3R3p/3p2pn/pp1P4/2Q2Kp1/2P5/6R1 b - -
+go depth 7
+ucinewgame
+position fen 8/3k1p2/r7/p1Brp1Rp/1b6/p1PN3b/R2K1P1P/7B b - -
+go depth 7
+ucinewgame
+position fen 1r2kbnr/p2bp3/2qp1pp1/1pP4p/2PPN2P/4P1P1/P4P2/RNB1KB1R w KQ -
+go depth 7
+ucinewgame
+position fen rn1qkbnr/1b1pp1pp/p1p2p2/6P1/2P5/7B/PP2PP1P/RNBQK1NR w KQkq -
+go depth 7
+ucinewgame
+position fen 2R5/2b2b2/8/4k3/8/8/5r2/4n1K1 b - -
+go depth 7
+ucinewgame
+position fen 1r1rk2B/p4R2/P1P5/1nPPb1q1/B7/N5P1/1P5P/4K3 b - -
+go depth 7
+ucinewgame
+position fen 1r1k1b2/8/p2pQ3/Pnp5/3P4/P2K1Bp1/3B4/R5NR w - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/p1p1pp2/1p6/1n1p2pp/4PP2/2P4P/PP1N1KPR/R1BQ1BN1 b kq -
+go depth 7
+ucinewgame
+position fen 5r1k/8/3rB3/1p6/3NQ3/Ppb5/6K1/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/1k6/1p6/8/K3n1p1/4r3/8 b - -
+go depth 7
+ucinewgame
+position fen 5b2/8/8/Pk2p3/2b4p/2P1Pr2/1Bn5/1K5N b - -
+go depth 7
+ucinewgame
+position fen 8/8/4b3/k3p2N/8/b1PB3p/2n5/1K6 b - -
+go depth 7
+ucinewgame
+position fen rB5r/pp4k1/5n2/3qp1pp/Pb3p2/1P1P3b/R2QPPP1/1N2KBNR b K -
+go depth 7
+ucinewgame
+position fen r3k1n1/4b3/BB3npq/5p1r/pP2PP1P/2P5/R3R3/1N2K3 w - -
+go depth 7
+ucinewgame
+position fen 5k2/8/2r1Br2/Pp6/3N4/1p4Q1/1b4K1/8 w - -
+go depth 7
+ucinewgame
+position fen r2bk1r1/p1p3pp/n2p1p2/1N2P1B1/P3P1b1/2P5/1P3PPQ/2R2KNq w q -
+go depth 7
+ucinewgame
+position fen r1b1kbnr/1p1p3p/6p1/pqp2p2/1n2PB2/P7/2PQKPPP/R4BNR w kq -
+go depth 7
+ucinewgame
+position fen 8/b7/8/p4P2/P3r2N/8/8/1K4k1 w - -
+go depth 7
+ucinewgame
+position fen r1bqkb1r/pppppp1p/2n3pn/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen bk4r1/3r2N1/p1p1R1P1/Pp1n3P/1P6/1P3B1P/8/1rB1K3 w - -
+go depth 7
+ucinewgame
+position fen 1rb3rk/1p6/n7/Bqbpp1p1/P1p3Qp/5NPK/2P3nP/RN3R2 w - -
+go depth 7
+ucinewgame
+position fen 8/6r1/p4P1p/P3k2P/1b4R1/1b1p2P1/3R4/4K3 b - -
+go depth 7
+ucinewgame
+position fen rN2k3/5N2/3P4/pp6/4B2p/P3K2P/1P1BP3/R5r1 b - -
+go depth 7
+ucinewgame
+position fen Rr6/2k1b3/5r2/p4p2/4p2p/R1P4B/5P1P/2N1K3 w - -
+go depth 7
+ucinewgame
+position fen k5nr/4r3/8/np1P2Pp/1p1Pq2P/1P1N1N2/6K1/6RR w - -
+go depth 7
+ucinewgame
+position fen rnb2br1/pp5p/4pk2/4npp1/P1PQ1BPP/2P1N2N/4PP2/1R2KB1R b K -
+go depth 7
+ucinewgame
+position fen 6n1/2p1k2r/P1r4p/P2p1ppq/1n1P1P1P/1P1bP3/3KR3/RBBN4 w - -
+go depth 7
+ucinewgame
+position fen r1r4k/1pP1n3/1P2p1p1/5p1p/R4P1P/6b1/2K5/7b w - -
+go depth 7
+ucinewgame
+position fen 4n3/4p1n1/8/p2k3p/P1p1N2r/Rr2p3/1b1pB1K1/1NB5 w - -
+go depth 7
+ucinewgame
+position fen 5b2/r1B5/nP6/pP2P1k1/2P3p1/1N1bK1P1/3r2BP/1R5R b - -
+go depth 7
+ucinewgame
+position fen 1nbqkb1r/2pppppp/rp5n/p7/3PP3/5N2/PPPN1PPP/1RBQKB1R b Kk -
+go depth 7
+ucinewgame
+position fen r1bqk1n1/p2p1pp1/nprb4/3Np3/3P2Pp/2p1BP1B/P3P2P/RN1QK2R w KQq -
+go depth 7
+ucinewgame
+position fen 5N2/b7/8/p4P2/P7/8/4r3/1K4k1 b - -
+go depth 7
+ucinewgame
+position fen 8/8/7r/k7/3Kb1p1/8/8/1r6 b - -
+go depth 7
+ucinewgame
+position fen 1r6/p1p3pP/2r1P1k1/P1n3P1/2Rb4/1P1b2N1/3K1N2/8 w - -
+go depth 7
+ucinewgame
+position fen 8/3kb2r/7p/Bn3p1P/P4N2/3P4/4K3/5R2 b - -
+go depth 7
+ucinewgame
+position fen 5k2/6p1/3K4/7R/P3pP1p/1b4qn/3N3P/7q b - -
+go depth 7
+ucinewgame
+position fen 8/k7/8/3B2b1/1K6/5rp1/8/8 b - -
+go depth 7
+ucinewgame
+position fen K6k/8/8/1PnN4/8/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 3N4/8/3p1P1R/1b6/5kn1/6n1/1K5p/8 b - -
+go depth 7
+ucinewgame
+position fen b5r1/1k1r2N1/p1p2nP1/Pp5P/1P2R3/1P3B1P/8/1rB1K3 b - -
+go depth 7
+ucinewgame
+position fen 1n4nr/p2r1B1p/1p5b/2p1B1kb/3pP1Pq/2QP1K1P/P1P5/RNR5 w - -
+go depth 7
+ucinewgame
+position fen rn3rk1/1b5p/1p2p3/p1P3b1/P1P1pP1p/5n2/1Q2PKN1/3R1BBR b - -
+go depth 7
+ucinewgame
+position fen 2kNnb2/8/3p4/3P1bp1/prP2PPp/4K2P/p1NR4/6RB w - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/pppppp2/8/6pp/3n1P2/2P4P/PP1NP1P1/R1BQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/pppppppp/n7/8/6Q1/4P3/PPPP1PPP/RNB1KBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 8/2R5/8/6kp/7p/4P2n/7K/1B6 w - -
+go depth 7
+ucinewgame
+position fen 6N1/8/2B1Pk2/Pp3P1K/1B2b1P1/n7/7R/8 b - -
+go depth 7
+ucinewgame
+position fen 6nr/3k1p1p/N1r1p1pb/7P/b1p1PqP1/B4P2/PQ1P1K1R/R7 b - -
+go depth 7
+ucinewgame
+position fen 4rbkr/3P4/6p1/p2np2p/2pQ1P1P/P3P3/5K1R/R1BN1BN1 b - -
+go depth 7
+ucinewgame
+position fen 6b1/r1k5/2NR4/8/p2p1K2/P2P4/3r4/4N3 b - -
+go depth 7
+ucinewgame
+position fen 5R2/8/4k2p/rp5r/6p1/n3K3/8/8 b - -
+go depth 7
+ucinewgame
+position fen 1r6/8/R4P1k/2p2P2/1rR4P/1b4Pp/7K/8 w - -
+go depth 7
+ucinewgame
+position fen k5N1/2B2n1p/P1b5/2qp4/6n1/3p3K/8/8 w - -
+go depth 7
+ucinewgame
+position fen 2R4r/1k6/1p2R3/pP2pp2/8/b5K1/PN6/1n1B4 b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/ppp1p1pp/8/3p1p2/N4PP1/P2P3P/1PP1PK2/R1BQ1BNR b kq -
+go depth 7
+ucinewgame
+position fen 6n1/2p1k2r/P2r3p/P2p1pP1/1n1PP2P/1P2K2b/B7/R1BqR3 b - -
+go depth 7
+ucinewgame
+position fen 3R1n2/7p/r4k1P/p1p4P/K4p2/8/8/4B3 w - -
+go depth 7
+ucinewgame
+position fen rnb1kb2/p2p3r/7p/1pNppppP/2q5/P7/1PPBPPP1/R1Q1KBNR w Qq -
+go depth 7
+ucinewgame
+position fen rnb1kb1r/1p1p1ppp/p1p2n2/4p3/P5P1/1qB1P3/2PPNP1P/RN1QKB1R b KQkq -
+go depth 7
+ucinewgame
+position fen 1rbkr3/p1p1p2p/Qpqn3b/1B1pP1p1/1PPn1pP1/3P1P2/PN1B3P/2R1K1NR w - -
+go depth 7
+ucinewgame
+position fen 3r4/n7/3P1kp1/pP3p1r/P1b2P1p/b2pP1Q1/6Pn/3RK1R1 w - -
+go depth 7
+ucinewgame
+position fen 1n4K1/8/2k5/2p1n3/2PpP2b/3P4/8/1b6 b - -
+go depth 7
+ucinewgame
+position fen 5k2/1n6/P1p2b2/6p1/1P6/N7/3B1r2/3K1N2 b - -
+go depth 7
+ucinewgame
+position fen bn3k2/8/3n4/B1p5/P1PpP1KN/1p1Pb3/8/8 w - -
+go depth 7
+ucinewgame
+position fen 7R/1N6/3p1P1k/8/1K4n1/r4b2/7p/7n b - -
+go depth 7
+ucinewgame
+position fen 4N3/1B3kBb/4R3/1p2p1P1/1P4R1/p7/8/6K1 w - -
+go depth 7
+ucinewgame
+position fen Q7/b4k2/p3n3/P2Pp3/P1p5/2N2K2/8/4RB2 b - -
+go depth 7
+ucinewgame
+position fen k7/4r3/8/8/2pK4/2P5/1N6/8 w - -
+go depth 7
+ucinewgame
+position fen 4kr2/4r2p/7P/ppp5/1Pn1p3/P1b3K1/3R4/N4B1Q b - -
+go depth 7
+ucinewgame
+position fen 1N6/3r4/4k3/1pK1PN2/R6P/2P2p2/8/8 w - -
+go depth 7
+ucinewgame
+position fen rnbq1r1k/2ppn2p/1p1b2p1/p3ppB1/1PP4P/1N1P1R2/P3PPP1/R2QKBN1 w Q -
+go depth 7
+ucinewgame
+position fen 2r5/1k6/1B6/5Ppp/Pq5P/8/1R4KR/8 b - -
+go depth 7
+ucinewgame
+position fen 1r2Nrk1/np2p1b1/1p3pp1/1qpn3p/PP5P/1R1P1PPb/4B3/3KR3 b - -
+go depth 7
+ucinewgame
+position fen q1r5/p3n1p1/P1bpR3/1pP2P1k/1B1P3p/2Q4P/1R3N2/5K2 b - -
+go depth 7
+ucinewgame
+position fen 3n2k1/8/4p1b1/1p2P2p/Q6P/4P3/8/2N1K2B b - -
+go depth 7
+ucinewgame
+position fen 3nrbnr/ppp1k2p/3p1p2/4pq2/P1P3b1/BP4PN/3PPP1P/RNQ1KB1R b K -
+go depth 7
+ucinewgame
+position fen 2b2kn1/r7/1n1P1N2/1P3P2/p5p1/PN2K3/1r6/2R1b3 b - -
+go depth 7
+ucinewgame
+position fen r1b1kb2/3pp1rp/1qp2ppn/pp1P4/2P1P1Q1/NP6/P3NPPP/R1B1KB1R b KQq -
+go depth 7
+ucinewgame
+position fen 3b2R1/2B4n/2r1k1p1/7r/1P3p1P/p1P5/2N5/2R3K1 w - -
+go depth 7
+ucinewgame
+position fen 8/3N4/8/3k4/8/rP3P1p/7P/2K5 w - -
+go depth 7
+ucinewgame
+position fen 6N1/6k1/P3P3/1p3P1K/1B2B3/8/7R/1n6 b - -
+go depth 7
+ucinewgame
+position fen 5kB1/P4r2/P7/1P6/3N3P/8/6K1/6B1 w - -
+go depth 7
+ucinewgame
+position fen rnb1kbnr/pp2q1p1/2pp1p1p/4p3/P4B2/1P1P2P1/R1P1PP1P/1N1QKBNR w Kkq -
+go depth 7
+ucinewgame
+position fen b1r3n1/p2k4/2qN3P/2P1p3/p1P2p1p/3PRPp1/1K3P2/3QRB2 b - -
+go depth 7
+ucinewgame
+position fen 1nb1kr2/r1Q1bp2/3p2Np/1PP2P2/RP6/3p1P2/3pK1Bq/2R5 w - -
+go depth 7
+ucinewgame
+position fen rnbqk1nr/ppppp1bp/5pp1/3N4/8/5P2/PPPPP1PP/R1BQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 3qkbnr/1rp4b/p2p3p/PN2pp2/3P3p/P4PP1/5KB1/R1B2QNR b k -
+go depth 7
+ucinewgame
+position fen 1r3b1R/1Bn5/p2p1k2/P1p2p2/3P1p2/Pb1K2p1/3B3q/R2Q2N1 w - -
+go depth 7
+ucinewgame
+position fen 3k2nr/p2B3r/n5Q1/Pqbp3p/1p1PP2P/1P3PP1/R3N3/1N3K1R b - -
+go depth 7
+ucinewgame
+position fen rnk5/1b1p2b1/1P6/pP2p1pr/2PpPP2/B5Pp/3N3P/1R2KB1R b - -
+go depth 7
+ucinewgame
+position fen 8/r7/4N3/p1b2P2/P7/8/3K3k/8 b - -
+go depth 7
+ucinewgame
+position fen 5q2/3Bk3/3p3n/3PNPb1/4pr1R/8/7p/2n1K3 w - -
+go depth 7
+ucinewgame
+position fen 1k2r3/8/PpB3P1/2R5/2P5/6p1/8/3K2N1 b - -
+go depth 7
+ucinewgame
+position fen 8/2N2r2/4N2k/p2K1p2/P4P2/6p1/8/8 b - -
+go depth 7
+ucinewgame
+position fen 6r1/5b1k/1p1B2RP/1Pnp1p2/6N1/1p1p3K/6B1/8 b - -
+go depth 7
+ucinewgame
+position fen 8/4k3/8/3p1p2/p4Qb1/6P1/3B1bP1/3R1K2 b - -
+go depth 7
+ucinewgame
+position fen 1k3b2/4Q3/4b3/2p3NP/2Bp4/P1P3P1/2N1KP2/3r3R b - -
+go depth 7
+ucinewgame
+position fen r1b1kbnr/1p1p3p/6p1/p1p2p2/2q1PB2/P4N2/4KPPP/R1Q2B1R w kq -
+go depth 7
+ucinewgame
+position fen 2rk2nN/6b1/3p4/1q1PpB2/R4p1p/3n1P2/4K1R1/8 b - -
+go depth 7
+ucinewgame
+position fen rb6/r6b/8/p1p1P3/P1N4P/1p1kp3/3P3R/3K4 w - -
+go depth 7
+ucinewgame
+position fen R2q4/p7/nkB1PQ2/8/1P4p1/2P5/2KR2Pb/8 w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/ppppppp1/7p/8/8/4P2N/PPPP1PPP/RNBQKB1R b KQkq -
+go depth 7
+ucinewgame
+position fen 1r1b4/1k6/1p3R2/1P3p2/B1n5/3Np1K1/P7/3R4 b - -
+go depth 7
+ucinewgame
+position fen k7/8/8/8/7b/3n4/2B5/5K2 w - -
+go depth 7
+ucinewgame
+position fen r1bqk1nr/p2p3p/n6b/p1pPpP2/6p1/P7/1PP1PP1P/RNB1KBNR w KQkq -
+go depth 7
+ucinewgame
+position fen bb2N2r/8/1q1n4/p4B1k/2P1PP1p/3K4/P7/1Rr5 b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/1p1p2p1/4p2p/p1p2p2/7P/2P2P1N/PP1PP1P1/RNBQKB1R w Qkq -
+go depth 7
+ucinewgame
+position fen 8/8/8/2BN4/5Pkp/R1r3p1/5RK1/8 w - -
+go depth 7
+ucinewgame
+position fen 1r3b1R/1Bn3k1/p1bp4/P1p2p2/3P1p2/PK4p1/3B3q/RQ4N1 w - -
+go depth 7
+ucinewgame
+position fen b3r3/1k1B4/8/3p1np1/P2P3p/8/1KQ5/8 w - -
+go depth 7
+ucinewgame
+position fen 5nk1/7p/r1p4b/p5PP/K4p2/3R4/5B2/8 w - -
+go depth 7
+ucinewgame
+position fen 8/5n1k/8/8/7p/1P1K3p/8/7R w - -
+go depth 7
+ucinewgame
+position fen rn3k2/p6p/2p2B2/1r3p2/1P3bPP/8/1K3PRR/8 b - -
+go depth 7
+ucinewgame
+position fen 1n1K4/3b4/8/1kp5/3q4/8/1B6/8 w - -
+go depth 7
+ucinewgame
+position fen 8/p6k/P7/1p1p4/3P2Qp/7P/3qN3/B2R2K1 b - -
+go depth 7
+ucinewgame
+position fen 2r5/k4N2/5P1r/8/2p5/2P2K2/8/4N3 b - -
+go depth 7
+ucinewgame
+position fen k7/3N4/1R6/1Kn3p1/8/2pp4/7P/8 w - -
+go depth 7
+ucinewgame
+position fen 8/2k5/2b5/3B4/P2n2pp/2Q5/4r3/2K5 b - -
+go depth 7
+ucinewgame
+position fen 2R5/p1k5/n1pqP2Q/1pb5/1P4p1/2P5/2KRB1P1/8 b - -
+go depth 7
+ucinewgame
+position fen r1bn3r/p1pk1ppp/7n/1P1N3q/1b1pp1PP/BP3P1R/Q1PPPK2/R4BN1 b - -
+go depth 7
+ucinewgame
+position fen 3b3Q/2Pk4/n7/7p/3p3P/6B1/8/1rRK4 w - -
+go depth 7
+ucinewgame
+position fen 1rbQ2n1/8/1N2k1p1/pP1p1p2/Pn3P1P/3p3R/3BP3/2R1KBN1 b - -
+go depth 7
+ucinewgame
+position fen 5k2/rp6/P4B1r/R2pp1K1/8/1n4P1/1p3b1P/1N2N3 w - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/ppppp1p1/2n2p1p/8/4PP2/7P/PPPP2P1/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 8/2p5/1p4P1/1pk2p1p/4bP2/4n2K/r2N4/8 b - -
+go depth 7
+ucinewgame
+position fen 4Qr2/p1q2r2/8/4pk2/PB4pp/1PnPpP1N/1RK3P1/1N3B1R w - -
+go depth 7
+ucinewgame
+position fen 3k4/8/1n3n2/1P1P4/3P3P/2p3Rr/5K1B/1N4Q1 b - -
+go depth 7
+ucinewgame
+position fen 2bq1b2/4k3/1p3ppr/2pp1Q1N/3p3P/2P5/PpN2PP1/1RB1KBR1 w - -
+go depth 7
+ucinewgame
+position fen 6n1/4br2/1r2kp1p/pp4BP/P5P1/N2P1P2/2p3BK/6R1 b - -
+go depth 7
+ucinewgame
+position fen 5bk1/3n1b1r/1p1p2Bp/Pp4pP/3P2p1/1R1QKR2/2P4N/8 w - -
+go depth 7
+ucinewgame
+position fen r2qk1n1/p2p1pp1/bprb4/3N4/1n1p1PPp/2p1B3/P2QP2P/RN2KB1R w KQq -
+go depth 7
+ucinewgame
+position fen 4k3/8/8/2K1PR2/1N5P/2p2p2/4r3/8 w - -
+go depth 7
+ucinewgame
+position fen rn3bkr/1bqpp3/p7/2p2p1p/P2P4/2N1P1p1/1p2NPPP/R1K1QB1R w - -
+go depth 7
+ucinewgame
+position fen 8/8/8/2BN4/5Pkp/1R4p1/5RK1/4r3 b - -
+go depth 7
+ucinewgame
+position fen 8/2N1r3/7k/8/Qp5K/3B3p/8/8 w - -
+go depth 7
+ucinewgame
+position fen rn4r1/p2kpn1p/B1p2b2/4Bp2/3P4/5N2/PP2KPPP/R1r4R w - -
+go depth 7
+ucinewgame
+position fen r1q4r/pbpk1pbp/3p3n/Pp2p3/2QPP3/4B1PN/1PP1BP1P/nN1K3R w - -
+go depth 7
+ucinewgame
+position fen k7/4n3/1q1PK2N/rp5R/1p5P/1PR5/8/8 b - -
+go depth 7
+ucinewgame
+position fen 3k4/pr4Q1/b2p3p/P4P1P/1bB5/3p2pR/2PR2P1/3K4 b - -
+go depth 7
+ucinewgame
+position fen 3b4/5rk1/6p1/p3p2p/P1r1PP1P/8/Q2pK2R/1R1N2N1 b - -
+go depth 7
+ucinewgame
+position fen 3knr2/8/7n/7B/K7/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1k6/5N2/3R4/2b1b3/8/1K3N2/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1B3k2/6r1/7r/1p1ppK2/5N2/Rn4P1/1p6/1N4b1 b - -
+go depth 7
+ucinewgame
+position fen 6N1/8/3pk2n/6n1/2B1p3/8/1q6/3K4 b - -
+go depth 7
+ucinewgame
+position fen k4Nnr/1n6/4K3/1p1P2Pp/1p1P3P/rP3q2/8/6RR b - -
+go depth 7
+ucinewgame
+position fen 5k2/8/np6/8/8/4Kp2/3b4/6n1 w - -
+go depth 7
+ucinewgame
+position fen rn1qkbnr/2p2p1p/pp1p4/4p1p1/4b3/1P3PPP/P1PP4/RNBQKBNR w KQk -
+go depth 7
+ucinewgame
+position fen 8/4k3/8/1Pn5/5B2/8/5K2/1b6 b - -
+go depth 7
+ucinewgame
+position fen 8/2Pk4/5bp1/2R3rp/3pQ2P/1nR3B1/8/3K4 b - -
+go depth 7
+ucinewgame
+position fen 1n3b1r/5k1p/3Q4/ppp4b/P2pP1n1/3P4/2P1K2B/RN6 w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/1p1p1ppp/p1p5/4p3/P7/1P6/1BPPPPPP/RN1QKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 1rbk3r/1p1p1Q2/p1Bb1n2/q3P2p/5p1P/1PP1PP2/P2K2P1/RN4NR b - -
+go depth 7
+ucinewgame
+position fen rR6/2b3k1/4b3/1P1Np2r/p4P1P/2n2R2/2K5/2B5 b - -
+go depth 7
+ucinewgame
+position fen 2k5/8/2b5/3p4/P2n2pp/2Q2B2/1K2r3/8 w - -
+go depth 7
+ucinewgame
+position fen 4n3/R7/P1p1k3/6p1/r7/1PB3N1/2NK4/b7 w - -
+go depth 7
+ucinewgame
+position fen 8/8/8/k3pb1N/8/b1P5/2B4p/1K6 w - -
+go depth 7
+ucinewgame
+position fen 5k2/1N3r2/p4b2/p1p5/P7/N1n4P/5R2/5K1N b - -
+go depth 7
+ucinewgame
+position fen rnb1kbnr/p1p3pp/1p2pq2/3p1p2/PP4P1/5P1P/2PPP3/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 8/8/4k3/8/1p1p4/8/6B1/1b5K w - -
+go depth 7
+ucinewgame
+position fen 1n2k3/r1Q1bp2/b2p3p/1PP1NP2/1P6/R2p1Pr1/3p1KBq/2R5 w - -
+go depth 7
+ucinewgame
+position fen 6n1/1k6/8/b1pbbP2/2R3Pp/p3K2P/6R1/1B1N4 w - -
+go depth 7
+ucinewgame
+position fen 3rk1r1/2p1ppbp/nN3npB/pp1p2q1/1P1P2b1/P1P2Q2/5P1P/1RN1KB1R b - -
+go depth 7
+ucinewgame
+position fen rn4n1/4b2r/p2ppk1p/1b1P1pp1/1P2P2P/p2R2P1/2K1NP2/1N2B2R b - -
+go depth 7
+ucinewgame
+position fen r1b1k3/1p1qbppr/n1p1p2n/3p3N/Pp5P/3P1P2/2P1P3/RNBQKB1R w KQ -
+go depth 7
+ucinewgame
+position fen 5kr1/8/B3nn2/2N5/8/8/1K6/8 w - -
+go depth 7
+ucinewgame
+position fen 8/p3k3/P4q2/1N1p4/3P3p/1K5P/8/B7 b - -
+go depth 7
+ucinewgame
+position fen r4qnr/p1p1kp2/1b4pp/Qp1p2P1/PnPP3P/1B2P2b/1P3P1R/R1BNK3 w Q -
+go depth 7
+ucinewgame
+position fen 1n6/rb2B1b1/1P4k1/pP2pr2/2P1P1p1/1N2K1P1/1R4BP/7R w - -
+go depth 7
+ucinewgame
+position fen 8/8/1k2P3/4b3/Q3B3/1K3p2/6P1/8 b - -
+go depth 7
+ucinewgame
+position fen 1r1k4/2R4p/7P/3p4/8/pp4K1/8/b7 w - -
+go depth 7
+ucinewgame
+position fen 1r4r1/1bNB2B1/p1p3kp/8/1P2P3/3p4/P7/2RK2b1 b - -
+go depth 7
+ucinewgame
+position fen r7/n3k1b1/p2p4/P1pP4/2K5/P6N/3BB2R/6Q1 b - -
+go depth 7
+ucinewgame
+position fen 2k3nr/p4p2/1pp1pP1b/1n5p/8/1BPr2PP/PP1N1K1R/R1Bb2N1 w - -
+go depth 7
+ucinewgame
+position fen 8/1b6/2kb4/2P3P1/8/1p1K3N/8/N3R1b1 b - -
+go depth 7
+ucinewgame
+position fen r1b1kbnr/p3pp2/1pp2P2/1n4pp/4N3/2Pq3P/PP3KPR/R1BQ1BN1 b kq -
+go depth 7
+ucinewgame
+position fen 3b4/1r4k1/6p1/p3p2p/P2rPP1P/8/3QK2R/1R1N2N1 w - -
+go depth 7
+ucinewgame
+position fen 2n5/8/6kB/1KN5/6p1/6PR/2b5/r7 w - -
+go depth 7
+ucinewgame
+position fen rn5r/ppp2k2/1B3n2/3qp1pp/Pb3p2/1P1P3b/R2QPPP1/1N2KBNR w K -
+go depth 7
+ucinewgame
+position fen 1r6/R6p/2K4P/6kP/2p4n/5p2/8/8 w - -
+go depth 7
+ucinewgame
+position fen 7r/k7/6p1/p3p2p/PRr4P/3pnP2/5K1R/4B3 b - -
+go depth 7
+ucinewgame
+position fen 1r5B/p1p3p1/2r1P1k1/P5P1/n1Rb4/1P1N2N1/3K4/8 b - -
+go depth 7
+ucinewgame
+position fen r1bn3r/p1pk1ppp/7n/1P1N4/1b1ppqPP/BP3P1R/Q1PPPK2/4RBN1 w - -
+go depth 7
+ucinewgame
+position fen 4n3/k7/6r1/p3p2p/2B3N1/5K2/1b5B/1N1r4 b - -
+go depth 7
+ucinewgame
+position fen B7/6k1/1P4P1/pR6/8/1K6/5r2/8 b - -
+go depth 7
+ucinewgame
+position fen 4r3/8/3K4/1k6/1r4p1/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/1b6/1k6/8/6pp/2K5/8/r7 b - -
+go depth 7
+ucinewgame
+position fen r7/3kN3/N7/1pK1P3/2P2R1P/5p2/8/8 w - -
+go depth 7
+ucinewgame
+position fen 8/2kb2b1/8/7R/8/6N1/2K5/N3b3 b - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/pppp1p1p/4pn2/6p1/5B2/NP1P2P1/P1P1PP1P/R2QKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 4Nkb1/8/B3R3/6P1/1P6/p5B1/6K1/7R w - -
+go depth 7
+ucinewgame
+position fen 4q3/4bk1b/1pr1pnpr/p1pP3p/P2P1PPP/1QN3NR/1P1B2B1/R4K2 w - -
+go depth 7
+ucinewgame
+position fen rn2k1nr/p1pp1pp1/bp5p/6q1/1b1p1PP1/2N1B3/PPP1P2P/2RQKBNR b Kkq -
+go depth 7
+ucinewgame
+position fen r3qbn1/4k1p1/B4n2/1p3p1r/p1ppPP1P/P1P1Q3/1P2b3/RNB1K2R b KQ -
+go depth 7
+ucinewgame
+position fen 2b5/8/5r1k/P2p1pn1/1p3PPp/1P2R2P/3n4/2K5 b - -
+go depth 7
+ucinewgame
+position fen 4k2r/6pp/2p2n2/p2B1P2/1bP5/2Np3N/2R2K1P/1r4R1 b - -
+go depth 7
+ucinewgame
+position fen k7/4r3/8/8/2pK4/2P5/8/6N1 w - -
+go depth 7
+ucinewgame
+position fen k7/3K4/8/6n1/6p1/8/7r/8 w - -
+go depth 7
+ucinewgame
+position fen 1r1k1bnr/pp1b1pp1/B2p1q1p/2p1p2Q/P3P1P1/2PP3P/1P1K4/RNB3NR b - -
+go depth 7
+ucinewgame
+position fen rnb2bnr/ppppkpp1/4p2p/8/P1PPP3/1P4q1/3K1PPP/RNBQ1BNR w - -
+go depth 7
+ucinewgame
+position fen 2Bk4/2N4N/1Q6/P2pb1P1/1R5p/2r1p2P/4K1R1/8 b - -
+go depth 7
+ucinewgame
+position fen 5b2/r2q1k1b/1pp1pnpr/p2P3p/5PPP/1QNP2NR/PP3KB1/R1B5 b - -
+go depth 7
+ucinewgame
+position fen 3r1bk1/1p2p2p/3p3n/1R4p1/2P1pPb1/6PN/3K3P/B4B1R b - -
+go depth 7
+ucinewgame
+position fen 1r4nr/2p1kpq1/pQ4pp/1p1p2P1/PnPP3P/1B2P2b/1P2KP1R/R1BN4 w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pp1pp2p/2p5/3B1pp1/4P3/5P1P/PPPPN1P1/RNBQK2R w KQ -
+go depth 7
+ucinewgame
+position fen 8/3n1k2/8/7P/3P4/N3K3/8/6Q1 b - -
+go depth 7
+ucinewgame
+position fen 1R6/8/2nk4/2p2K2/2PpP1nb/3P4/8/1b6 b - -
+go depth 7
+ucinewgame
+position fen 8/8/4k3/7B/1p1p4/8/8/7K b - -
+go depth 7
+ucinewgame
+position fen b7/5K2/8/2r4k/8/2p3b1/1n6/2r4n w - -
+go depth 7
+ucinewgame
+position fen rn1qk1r1/p2p4/b1p2ppp/1p1Q1n2/1P2PpP1/1P5P/P1KPN2R/R1B2B2 w q -
+go depth 7
+ucinewgame
+position fen 5N2/4k3/B3n3/1r6/P2P4/1Pp2P1p/7P/K2Q3R w - -
+go depth 7
+ucinewgame
+position fen r4br1/1k2p3/2p2npp/PpnQ4/P5b1/2PPP1qP/5P2/RNB1KB2 w Q -
+go depth 7
+ucinewgame
+position fen 7r/8/2np1npb/pRp4k/P1p1br2/5P2/3K2BP/8 b - -
+go depth 7
+ucinewgame
+position fen r4bk1/p1qb2p1/1p1pp2r/1Pp1P1Rp/P1K2P1P/6B1/2P1P1B1/RNnQ2N1 w - -
+go depth 7
+ucinewgame
+position fen 8/8/8/1k4P1/R1b4P/8/1K6/8 b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/p1pp1pp1/1p5p/4p3/3P4/2N1B3/PPP1PPPP/R2QKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 1rb2kn1/Np5r/p2p1q2/2N5/PBP2p1p/3PPP1Q/1P4PP/3RKB1R b - -
+go depth 7
+ucinewgame
+position fen R7/p7/1kBqP2Q/8/1P3bp1/3R4/2K3P1/8 w - -
+go depth 7
+ucinewgame
+position fen 1n2rQk1/7p/rpb1pb2/p4N2/P1P1pP1p/5n2/4PK2/4RBBR b - -
+go depth 7
+ucinewgame
+position fen 6k1/rp6/n4B2/2bpp3/P4r1N/1p4PK/7P/RN6 w - -
+go depth 7
+ucinewgame
+position fen 6nr/2pbp2B/Br5k/4P3/1b4pP/q5P1/5P1K/3R2NR b - -
+go depth 7
+ucinewgame
+position fen 2r5/7k/2B4r/6np/p6p/3pP3/8/bR4K1 w - -
+go depth 7
+ucinewgame
+position fen k5nr/4r3/8/np1P2Pp/1p1P3P/RP2KN2/8/1qN4R w - -
+go depth 7
+ucinewgame
+position fen rn1qk1r1/p2pn3/b1p2ppp/1p1Qp3/1P2P1P1/1P5P/P1KPNP1R/R1B2B2 b q -
+go depth 7
+ucinewgame
+position fen r4Nk1/2n5/8/1B6/P2P4/KPp1QP1p/7P/7R w - -
+go depth 7
+ucinewgame
+position fen 1r3kn1/p1rp2p1/1p2b3/4NpP1/3q1P1p/2pQ4/Pb2P1BP/R1BK3R w - -
+go depth 7
+ucinewgame
+position fen 1r1qkb1r/7b/p2p3p/P1pnpp1R/3P1P2/P4Qp1/6B1/R1BK2N1 b k -
+go depth 7
+ucinewgame
+position fen 8/2p5/rp4P1/1pk2p1p/4bP2/4n3/3N1K2/8 w - -
+go depth 7
+ucinewgame
+position fen 4k3/7N/P5P1/3p4/2Q3B1/4pNpP/4K3/1R2r3 w - -
+go depth 7
+ucinewgame
+position fen 4k1n1/2n2r2/8/1P1PB3/5P1P/2pP2r1/5KR1/1N4Q1 b - -
+go depth 7
+ucinewgame
+position fen 1nk5/r4N1b/1p6/6Q1/3PPPPp/PP6/b4B1K/3Bb2R b - -
+go depth 7
+ucinewgame
+position fen 1r6/8/1k6/4BPpp/P6P/8/4R1KR/4q3 b - -
+go depth 7
+ucinewgame
+position fen 3NN3/8/1b6/p4p2/P4Pk1/8/4r3/K7 w - -
+go depth 7
+ucinewgame
+position fen 2b5/r1n3k1/1P1P1N2/NP1n2p1/p4p2/P1bK2P1/2r5/5R2 w - -
+go depth 7
+ucinewgame
+position fen 8/k1n2B2/8/p3p1r1/3r2p1/8/1b2K2B/3N4 w - -
+go depth 7
+ucinewgame
+position fen N7/6k1/8/8/4BQ1K/1p5p/8/8 b - -
+go depth 7
+ucinewgame
+position fen 1rbqkb1r/1p1p2pp/p1p2n2/1B2pp2/3P3P/1PP1P1Q1/P2K1PP1/RNB3NR w k -
+go depth 7
+ucinewgame
+position fen 8/1R6/1K3k2/5P2/3r3p/p5b1/8/8 w - -
+go depth 7
+ucinewgame
+position fen b7/7K/8/6rk/8/2p3b1/1n6/2r4n b - -
+go depth 7
+ucinewgame
+position fen rnb1kbr1/pB2ppp1/1q6/2pp3p/2PP1Pn1/P3P3/RP2K1PP/1NBQ2NR b q -
+go depth 7
+ucinewgame
+position fen 1r2k1n1/p1rp2p1/1p6/4Np2/2bq1PPp/2pQ4/Pb2P1BP/R1BK3R b - -
+go depth 7
+ucinewgame
+position fen r1b5/1pp2nr1/pk1p1p2/4P1bp/1P3p1P/N2K1PPR/P1n1N3/5B2 b - -
+go depth 7
+ucinewgame
+position fen 8/k7/5n2/5b2/1K6/8/4R2P/2b5 b - -
+go depth 7
+ucinewgame
+position fen rnbq3r/3p4/pp3p1k/1Pbp3p/3p2PN/2P3K1/4B3/1R2B2R w - -
+go depth 7
+ucinewgame
+position fen 5R2/1k2n3/3P1N2/1p2K3/1p1R3P/1P6/6q1/7r b - -
+go depth 7
+ucinewgame
+position fen 6R1/p6k/P1P5/2P1r3/6BK/1P6/5r2/8 w - -
+go depth 7
+ucinewgame
+position fen 3n4/5k2/8/3r1n1R/2p5/2NB4/8/1K6 b - -
+go depth 7
+ucinewgame
+position fen r4qr1/p1B2k1p/1p2p1p1/2p3b1/4PpnP/PP1b1P2/1R1P2B1/2B1K1QR w K -
+go depth 7
+ucinewgame
+position fen rnbqk2r/ppppb1pp/4p2n/5p2/2P5/3QP3/PP1P1PPP/1RB1KBNR w Kkq -
+go depth 7
+ucinewgame
+position fen r2n3r/1bNk2pp/6P1/pP3p2/3pPqnP/1P1P1p1R/2P3B1/Q1B1bKN1 b - e3
+go depth 7
+ucinewgame
+position fen 4r3/R1p5/Pn2P1p1/2r1B3/6k1/1P1N4/1b6/3K3N b - -
+go depth 7
+ucinewgame
+position fen rN6/5Nk1/3P4/pp6/3KB2p/P6P/1P1BP3/R5r1 w - -
+go depth 7
+ucinewgame
+position fen rn4r1/p2kp2p/B1pB4/r3np2/P2b3P/5N1R/1P2KPP1/5R2 b - -
+go depth 7
+ucinewgame
+position fen 2r1r3/8/8/1k1K4/6p1/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen 6k1/1R6/8/2B5/3p3b/5bp1/K5P1/8 w - -
+go depth 7
+ucinewgame
+position fen 2N4k/8/N2p4/1p3nPr/P1P4p/1P1P1P2/3Q3P/2K2B1R w - -
+go depth 7
+ucinewgame
+position fen 1r4k1/p7/P1P5/2P1r3/1R6/3B1KP1/1P6/8 b - -
+go depth 7
+ucinewgame
+position fen rnk4r/1b1p2b1/1P6/pP2p1p1/2PpPP2/7p/3N2PP/1RB1KB1R w - -
+go depth 7
+ucinewgame
+position fen 7r/n7/p1k3B1/P2r4/1P5P/1PB5/N6K/8 w - -
+go depth 7
+ucinewgame
+position fen r1bNk3/p2p1r2/n2b3p/1B1pp1pP/3B1p2/P3P2R/Q1P3P1/R3K1N1 w Qq -
+go depth 7
+ucinewgame
+position fen 4N3/5kBb/B3R3/1p4P1/1P1Rp3/p7/8/6K1 b - -
+go depth 7
+ucinewgame
+position fen 5b2/7r/2k2B1p/5p1P/P4N2/n2P1K2/8/5R2 b - -
+go depth 7
+ucinewgame
+position fen 4kr1r/2pR3p/1B3p1n/Q4n2/PP3bP1/2pq4/4PR1P/4K3 b - -
+go depth 7
+ucinewgame
+position fen 8/1n6/8/5k1p/7P/8/8/1RK5 b - -
+go depth 7
+ucinewgame
+position fen 4k3/nb6/5n2/P1p5/2PpP2N/1p1P3K/8/6b1 b - -
+go depth 7
+ucinewgame
+position fen 6n1/4k3/2P3P1/8/7N/p4r2/1r6/4b2K w - -
+go depth 7
+ucinewgame
+position fen 8/2b3k1/4Brp1/p3p2p/P3PP1P/1Qr5/3p1K1R/1R1N2N1 b - -
+go depth 7
+ucinewgame
+position fen 6k1/6N1/3R1n1p/3p2pP/pp1P4/2Q2Kp1/2P5/R7 b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/ppppp1pp/5p2/8/6P1/2N5/PPPPPP1P/R1BQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen N1b2knr/pp3qbp/5p2/2ppp1p1/1P4P1/2P1PP1P/P2PK1B1/R1BQ2NR b - -
+go depth 7
+ucinewgame
+position fen 2r1k1Br/2p4p/4pbp1/ppP1P3/P4B2/1PNRQP1P/4K1P1/6R1 b - -
+go depth 7
+ucinewgame
+position fen 3n4/5k2/8/3r1PR1/2p4n/2N5/8/1K3B2 w - -
+go depth 7
+ucinewgame
+position fen rnbk1r2/p2p3p/2pbp3/2P4n/P5q1/1PNp3n/1R1P3R/1QB4K w - -
+go depth 7
+ucinewgame
+position fen b7/5nb1/P1pBkP2/8/p1P3P1/6p1/2N1K3/1N1R4 w - -
+go depth 7
+ucinewgame
+position fen rnq4r/3kn2p/1p2p1p1/8/P2B2P1/7P/3bPKb1/2Qr1RNR b - -
+go depth 7
+ucinewgame
+position fen rnbq1r2/1ppp1k2/1b2p2n/pP3ppp/3PP3/5PK1/PBP1Q1PP/RN3BNR w - -
+go depth 7
+ucinewgame
+position fen rn2kb1r/1p2pppp/1q3n2/p1pp4/P1P2Pb1/8/1P1PP2P/RNBQKBNR w kq -
+go depth 7
+ucinewgame
+position fen 1r1k1b1Q/pb2p3/np6/P1pP1n2/1P1Pp3/B4N1p/5PPR/R1N3K1 b - -
+go depth 7
+ucinewgame
+position fen 8/7K/2nr3P/8/7k/2p5/8/1r6 w - -
+go depth 7
+ucinewgame
+position fen 3k4/8/8/2n1Q2p/1r5P/6R1/8/2K5 b - -
+go depth 7
+ucinewgame
+position fen 1k6/8/B3p3/4P2p/1K2P2P/8/8/5N2 w - -
+go depth 7
+ucinewgame
+position fen 8/1k6/1r5b/8/4K1B1/6p1/8/1N6 w - -
+go depth 7
+ucinewgame
+position fen 8/8/1k6/3n4/1K6/6p1/4r3/8 w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pp1ppppp/8/2p5/2P5/7P/PP1PPPP1/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 4r3/8/3k3P/1K6/8/8/5p2/4N1b1 w - -
+go depth 7
+ucinewgame
+position fen 1k6/8/5pP1/p1p5/PPP5/7K/N3Rr2/R7 b - -
+go depth 7
+ucinewgame
+position fen 1nb3nr/2p1pk2/r7/ppP2pq1/1P1pP1Q1/N4KPP/P2b1P2/1RB2BNR b - -
+go depth 7
+ucinewgame
+position fen 7k/5b2/7r/pP3B2/P3PpP1/1R3R2/3nK3/2b5 w - -
+go depth 7
+ucinewgame
+position fen r4n2/7p/2p2k1b/p6P/5pP1/4R3/K4B2/8 b - -
+go depth 7
+ucinewgame
+position fen 1r4N1/P2r3n/2p1k2p/P2p3P/3Pp3/1P2Kb1R/1BB2R2/8 w - -
+go depth 7
+ucinewgame
+position fen 2R5/6p1/7k/6P1/b2K4/8/2q2n2/8 b - -
+go depth 7
+ucinewgame
+position fen 1r1k1b1N/pR1b2rp/2pp4/2n1pP1p/1p1P1P1P/6PR/2P1BB2/1K6 b - -
+go depth 7
+ucinewgame
+position fen 5k2/p1R3p1/1p5q/5pn1/P1N1PP1p/1b5B/1b3K1P/2q4R b - -
+go depth 7
+ucinewgame
+position fen B2k1B2/3b4/7P/4P1P1/1K6/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen rr6/1kb2Q2/p2B2P1/Ppp2p2/3R4/RP5b/3K4/8 w - -
+go depth 7
+ucinewgame
+position fen 4k3/7p/2b4P/3p4/p1pb1B2/4r1p1/2B2R1r/3K4 w - -
+go depth 7
+ucinewgame
+position fen 1k4r1/7P/p2n4/P1p4R/1P6/1P5P/1N3Kb1/1rB1rB2 b - -
+go depth 7
+ucinewgame
+position fen Nb6/4B1nr/1p5k/5P1P/1pP3pN/p4R1P/Pq6/R2K1B2 w - -
+go depth 7
+ucinewgame
+position fen 3k4/8/5N2/8/5P2/1P5p/7P/3K4 b - -
+go depth 7
+ucinewgame
+position fen r1b5/1pp3r1/pk1p1pnb/4P1Qp/1P3pnP/N2K1PP1/Pq4B1/4R1NR b - -
+go depth 7
+ucinewgame
+position fen 6nr/2p1p2B/nrq1b2k/1p2P3/1b4pP/3B2P1/P4PK1/1R4NR w - -
+go depth 7
+ucinewgame
+position fen 3rnbr1/3kp2p/7n/p1p5/1p3p1P/2Pp1R1K/PB1N4/RN3BQ1 w - -
+go depth 7
+ucinewgame
+position fen rnb2bnr/ppppk1p1/4p2p/5p2/P1PPP3/RP3Qq1/3K1PPP/1NB2BNR b - -
+go depth 7
+ucinewgame
+position fen k3b3/8/1n6/3p2p1/8/N2p1n2/3K4/8 w - -
+go depth 7
+ucinewgame
+position fen 2k4b/P1P5/2N1p1p1/3r3p/2R4P/1R4B1/8/3Kn3 w - -
+go depth 7
+ucinewgame
+position fen 1nb4r/7k/1p1p1p1P/1P1p4/1p1p3N/5BB1/7K/1r4R1 w - -
+go depth 7
+ucinewgame
+position fen rqb1k1r1/pp1p1p2/1N1P4/2p2PN1/4p1Pp/P1Q4P/1P1BPKn1/R4B1R b - -
+go depth 7
+ucinewgame
+position fen 1N2R3/8/3p1P1k/p6P/2nK4/7r/7p/3b3n b - -
+go depth 7
+ucinewgame
+position fen 8/P1k5/4n3/1R5n/1p1N4/7P/2B2K2/2R5 w - -
+go depth 7
+ucinewgame
+position fen 5b2/7r/rp2bqN1/p1k2p2/PpPpP3/1Q3P1P/3P4/RN2KB1R b KQ -
+go depth 7
+ucinewgame
+position fen 6N1/5n2/3p4/1B3kn1/4p3/8/1q6/3K4 w - -
+go depth 7
+ucinewgame
+position fen 1n3bnr/7p/8/pppQ2kb/3pP1q1/3P4/P1PK3B/RN4R1 b - -
+go depth 7
+ucinewgame
+position fen r3k3/7p/8/1pn2pp1/2r3PP/5K2/7R/8 w - -
+go depth 7
+ucinewgame
+position fen 2r3nr/1q2pk2/8/2p1P3/4BPpP/3bb1P1/6K1/R5NR w - -
+go depth 7
+ucinewgame
+position fen 2r4r/1pp1k2p/3b1p1n/Q4n2/PP3P2/2p1B1Pq/4P2P/3RKbR1 b - -
+go depth 7
+ucinewgame
+position fen 1n1b2K1/8/1k2P3/2p1n3/2Pp4/3b4/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1n2k3/2q2N2/2rPK3/5P1p/1P6/8/2R5/4b3 b - -
+go depth 7
+ucinewgame
+position fen 2rk4/7p/7P/3p4/R7/2b5/1p4K1/8 b - -
+go depth 7
+ucinewgame
+position fen 5r2/k7/4p1p1/p6p/P6P/3pnP2/6R1/1Rr1BK2 w - -
+go depth 7
+ucinewgame
+position fen 1r4nr/2p1p3/n6k/bpP1Pbq1/4B1pP/N5P1/P3pPK1/RB4NR b - -
+go depth 7
+ucinewgame
+position fen rnbqk1n1/1ppp3r/p3p2p/5p2/1b6/2N1PQ1N/PPPP1PPP/1RBK1B1R b q -
+go depth 7
+ucinewgame
+position fen 8/2K2k2/p1N5/p7/P7/8/5N2/2r5 w - -
+go depth 7
+ucinewgame
+position fen 1kbn4/8/1p6/5PpN/8/KRpp4/7P/8 w - -
+go depth 7
+ucinewgame
+position fen 6k1/8/8/6b1/1bK5/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen 5r2/k7/4p1p1/p6p/P6P/2rpnP2/5KR1/1R2B3 b - -
+go depth 7
+ucinewgame
+position fen B7/5r2/p2BN1kp/PP2b3/5r2/3R4/3K4/8 b - -
+go depth 7
+ucinewgame
+position fen 1n6/8/3k4/7P/3PK3/N7/8/8 b - -
+go depth 7
+ucinewgame
+position fen 5q2/p2P4/P1n2Pk1/Bp1p2p1/3P3p/7P/6R1/4Q1KN b - -
+go depth 7
+ucinewgame
+position fen 3Nk3/pr6/b2p3p/5P1P/Pb1p4/6pR/QrPRB1P1/4K3 w - -
+go depth 7
+ucinewgame
+position fen 7k/Pp6/4pnp1/5p1p/5R1P/2r5/3bK1b1/8 b - -
+go depth 7
+ucinewgame
+position fen 3rkbr1/2nbpp1p/5npB/ppp5/PP1P4/2P4Q/5P1P/1RN1KBqR w - -
+go depth 7
+ucinewgame
+position fen 2N5/7k/N2p4/1p3n2/P1PP1Q1p/1P3P2/7P/2K2BrR w - -
+go depth 7
+ucinewgame
+position fen 3k4/8/7P/2N1P3/8/5K2/8/8 w - -
+go depth 7
+ucinewgame
+position fen 7k/5b1B/8/pP6/P1n1PpP1/1R3R1r/4K3/2b5 b - -
+go depth 7
+ucinewgame
+position fen r3k3/n6Q/p2p4/P1pP4/8/P2KBB1N/6pR/b7 w - -
+go depth 7
+ucinewgame
+position fen rnb1qbkr/3pp3/p7/2p2p1p/P1pP1Np1/4P3/NPK2PPP/R1Q2B1R w - -
+go depth 7
+ucinewgame
+position fen 5NB1/P7/7k/8/1p4K1/7p/8/5r2 w - -
+go depth 7
+ucinewgame
+position fen 8/2R5/8/k7/N5PP/2K5/8/5b2 w - -
+go depth 7
+ucinewgame
+position fen 8/2k5/7P/4P3/3K4/1N6/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/5R2/8/8/1k5n/8/K7/2b5 w - -
+go depth 7
+ucinewgame
+position fen rnb2b1r/pp2p1kp/6pn/2pN1p2/P4B1P/1qPP4/4PPP1/RQ2KBNR b KQ -
+go depth 7
+ucinewgame
+position fen 1k6/6N1/Pr6/1p6/2r5/1p6/6Kb/8 w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pppppp1p/8/6p1/8/4PN2/PPPP1PPP/RNBQKB1R b KQkq -
+go depth 7
+ucinewgame
+position fen 5Q2/3k4/1n6/1PnP4/3P3P/2R5/4K3/1N6 w - -
+go depth 7
+ucinewgame
+position fen Br2rB2/b7/p5kp/P7/1PpNP3/3p4/8/2RK4 b - -
+go depth 7
+ucinewgame
+position fen 8/3n4/5k2/8/3P1K1P/N7/8/6Q1 b - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/3pp2p/1Pp2ppn/p7/6P1/5N2/PPQPPP1P/RNB1KB1R w KQkq -
+go depth 7
+ucinewgame
+position fen B2N4/5rk1/8/Pp1Rb2p/8/8/3K3B/8 w - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/pppppp2/8/6pp/P2P2n1/4PN2/1PPQ1PPP/RNB1KB1R b KQkq -
+go depth 7
+ucinewgame
+position fen r1b2b2/q2kp1rp/2p2ppn/pp1P4/2P1P3/NP6/P3NPPP/R1B1KB1R w KQ -
+go depth 7
+ucinewgame
+position fen 2b1kb1r/r1p4p/p1n1p3/1p3qPP/2Pp1B2/1N1P2K1/PP2Bn2/R2Q2N1 w k -
+go depth 7
+ucinewgame
+position fen 7k/3n1b2/1p5P/1P1p2B1/4r2R/3p2K1/2b3B1/8 b - -
+go depth 7
+ucinewgame
+position fen r7/2P2P2/8/6k1/1p2B1P1/6b1/4K3/6R1 b - -
+go depth 7
+ucinewgame
+position fen 4kb2/5p1p/2Pr1nr1/p3p1R1/1P3N2/pRP4b/3B1P1P/3K1B2 w - -
+go depth 7
+ucinewgame
+position fen 4k3/8/8/4n3/8/3p3r/1K1N2N1/8 b - -
+go depth 7
+ucinewgame
+position fen bnk5/7p/8/R1Ppq3/P4r2/3p3K/2NP3n/2B5 b - -
+go depth 7
+ucinewgame
+position fen 8/3k2R1/8/2PP4/2K1p3/5Pp1/5rp1/8 b - -
+go depth 7
+ucinewgame
+position fen 1r3kr1/1bpqp2p/1p2Bbp1/p3P3/P1P1NB2/1PK2P1P/2n3P1/RN1Q3R w - -
+go depth 7
+ucinewgame
+position fen 2n5/1R5B/r1k2b2/P3p1pp/3P3P/2P1P3/4b3/B3KN2 w - -
+go depth 7
+ucinewgame
+position fen 4k3/8/r7/PB2N3/8/1P3PRp/2K4P/8 b - -
+go depth 7
+ucinewgame
+position fen r2qkbnr/1pn1pp1p/3p4/5Pp1/P1p3b1/1p1P3B/1BP1P2P/RN1QK1NR w Kkq -
+go depth 7
+ucinewgame
+position fen r7/1k6/1P6/K7/6p1/7n/8/8 w - -
+go depth 7
+ucinewgame
+position fen 8/3q3B/R6k/1P3P2/p6p/5b2/8/1K6 b - -
+go depth 7
+ucinewgame
+position fen 1r1r1bk1/np2p3/1P3ppn/1Pp4p/R4P1P/3P1b2/1R1K4/5q2 w - -
+go depth 7
+ucinewgame
+position fen 4k3/8/p2R3p/P7/5R2/2Q2b2/8/7K w - -
+go depth 7
+ucinewgame
+position fen 1R1r4/p4k2/1N6/n1n5/1P1p1K1b/p4p2/1B3P2/6n1 b - -
+go depth 7
+ucinewgame
+position fen 2r1kb1r/p3pbpp/n4p1n/1pp1N3/Q3p1PP/2PP4/PB6/RN2KBR1 w Qk -
+go depth 7
+ucinewgame
+position fen 3r3r/p2k1pQ1/3p2pb/1pp3P1/P2p4/2nR3b/1PK4P/2B2N1R b - -
+go depth 7
+ucinewgame
+position fen 8/5k2/p2p1n2/P2P2Q1/P1p5/2N2KB1/4B2R/6b1 b - -
+go depth 7
+ucinewgame
+position fen rnbk1rq1/3p3p/2p5/p1b1Q3/PP4n1/2Np3n/1R1P3R/2B4K w - -
+go depth 7
+ucinewgame
+position fen BR4r1/3n3k/8/8/8/7K/2bp4/8 b - -
+go depth 7
+ucinewgame
+position fen r1b1kb1r/p1npp1pp/2p2p1Q/1p6/1q1PPP2/4B3/2P3PP/RNK2BNR b q -
+go depth 7
+ucinewgame
+position fen 2bqk2r/1r1pbppp/ppn5/Q1P1p2P/2P3n1/4PP2/P2P4/RNBK1BNR b k -
+go depth 7
+ucinewgame
+position fen 5bnr/1p3k2/5p2/1q2p1Qp/ppN3P1/B1P1pP1P/P2PK2R/4R1NB b - -
+go depth 7
+ucinewgame
+position fen rnbq1bnr/6pp/Pp1kp3/2p2p2/P1p3P1/B1N2P1P/3PP1B1/R2QK1NR w KQ -
+go depth 7
+ucinewgame
+position fen 1n4nr/3r3p/7b/pppB2kb/3pP1Pq/3P4/PQPK3B/RNR5 b - -
+go depth 7
+ucinewgame
+position fen 1Q2k3/8/8/1P1P4/3P3P/8/2n1K3/1N6 b - -
+go depth 7
+ucinewgame
+position fen r7/2p3r1/P3knPp/P2p4/3Pp1bP/1P1nKR2/1B3R2/1B6 b - -
+go depth 7
+ucinewgame
+position fen 3N2k1/7R/8/Pp1pP1BP/8/1b1pP3/3K2P1/8 w - -
+go depth 7
+ucinewgame
+position fen 1rbk1bnr/pp1p1ppp/n1q5/2p1pP1Q/P1B1P3/2PP3P/1P4P1/RNB2KNR w - -
+go depth 7
+ucinewgame
+position fen 2b1q3/p1rpn1p1/P1p1R3/1pP2P1k/PB1P3p/4b2P/R3K3/1N2Q3 w - -
+go depth 7
+ucinewgame
+position fen 1k6/8/4P3/7B/8/3Q4/2K2bP1/8 b - -
+go depth 7
+ucinewgame
+position fen 8/n5bB/r7/P1k1p1pp/1R4PP/2PPP3/4b2N/B3K3 b - -
+go depth 7
+ucinewgame
+position fen 5k2/2R5/1p2B2N/1P6/P7/8/5K1b/b2r4 b - -
+go depth 7
+ucinewgame
+position fen 3r4/7r/q4k2/p3p3/PP1Q3p/2nPppP1/1RKN2B1/1R4N1 w - -
+go depth 7
+ucinewgame
+position fen k7/8/8/5K1r/8/2P5/8/8 w - -
+go depth 7
+ucinewgame
+position fen 8/p3k3/P7/1p1p4/3P1q1p/2N4P/4K3/B7 w - -
+go depth 7
+ucinewgame
+position fen r4br1/8/3k1npp/P1n1p3/8/2PPP1qP/4bPB1/RNB1K3 w Q -
+go depth 7
+ucinewgame
+position fen r1b1kb1r/pp1ppP1p/6pn/q2p4/n4PP1/P1P4B/1PNQK2P/RNB4R b k -
+go depth 7
+ucinewgame
+position fen 5k2/7Q/3R1r1P/1pp4r/1p6/P1b1n1KB/2N5/8 b - -
+go depth 7
+ucinewgame
+position fen 4nr2/2k2n2/6B1/8/K7/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/1k1n4/1p5P/1p4K1/1P1R3R/8/r2N4 b - -
+go depth 7
+ucinewgame
+position fen rn5k/3p4/1pp1p3/pR3pp1/P4P2/3Q1N2/2NK1Pb1/q1B5 b - -
+go depth 7
+ucinewgame
+position fen 3k1bnr/p4r2/nqp3pQ/P2p3p/1pP1P2P/1P1P1PPB/8/RN3KNR b - -
+go depth 7
+ucinewgame
+position fen 8/1B2k2b/1p2P2N/P4P1K/6PR/n7/2r3b1/4B3 b - -
+go depth 7
+ucinewgame
+position fen 1rbq1bn1/ppppp1p1/8/PB3k2/P5rp/B1P4P/3PQPPN/RN2K1R1 b Q -
+go depth 7
+ucinewgame
+position fen 1r1r1bk1/1p2p3/1Pn2ppn/1Pp4p/R2P1P1P/R7/3K4/q2b4 w - -
+go depth 7
+ucinewgame
+position fen rn1qkb1r/1bp2ppp/8/pp1pp2n/2PP1B2/5P1P/PP1QP1P1/RN2KBNR w KQk -
+go depth 7
+ucinewgame
+position fen 5k2/8/b7/r1Rn1pP1/1p1p3p/1P4nP/K7/8 w - -
+go depth 7
+ucinewgame
+position fen rn2bknr/4b3/3pP2p/8/pP2PPpP/p1R5/2KB1P2/1NN4R w - -
+go depth 7
+ucinewgame
+position fen rnbqk1nr/pppp3p/6pB/4pp2/7P/b1PP3R/PP2PPP1/RN1QKBN1 b Qkq -
+go depth 7
+ucinewgame
+position fen r1b3nr/3pqpb1/4Nkp1/pppP3p/1nP5/P4PP1/3RP2P/3QKBNR b K -
+go depth 7
+ucinewgame
+position fen 8/8/P7/2p5/PkP1Rp2/5N2/7K/8 b - -
+go depth 7
+ucinewgame
+position fen rnbq1bn1/pp1ppkp1/2p5/5p2/P1P5/7R/1P1PPP2/RNBQKBN1 w Q -
+go depth 7
+ucinewgame
+position fen 3Q4/6k1/1N2b1p1/1P1p1p2/Pp3PnP/3P4/4RNB1/4K3 b - -
+go depth 7
+ucinewgame
+position fen 8/3Nb3/P1R3P1/4r2k/7P/1B1p4/K5N1/8 w - -
+go depth 7
+ucinewgame
+position fen 3n4/4Bk2/PPp2b2/1Nr3pN/8/8/8/6K1 b - -
+go depth 7
+ucinewgame
+position fen 6n1/6p1/7q/5R2/4b1k1/1K6/8/8 b - -
+go depth 7
+ucinewgame
+position fen 3r4/1b1npkbr/p2p4/P1p5/6Pp/4P2N/5PP1/R1KNQB1R w - -
+go depth 7
+ucinewgame
+position fen 5Nk1/8/3rn3/8/P2P4/KPp2P1p/7P/3Q1B1R b - -
+go depth 7
+ucinewgame
+position fen 2n5/3R4/r1kb4/P3p2p/3P3p/2PbP3/1K6/BB3N2 b - -
+go depth 7
+ucinewgame
+position fen 4n1kr/7b/1pq1p1p1/p3B2P/1Q2BP1P/R2p4/1P1N4/1N3K1R b - -
+go depth 7
+ucinewgame
+position fen 3R4/1B5k/7P/5b2/4n2K/5b2/8/8 b - -
+go depth 7
+ucinewgame
+position fen 4kbr1/2p1pp2/r1nqb1p1/pp5n/1PPp4/3PPP1P/PB1N2BR/1R1QK1N1 w - -
+go depth 7
+ucinewgame
+position fen 8/P7/4R3/2p3N1/2P5/5pK1/8/2k5 b - -
+go depth 7
+ucinewgame
+position fen 2k4r/p2n1p2/1pp1p2b/1n5p/1P4P1/1BP4K/P4r2/2R3NR b - -
+go depth 7
+ucinewgame
+position fen 8/2p5/1p6/1p3p2/1k3P1p/1n2N3/6K1/r7 w - -
+go depth 7
+ucinewgame
+position fen 8/5k2/Bn3r2/6bn/b2p2r1/2p5/2R5/3K4 b - -
+go depth 7
+ucinewgame
+position fen 3kr3/6R1/2P4n/3p1PN1/1b6/6P1/3N4/2nK4 w - -
+go depth 7
+ucinewgame
+position fen 8/2k5/8/2P5/B3pN1b/2K5/8/8 w - -
+go depth 7
+ucinewgame
+position fen k7/8/3K4/7r/8/2P5/8/8 w - -
+go depth 7
+ucinewgame
+position fen 7k/3r3B/6K1/P7/1p6/R6p/3b4/6N1 b - -
+go depth 7
+ucinewgame
+position fen 5n2/7k/4p1p1/7p/1b5P/3r4/8/5K1B w - -
+go depth 7
+ucinewgame
+position fen 4k3/r6B/p2P4/pNp3P1/P3n3/1n4NP/1b6/4KR2 b - -
+go depth 7
+ucinewgame
+position fen 2b1kb2/3np3/P1p2rp1/B2PP2p/1rP5/1N1R2P1/p4P1P/2K4R b - -
+go depth 7
+ucinewgame
+position fen 4q3/kB6/4P3/8/1R4p1/K1Q3b1/6P1/8 w - -
+go depth 7
+ucinewgame
+position fen 1r3B2/4r3/p3Nbkp/P2B4/1P2P3/2Rp4/3K4/8 w - -
+go depth 7
+ucinewgame
+position fen r2B1qr1/p2bbk1p/np2p1pn/2p2p2/6PP/PP2PP2/1R1PQ3/2B1KBNR b K -
+go depth 7
+ucinewgame
+position fen 1Q6/4k3/8/3p1p2/p4p2/5bP1/3B1bP1/R4K2 w - -
+go depth 7
+ucinewgame
+position fen 6n1/2P4b/4P3/P1k3N1/7p/K7/2N3P1/6R1 w - -
+go depth 7
+ucinewgame
+position fen 2B1k3/7N/1Q6/PN1p2P1/5b1p/1R2p2P/4K1R1/3r4 w - -
+go depth 7
+ucinewgame
+position fen 3R4/k3n3/3PK2N/1p1R4/1pq4P/1P6/8/r7 b - -
+go depth 7
+ucinewgame
+position fen r1b2q1r/pp1Pbk1p/n3p1pn/2p2p2/6P1/PP2PP2/1R1PQ2P/2B1KBNR b K -
+go depth 7
+ucinewgame
+position fen 2b1kb2/3Np3/P5p1/B2PP2p/1rP2r2/6P1/5P1P/n1KR3R b - -
+go depth 7
+ucinewgame
+position fen 1k3b2/4Q3/8/2p3NP/2bp4/P1P2KP1/2N2P2/1r5R w - -
+go depth 7
+ucinewgame
+position fen 3r4/8/8/2k5/6p1/7r/5K2/8 w - -
+go depth 7
+ucinewgame
+position fen 1r6/2k4p/7P/8/8/R5b1/1p6/7K b - -
+go depth 7
+ucinewgame
+position fen 6Q1/3b4/5k2/8/3p1p2/p2Rb1P1/6P1/2B1K3 w - -
+go depth 7
+ucinewgame
+position fen 8/prbpkNr1/b6p/3pB1pP/2B2P2/P1n3R1/Q1P3P1/1R2K1N1 w - -
+go depth 7
+ucinewgame
+position fen 8/6k1/8/2q3N1/Pp1rp3/2RP1N2/4K3/1r6 b - -
+go depth 7
+ucinewgame
+position fen 8/7k/B7/6np/7p/3pP3/8/bR4K1 b - -
+go depth 7
+ucinewgame
+position fen 8/6B1/1K6/4P1P1/P3qk2/3b4/2R5/8 b - -
+go depth 7
+ucinewgame
+position fen 2b2bn1/r2pqp1r/4pkp1/ppp3Np/1nPP4/P4PP1/3RP2P/2Q1KBNR b K -
+go depth 7
+ucinewgame
+position fen 2b1k3/r1np3r/1P1P2p1/5p2/pP3Bn1/3K1NP1/P7/bN3B1R w - -
+go depth 7
+ucinewgame
+position fen 5k2/2B2b2/7P/P3P3/6P1/3K4/8/8 b - -
+go depth 7
+ucinewgame
+position fen 1nq3nr/3k3p/1p2p1p1/r2b4/PB3bP1/2Q2P1P/3pPKB1/5RNR b - -
+go depth 7
+ucinewgame
+position fen 1n2k3/r1Q1bN2/b2p3p/RPP2P2/1P6/2Rp1Pr1/4qKB1/7q w - -
+go depth 7
+ucinewgame
+position fen 8/2r1k2b/1pB1P2N/P4P1K/6P1/n7/6b1/4B2R w - -
+go depth 7
+ucinewgame
+position fen rnqk1b1r/N1p1pppp/pp2b2n/3p4/2P2PP1/1Q1P3P/PP2P3/R1B1KBNR w KQ -
+go depth 7
+ucinewgame
+position fen 8/6Q1/p2bk2p/P7/5R2/8/4b3/2R3K1 b - -
+go depth 7
+ucinewgame
+position fen 1r4r1/1bNB4/p1p2Bkp/2b5/1PR1P3/3p4/P7/3K2N1 w - -
+go depth 7
+ucinewgame
+position fen 8/1b6/2k5/8/6pp/8/3r4/1K6 b - -
+go depth 7
+ucinewgame
+position fen rn6/p2p2qk/1pp1p3/1R3pp1/P4P2/N3Q3/3K1Pb1/2B3N1 b - -
+go depth 7
+ucinewgame
+position fen 5k2/8/1P6/pR1B2P1/5r2/8/1K6/8 b - -
+go depth 7
+ucinewgame
+position fen 2Bn2k1/5b2/7r/pP3p2/P4pP1/2R1PR2/5K2/2b5 w - -
+go depth 7
+ucinewgame
+position fen 8/k7/4r3/1P6/2K3p1/8/8/r5n1 w - -
+go depth 7
+ucinewgame
+position fen r1b2kn1/1p3q1r/p2p4/1N6/PbP1Np1p/3PPP1Q/1P1B2PP/1R1K1B1R w - -
+go depth 7
+ucinewgame
+position fen r1bq1bnr/1p3k2/p1npp2p/5ppP/P7/1P2NN2/2PPPPP1/1RBQKB1R b K -
+go depth 7
+ucinewgame
+position fen 8/r1b3r1/1N2P3/2pb3P/P2k4/4p3/1p1PR3/3K4 w - -
+go depth 7
+ucinewgame
+position fen 2r3nr/pbp1kp1p/4p1pb/1N1p4/4PqPP/3B1P2/P2P1K1R/RQB5 w - -
+go depth 7
+ucinewgame
+position fen r7/1kb4Q/p2B2P1/Ppp2p2/3Rr3/RP5b/3K4/8 b - -
+go depth 7
+ucinewgame
+position fen 5k2/p1R3p1/1p5q/5pn1/P1N1PP1p/1b5B/1bp4P/5K1R w - -
+go depth 7
+ucinewgame
+position fen 8/4k3/2P5/5p1p/3N4/8/8/B6K w - -
+go depth 7
+ucinewgame
+position fen rnkq4/p5r1/b1p3pp/1p3p2/1P2P1P1/1PK2pRP/PB1PN3/R4B2 b - -
+go depth 7
+ucinewgame
+position fen 3r4/3n1k2/p2p4/P1pbp3/R6p/4PPrN/B2K1QP1/3N3R w - -
+go depth 7
+ucinewgame
+position fen 8/Q7/1B3k2/p2p1pp1/R4P2/6P1/1p4P1/4bK2 w - -
+go depth 7
+ucinewgame
+position fen 8/5bP1/p2b3p/P3k2P/5RP1/8/5K2/R2q4 w - -
+go depth 7
+ucinewgame
+position fen b7/b3r3/1k5N/7P/P3p3/8/2K5/8 w - -
+go depth 7
+ucinewgame
+position fen 8/8/Pk6/2p5/P1P2p2/5N2/6K1/4R3 b - -
+go depth 7
+ucinewgame
+position fen 4qb2/r4k1b/1pp1pnpr/p2P3p/4NPPP/1Q1P3R/PP2NKB1/R1B5 w - -
+go depth 7
+ucinewgame
+position fen 2k2r2/8/r3P3/1P1P2pP/4N1p1/8/nK6/8 w - -
+go depth 7
+ucinewgame
+position fen b4rn1/p3k3/q2N3P/2P1ppn1/p1P2pPp/Q2PR3/4PP2/R2K1B2 b - -
+go depth 7
+ucinewgame
+position fen 1b6/3NP1r1/2b5/r6P/2pk4/3Pp3/3R4/4K3 w - -
+go depth 7
+ucinewgame
+position fen k5nr/rn1N4/8/1p1PK1Pp/1p1P3P/1P3q2/8/6RR w - -
+go depth 7
+ucinewgame
+position fen 2r5/pb4r1/2pk2p1/1pnB1P1P/PP1N3R/1PB4P/4K3/1r6 b - -
+go depth 7
+ucinewgame
+position fen 8/p7/P2q4/5k2/N1KP3p/8/1B6/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/PP4P1/4k3/3p1N1R/3P1b2/5N2/r5K1 w - -
+go depth 7
+ucinewgame
+position fen 2b4r/6R1/5P1k/2p2P2/5R1P/6Pp/7K/1r6 w - -
+go depth 7
+ucinewgame
+position fen 8/7k/5n1p/3R2p1/1p1P4/p1Q2Kp1/2P5/6R1 w - -
+go depth 7
+ucinewgame
+position fen 4B1nr/pppr1p1p/4k1bq/2b5/1n1pPpp1/3P1PP1/P1PNQ2P/R1B2KR1 w - -
+go depth 7
+ucinewgame
+position fen rn4nr/3bb2k/1R1pP3/4N2p/pP2PPPP/p1N5/2KB3R/8 b - -
+go depth 7
+ucinewgame
+position fen b2r2nr/3p4/2n3pb/p1p2kP1/2p2N2/P4P2/4P2P/3K1B1R b - -
+go depth 7
+ucinewgame
+position fen 1n5k/2N5/7p/Pp1p3P/P2pPR1B/4R3/b4PP1/3K4 b - -
+go depth 7
+ucinewgame
+position fen rn1k1b2/NQ1q1b1r/1pp1p3/5Ppp/3PPP2/2p2N1P/PP2K3/1RBB1R2 b - -
+go depth 7
+ucinewgame
+position fen 5n2/3r2kr/7p/1R1b4/p1p4p/4PBb1/N2RK3/8 w - -
+go depth 7
+ucinewgame
+position fen r1b1kb1r/ppp1p2p/2nq4/3p1pB1/2P1P2P/3P1K2/PP1N1PP1/R2Q1BNn b kq -
+go depth 7
+ucinewgame
+position fen 2k5/8/5N1n/8/8/8/3NK3/8 b - -
+go depth 7
+ucinewgame
+position fen r1b1k1n1/4qpr1/n1p1p3/1pbP4/Pp5P/N1PPBP1B/8/R2QK2R b KQ -
+go depth 7
+ucinewgame
+position fen bk6/b7/7p/2P4P/1B2p3/P7/3K3N/6r1 w - -
+go depth 7
+ucinewgame
+position fen Bnbqk3/3ppp1r/p4Qp1/1pp1b2p/PP6/B3P1PP/3PKP2/RN4NR b - -
+go depth 7
+ucinewgame
+position fen 5Qk1/p7/P7/1p1p4/3P3p/7P/3qN2K/B7 b - -
+go depth 7
+ucinewgame
+position fen 1r1k2nN/7B/3p3b/3Pp3/1R4Rp/5P2/7q/2nK4 b - -
+go depth 7
+ucinewgame
+position fen 7k/R7/6P1/2p2P1P/8/3b1K2/8/8 w - -
+go depth 7
+ucinewgame
+position fen 8/8/1K6/8/8/k2p4/8/6n1 b - -
+go depth 7
+ucinewgame
+position fen k7/2r2N2/5P2/6r1/2pK4/2P5/8/4N3 w - -
+go depth 7
+ucinewgame
+position fen 3nB3/k5r1/r7/p3p3/3b2p1/3K2B1/8/3N4 b - -
+go depth 7
+ucinewgame
+position fen k2B4/P7/2n4p/3p4/6K1/1q1p4/4N2n/3b4 w - -
+go depth 7
+ucinewgame
+position fen 4k1n1/8/2N5/1K3P2/1P4p1/p7/1r6/5N2 w - -
+go depth 7
+ucinewgame
+position fen 2k2b1r/1q1b1Np1/rp1p4/n3p2p/1pPPPpn1/RN4PB/4KP2/B1R5 w - -
+go depth 7
+ucinewgame
+position fen B6k/8/6KP/8/8/3b4/8/5nR1 w - -
+go depth 7
+ucinewgame
+position fen 7k/rp2B3/n7/2bpp3/P6N/Rp4P1/5rKP/1N6 w - -
+go depth 7
+ucinewgame
+position fen 2r1k3/8/p2p1n2/P1p1p3/1R2PP1p/1bK3QN/B5P1/3N3R w - -
+go depth 7
+ucinewgame
+position fen k4B2/5n1p/P7/3p1N2/b7/3p3K/1q6/5n2 w - -
+go depth 7
+ucinewgame
+position fen 8/6k1/1p6/3n4/8/7b/7n/2K5 b - -
+go depth 7
+ucinewgame
+position fen 8/3NP1r1/2b5/r3b2P/2pk4/3Pp3/3RK3/1q6 b - -
+go depth 7
+ucinewgame
+position fen r7/n3k1b1/p2p4/P1pP1Q2/8/P2KBB1N/6pR/R7 b - -
+go depth 7
+ucinewgame
+position fen rnb1k1nr/p1ppbpp1/1p5p/6q1/1P1p1PP1/2N1B3/P1P1P2P/2RQKBNR w Kkq -
+go depth 7
+ucinewgame
+position fen 8/8/3R4/1k6/3b4/1K3n2/8/8 b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pppppp1p/6p1/8/7P/3P4/PPP1PPP1/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 2n5/3R3B/r1kb4/P3p2p/3P3p/2P1P3/4b3/B1K2N2 w - -
+go depth 7
+ucinewgame
+position fen b4b1n/3k2rR/P1pB1P2/8/p1Pp1pP1/N5P1/3RB3/1N3K2 w - -
+go depth 7
+ucinewgame
+position fen 8/8/1B3N2/5k2/5P2/R2r2pp/5R2/5K2 w - -
+go depth 7
+ucinewgame
+position fen 2N4R/6k1/p7/pN6/P1pK4/2n3N1/8/8 w - -
+go depth 7
+ucinewgame
+position fen b3k3/n7/P7/2p5/2PpPN2/3Pb3/1p4Kn/8 w - -
+go depth 7
+ucinewgame
+position fen 8/3k4/8/4P2P/5K2/8/3N4/8 w - -
+go depth 7
+ucinewgame
+position fen r2k1b2/p3pn1R/n7/2Qb4/pP1pp3/3N1N2/1B3Pp1/1R4K1 w - -
+go depth 7
+ucinewgame
+position fen 3r4/k3N3/5r2/1P6/6p1/2K5/8/6n1 b - -
+go depth 7
+ucinewgame
+position fen r1b1kb2/3pp1rp/1qp2ppn/pp2n3/2PPP3/NP3Q2/P3NPPP/R1B1KB1R w KQq -
+go depth 7
+ucinewgame
+position fen 4n3/7k/4P3/7B/7p/8/8/4K3 w - -
+go depth 7
+ucinewgame
+position fen 1r1qkb1r/1bppp2p/1p3np1/p4p2/P1PnP3/3BBP1N/1P4PP/RN1QK2R b KQk -
+go depth 7
+ucinewgame
+position fen 8/8/n3kP1p/1p6/6pP/8/2rR2K1/r7 w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/p1p2ppp/1p1pp3/8/1P1P4/8/P1PKPPPP/RNBQ1BNR w kq -
+go depth 7
+ucinewgame
+position fen 2Bb4/2r5/7k/8/4b3/2pr4/1n2Kn2/8 b - -
+go depth 7
+ucinewgame
+position fen b7/b3r3/1k5N/7P/P3p3/8/3K4/8 w - -
+go depth 7
+ucinewgame
+position fen 3kr3/1r5p/p6P/npp1p3/2PpK3/P3b3/RP6/N4BNQ b - -
+go depth 7
+ucinewgame
+position fen 1rb1k1r1/p1p1p1bp/1N2P3/3p2p1/QP1B1NP1/P1nP1Pn1/7P/3R2KR b - -
+go depth 7
+ucinewgame
+position fen 5k2/2n4B/p2p4/P2P4/P1p4Q/4K2N/1b5R/4B3 w - -
+go depth 7
+ucinewgame
+position fen 5bn1/r3kq2/5np1/1B3p1r/p1ppPP1P/P1P1Q3/1P1Bb2R/RN2K3 b Q -
+go depth 7
+ucinewgame
+position fen 6k1/8/B1n4p/Pp1p3P/P2pPp1B/5R1N/b2K1PP1/R6q w - -
+go depth 7
+ucinewgame
+position fen 4b3/4k3/1b2P3/1P6/7P/p5n1/8/KR6 b - -
+go depth 7
+ucinewgame
+position fen r1qk1bn1/pp5r/B4p1p/1Pp1p1Q1/P1P3bP/R2PB3/8/1N2K1NR w - -
+go depth 7
+ucinewgame
+position fen N4b2/7r/qB3P1k/8/PpP3P1/1B6/2n5/1K3R2 w - -
+go depth 7
+ucinewgame
+position fen r7/3k4/8/1R6/5P1p/p3K1b1/B7/1r6 w - -
+go depth 7
+ucinewgame
+position fen 3k2nN/8/3p2B1/3P2b1/4pq1R/1r3P1p/8/2nK4 w - -
+go depth 7
+ucinewgame
+position fen rn1qk2r/p1ppn1p1/b2b1p1p/1p2p3/4P1P1/1QP4P/PPKP1P2/R1B2BNR w kq -
+go depth 7
+ucinewgame
+position fen 1N6/6P1/5k2/r2b4/3p4/3P3K/8/QR1N4 b - -
+go depth 7
+ucinewgame
+position fen 1n3k2/q7/2rP4/3K1P1p/1b6/8/1R6/8 w - -
+go depth 7
+ucinewgame
+position fen 3k1r2/3r3p/p6P/1pp1p1K1/1Pnp4/P6Q/2R1N3/N4Bb1 w - -
+go depth 7
+ucinewgame
+position fen 8/8/8/1k6/4R2n/8/K7/2b5 b - -
+go depth 7
+ucinewgame
+position fen rn2bk1r/4b3/2RpPn1p/8/pP2PPpP/p7/2KB1P2/1NN4R b - -
+go depth 7
+ucinewgame
+position fen 3n4/N3Bk2/PPp2b2/6pN/8/7r/8/6K1 w - -
+go depth 7
+ucinewgame
+position fen 8/7k/4P3/7p/P3P2b/7N/N7/6K1 b - -
+go depth 7
+ucinewgame
+position fen r1bqkb1r/pppppp1p/2n2np1/8/4P3/2P5/PP1PKPPP/RNBQ1BNR w kq -
+go depth 7
+ucinewgame
+position fen 1rb1qbn1/ppppp1p1/8/PB3k2/P2r3p/B1P2P1P/3PQ1PN/RN2K1R1 w Q -
+go depth 7
+ucinewgame
+position fen 4k3/K3N3/p4r2/p7/P7/8/8/3N4 w - -
+go depth 7
+ucinewgame
+position fen 1q3b2/5b1N/1k4p1/2ppQ3/2Bp3P/P1P5/2NK1PP1/2r3R1 w - -
+go depth 7
+ucinewgame
+position fen 4k3/1B5N/p2pp2b/PRr5/6Pp/N6P/2P2r2/3Q1K1R w - -
+go depth 7
+ucinewgame
+position fen k3b3/8/8/1N1p2p1/2n5/3p1n2/8/3K4 b - -
+go depth 7
+ucinewgame
+position fen 2k1N3/6b1/2b5/2B5/8/8/4K3/7r w - -
+go depth 7
+ucinewgame
+position fen 8/r7/1kN5/8/p2R1K2/Pb1P4/3r4/4N3 w - -
+go depth 7
+ucinewgame
+position fen 1r4rk/1p6/n7/Bq1pp1p1/P1p1R1bN/6PK/2P3nP/RN4b1 w - -
+go depth 7
+ucinewgame
+position fen rnbr4/1pppq1k1/1b2p3/pP4p1/P2Pp1np/1QB2P1K/2PNB1PP/1R4NR b - -
+go depth 7
+ucinewgame
+position fen 4k1n1/8/3P4/1N3P2/p1R3pb/P2K2N1/8/5r2 w - -
+go depth 7
+ucinewgame
+position fen 6kr/3n3p/3b2b1/Bpp1n3/P1PpP3/3P4/5K2/1N1R4 w - -
+go depth 7
+ucinewgame
+position fen 7r/R6p/2K4P/5k1P/2p4n/5p2/8/8 w - -
+go depth 7
+ucinewgame
+position fen Q1b5/q3b1k1/pp2p3/1Pp1P2p/P3B2P/1n1K4/4P1NB/2r2N2 w - -
+go depth 7
+ucinewgame
+position fen 2k5/5b2/p7/Pr4B1/8/3p4/8/QRK5 w - -
+go depth 7
+ucinewgame
+position fen 4b3/1k6/8/p3r3/8/6K1/8/8 w - -
+go depth 7
+ucinewgame
+position fen r2qkbnr/1bppp2p/1p4p1/p4p2/P1Pn4/3BPP2/1P1B2PP/RN1QK1NR w KQkq -
+go depth 7
+ucinewgame
+position fen 8/8/1k6/1p5r/8/4n1p1/K7/8 w - -
+go depth 7
+ucinewgame
+position fen 7b/8/1p2k3/PP3N2/4Kb2/8/1R6/5B2 b - -
+go depth 7
+ucinewgame
+position fen rnbk3r/pp1pb2p/2p1p3/q6n/P7/NPPp3n/Q2PN1KR/R1B5 w - -
+go depth 7
+ucinewgame
+position fen 3K1kn1/8/8/5P2/1P4p1/pNr5/8/5N2 b - -
+go depth 7
+ucinewgame
+position fen rnq2b2/1b2pk1r/p2p4/2p4p/P2P1p2/4P1P1/K3NPP1/R2NQB1R w - -
+go depth 7
+ucinewgame
+position fen 7r/8/2n2npb/pRpp3k/P1p1b2r/2K2P2/6BP/8 w - -
+go depth 7
+ucinewgame
+position fen r2q2nr/p1pbkppp/2npp3/bp4P1/3P1N1P/2N1P3/PPPQ1P1R/R1B1KB2 b Q -
+go depth 7
+ucinewgame
+position fen r4b2/4r3/3k2pp/P2np3/4n1P1/R1PPPB1P/3Nb3/2B1K3 b - -
+go depth 7
+ucinewgame
+position fen 1nK5/4B3/2k5/2p5/2b5/8/3p4/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/8/1p1N4/2k5/8/4K3/8 w - -
+go depth 7
+ucinewgame
+position fen 8/5Q1b/4p2k/4P2p/1p2P1BP/8/8/2NK4 w - -
+go depth 7
+ucinewgame
+position fen 7k/8/n5P1/r7/1p1p1p1p/1P4nP/8/2K2b2 w - -
+go depth 7
+ucinewgame
+position fen 1r1qbb1r/1Bn3k1/p2p3p/P1p2p1R/3P1p2/P1K3p1/2QB4/R5N1 b - -
+go depth 7
+ucinewgame
+position fen 4k3/3n4/3R3p/p2p1NpP/1p1P2p1/8/2P2K1Q/R7 w - -
+go depth 7
+ucinewgame
+position fen 4k1b1/1Np3r1/6r1/p5b1/pBPp1p2/P2P1P1N/6q1/4K2R b - -
+go depth 7
+ucinewgame
+position fen 2r5/1bkn2r1/p1p3P1/1p5P/PP1N3R/1P5P/3BK1B1/1r6 b - -
+go depth 7
+ucinewgame
+position fen 8/8/1kq5/1pN5/1p1p4/5B2/8/3K1n2 b - -
+go depth 7
+ucinewgame
+position fen 3N2k1/8/7P/P3P1B1/1p4P1/1K2p3/6b1/8 w - -
+go depth 7
+ucinewgame
+position fen 2b4r/1r1kb2p/p1Q5/npp1p1PP/2Pp4/PN3K2/RP2B3/6N1 b - -
+go depth 7
+ucinewgame
+position fen k5n1/2P5/4KNq1/rp1P3p/1p2R2P/1P6/2R5/8 b - -
+go depth 7
+ucinewgame
+position fen B7/2kN2B1/8/p5P1/1p1K1R2/P6p/1P2P3/8 b - -
+go depth 7
+ucinewgame
+position fen 8/k2n4/4R3/6p1/1K6/2p5/7P/3b4 w - -
+go depth 7
+ucinewgame
+position fen k7/rr6/pQ4P1/Pp3p2/1P1p4/7b/R2K3B/8 b - -
+go depth 7
+ucinewgame
+position fen 3n4/8/K7/5k2/8/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/4K1pP/5nkP/2r5/2p2p2/8/8 b - -
+go depth 7
+ucinewgame
+position fen 2r5/1k6/pb4P1/PppR1p2/5B2/RPr4b/3QK3/8 b - -
+go depth 7
+ucinewgame
+position fen b3n1r1/1k1B4/8/3p2p1/P2P3p/8/1Kn4Q/8 w - -
+go depth 7
+ucinewgame
+position fen 8/2R5/8/4kb2/8/8/5r2/4n1K1 w - -
+go depth 7
+ucinewgame
+position fen 8/pr1pkNr1/b2b3p/1n1pB1pP/2B2P2/P5R1/Q1P1K1P1/1R4N1 b - -
+go depth 7
+ucinewgame
+position fen b4rn1/p2k4/2qN3P/2P1p3/p1P2p1p/1Q1PRPp1/1K3P2/R4B2 w - -
+go depth 7
+ucinewgame
+position fen 4rbkr/3P4/6p1/p2np2p/2p2P1P/P3P3/3Q1K1R/R1BN1BN1 w - -
+go depth 7
+ucinewgame
+position fen 8/k1b5/8/1K6/B3p3/2N3p1/2r5/8 w - -
+go depth 7
+ucinewgame
+position fen rnbq1bnr/p1pkpppp/1p6/3p4/5P2/6P1/PPPPP2P/RNBQKBNR w KQ -
+go depth 7
+ucinewgame
+position fen r1bk1b1r/pp1nqp1p/2ppp1p1/7n/1P1PN1P1/B1N1Q3/P1P1PK1P/1R3B1R b - -
+go depth 7
+ucinewgame
+position fen 1r1k1bnr/pp1bqpp1/B6p/2p1p2Q/P3p1PP/2PP4/1P1K4/RNB3NR b - -
+go depth 7
+ucinewgame
+position fen rn6/p2Np1rp/2pBk3/1B3p2/r2b3P/7R/1P2KPP1/6R1 w - -
+go depth 7
+ucinewgame
+position fen 2n5/6bB/r7/P1k1p1pp/6P1/2PPP2P/1R2b2N/B3K3 w - -
+go depth 7
+ucinewgame
+position fen 7k/1B3n2/4p1b1/pp2P2p/7P/Q2NP3/5K2/8 b - -
+go depth 7
+ucinewgame
+position fen k7/8/5P1N/7P/2pNb2K/2P1p3/1r3PR1/8 b - -
+go depth 7
+ucinewgame
+position fen 8/P7/3kn3/1R5n/1p1N4/7P/B4K2/2R5 b - -
+go depth 7
+ucinewgame
+position fen 3R4/4k1p1/8/8/b4q2/N2K2Pn/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1kr5/n6P/p4B2/P7/1P5P/1Pp2B2/7r/2N3K1 b - -
+go depth 7
+ucinewgame
+position fen 7k/3Q1n2/pp2p3/PP2P2p/2p1B2P/4P3/3NK3/4N3 b - -
+go depth 7
+ucinewgame
+position fen r1b2b1r/2Bpk2p/1p2P1p1/p4p2/P4q2/2p3P1/Q3KPPR/R3NB2 w - -
+go depth 7
+ucinewgame
+position fen 8/6p1/3R4/8/2K3n1/6k1/7q/3b4 w - -
+go depth 7
+ucinewgame
+position fen r1bqkb1r/pppppp1p/6pn/4n3/2PP4/3Q4/PP2PPPP/RNB1KBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 3k2nr/2p2p2/pr3qpp/1P1p2P1/Pn1P1P1P/1P2P3/B6R/R1BNKb2 b - -
+go depth 7
+ucinewgame
+position fen 8/k7/8/1K1B4/7b/1r4p1/8/8 w - -
+go depth 7
+ucinewgame
+position fen q1b2bnr/2r4k/p1PN4/3Pppp1/2P4P/N2KPPP1/PB2B3/R5R1 w - -
+go depth 7
+ucinewgame
+position fen 4k3/2r4B/p4n2/prpP2P1/P7/2N4P/1b1nN3/4KR2 b - -
+go depth 7
+ucinewgame
+position fen 1nb4k/3pp1r1/5pp1/1Pp1b2p/5PPP/BpqPPN2/2R1K1B1/1N5R b - -
+go depth 7
+ucinewgame
+position fen 1N1k4/3b2b1/P3p1p1/3PrPrp/2PB3P/8/4R2R/n1K5 b - -
+go depth 7
+ucinewgame
+position fen 8/1BN1k3/6P1/1P6/8/pb6/5B2/4K1R1 w - -
+go depth 7
+ucinewgame
+position fen 3N3k/Bnr4b/7B/8/3K2p1/6P1/8/7R w - -
+go depth 7
+ucinewgame
+position fen 8/2p5/1p4P1/rp3p1p/1k2bP2/1N2n2K/8/8 w - -
+go depth 7
+ucinewgame
+position fen r7/n4b1r/3P1k2/pP3pp1/P2R1PPQ/b3P3/8/4KR2 b - -
+go depth 7
+ucinewgame
+position fen 8/1N6/6k1/8/6Pb/3p2B1/5K2/8 w - -
+go depth 7
+ucinewgame
+position fen 4k3/8/8/2n3Qp/7P/1r4R1/8/2K5 w - -
+go depth 7
+ucinewgame
+position fen 2k2q2/2P2rb1/2r1b3/1p1pP3/1p6/7B/5BPn/4K3 b - -
+go depth 7
+ucinewgame
+position fen 5Q2/5b2/p2bk2p/P6P/5RP1/8/5K2/R2q4 b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pp2p1pp/2p5/3p1p2/2P5/1P6/PB1PPPPP/RN1QKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 6kb/8/5R2/8/3p4/B5p1/K1b3P1/8 b - -
+go depth 7
+ucinewgame
+position fen r1r5/6k1/5b2/1p6/2Np2P1/1RN2KB1/8/1r6 w - -
+go depth 7
+ucinewgame
+position fen 2r2k2/1p2p2p/7n/3p1Pp1/2PB2b1/6P1/4RN1P/2K2B1R b - -
+go depth 7
+ucinewgame
+position fen rn1qkb1r/1b1pp2p/1PQ2ppn/p7/1P4P1/5N2/P2PPP1P/RNB1KB1R b KQkq -
+go depth 7
+ucinewgame
+position fen r1b1kbnr/1p1p3p/6p1/pqp1np2/1P2PB2/P2P4/2PQ1PPP/R3KBNR b KQkq -
+go depth 7
+ucinewgame
+position fen r3q2r/pb1k2bp/P1p2p1n/3pp1B1/2pPP3/1P4P1/1P2BP1P/1N1K2NR w - -
+go depth 7
+ucinewgame
+position fen 3r1k2/8/1p2B2N/1P2b3/P5K1/6R1/8/b7 w - -
+go depth 7
+ucinewgame
+position fen 6n1/6r1/r2k1p1p/p6P/P5P1/3P1P2/2NB1bBK/6R1 w - -
+go depth 7
+ucinewgame
+position fen 4k3/K3N3/p7/p7/P6r/8/8/N7 w - -
+go depth 7
+ucinewgame
+position fen 8/5B1n/6nR/P4Pbp/1p6/k6P/5R2/1K4N1 b - -
+go depth 7
+ucinewgame
+position fen r5nr/p1p1kpq1/1Q4pp/1p1p2P1/PnPP3P/1B2P2b/1P1K1P1R/R1BN4 b - -
+go depth 7
+ucinewgame
+position fen B6k/8/4p2n/pp2P2p/7P/Q3P3/8/3bN1K1 b - -
+go depth 7
+ucinewgame
+position fen 2b3q1/p1r1n1p1/P1pp4/1PP2P1k/1B1P3p/1Q2R2P/1R2K3/1N6 b - -
+go depth 7
+ucinewgame
+position fen 1B6/4Bnk1/4n3/5P2/8/2K2p2/1r6/8 b - -
+go depth 7
+ucinewgame
+position fen 1N6/6P1/6k1/3b4/r2p4/3P3K/1N6/QR6 w - -
+go depth 7
+ucinewgame
+position fen r1b1kb2/p2p3r/4N2p/1p1ppppP/1n6/P3P2R/1PPB2P1/RQ2KBN1 b Qq -
+go depth 7
+ucinewgame
+position fen 6k1/8/1p6/8/1n6/8/2b4n/4K3 w - -
+go depth 7
+ucinewgame
+position fen 8/1k2N3/P3Q3/1p3r2/4r3/1p5K/1b6/8 b - -
+go depth 7
+ucinewgame
+position fen 4r2k/3n1b2/1p5P/1P1p2B1/5RK1/3p4/2b3B1/8 w - -
+go depth 7
+ucinewgame
+position fen rB2kbnr/pb6/1p6/3p1p1p/PpP3Pq/1Q5N/3PPP1P/RN2KB1R b KQkq -
+go depth 7
+ucinewgame
+position fen 5Nr1/5N2/1kn5/8/3p4/6b1/8/3K1n2 w - -
+go depth 7
+ucinewgame
+position fen r1br4/2k3p1/6p1/pP3p2/1Q1nP2P/1P1P2R1/2P1N3/4K1n1 w - -
+go depth 7
+ucinewgame
+position fen 3nk3/3N4/B7/8/P2r4/1P3P1p/K1p3RP/8 b - -
+go depth 7
+ucinewgame
+position fen r1bq1knr/pp1p2bp/2n2pp1/2pNp3/6P1/4PP1P/PPPP4/R1BQKBNR b KQ -
+go depth 7
+ucinewgame
+position fen 1r6/5b1k/1p4RP/1Pnp1p2/6N1/1p1p2BK/6B1/8 w - -
+go depth 7
+ucinewgame
+position fen rnb1kb1r/1p1ppppp/1q3n2/p1p5/P1P2P2/8/1P1PP1PP/RNBQKBNR b kq -
+go depth 7
+ucinewgame
+position fen r3k3/n6Q/p2p4/P1pP4/8/P2K3N/3BB2R/b5q1 b - -
+go depth 7
+ucinewgame
+position fen bb2N2r/8/3n4/p6k/2P1BP1p/3KP3/Pq6/1Rr5 w - -
+go depth 7
+ucinewgame
+position fen 2bkq3/4p3/1rpp1nQb/2nP2pp/pBP3P1/PP2PN1P/3NKP1R/2R2B2 b - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/p2pppp1/n7/1pQ4p/7P/3P2P1/PPP1PP2/RNB1KBNR w KQq -
+go depth 7
+ucinewgame
+position fen r1bnk1n1/p7/q2p3P/2p1pp1p/pPPN1pP1/3P3R/4PP2/R1QK1B2 b q -
+go depth 7
+ucinewgame
+position fen 8/1B3n1n/8/P2p1P1p/1p6/1k5P/2R2R1b/2K3N1 b - -
+go depth 7
+ucinewgame
+position fen rn2kbnr/p1p1p2p/3qbp2/1p4p1/2B1P3/NQ6/PP1P1PPP/R1BK2NR b kq -
+go depth 7
+ucinewgame
+position fen 8/8/8/1k6/3R2PP/3b4/1K6/8 w - -
+go depth 7
+ucinewgame
+position fen rnbk1r2/3p3p/2pbp3/p1P4n/PP4q1/2Np3n/QR1P3R/2B4K b - -
+go depth 7
+ucinewgame
+position fen 2k4r/p4p2/1pp1pn1b/1n3b1p/2B2B2/2P2rPP/PP4K1/R5NR b - -
+go depth 7
+ucinewgame
+position fen 6R1/6p1/8/4K1k1/b3n3/8/8/2q5 b - -
+go depth 7
+ucinewgame
+position fen 2b4Q/1r2n3/1N2k1p1/pP1p1p2/Pn1p1P1P/8/2RBP3/4KBNR b K -
+go depth 7
+ucinewgame
+position fen r2nk1nr/p3p3/b1qp1p2/1pp3bp/1P3pPP/P1PP3B/4PP1R/RNQK4 b kq -
+go depth 7
+ucinewgame
+position fen 5B1r/3n3k/1p2bpRP/1P1p4/8/1p1pN3/6B1/7K b - -
+go depth 7
+ucinewgame
+position fen 1n1r4/6R1/5n1b/2pp1kp1/P1p4r/2K2P1P/6B1/1b6 w - -
+go depth 7
+ucinewgame
+position fen 7N/3k4/n7/2P4B/8/8/1K6/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/P2Rn3/k7/1p6/7P/2B1N1K1/5nR1 b - -
+go depth 7
+ucinewgame
+position fen 3b1r2/6k1/6p1/p3p2p/P3PP1P/7B/1Q1p1K1R/1RrN2N1 b - -
+go depth 7
+ucinewgame
+position fen 8/p6k/P1P5/2P2r2/1R4rK/8/1P2B3/8 w - -
+go depth 7
+ucinewgame
+position fen 2R4r/1k6/1p2R3/pPb1pp2/B7/3N2K1/P7/1n6 w - -
+go depth 7
+ucinewgame
+position fen k7/5N2/5b2/8/3b4/1K6/8/7R w - -
+go depth 7
+ucinewgame
+position fen 1nbqkbnr/2pppppp/rp6/p7/3P4/8/PPPNPPPP/1RBQKBNR w Kk -
+go depth 7
+ucinewgame
+position fen k5n1/2P5/4KNq1/rp1P3p/1p2R2P/1PR5/8/8 w - -
+go depth 7
+ucinewgame
+position fen rnb1kbnr/p1q1pppp/1ppp4/8/4B1P1/2P5/PPQPPP1P/RNB1K1NR b KQkq -
+go depth 7
+ucinewgame
+position fen 2B1k1n1/r1n2p2/2p3r1/1pbPp1q1/Pp3P1P/N1PPB3/2Q5/2R1K2R w K -
+go depth 7
+ucinewgame
+position fen rn1q1bn1/p2p1kp1/1pp1p3/5p2/P1b5/R4R1B/1P1PPP2/1NBQK1N1 b - -
+go depth 7
+ucinewgame
+position fen 8/7k/np6/8/8/5p2/K7/6n1 w - -
+go depth 7
+ucinewgame
+position fen 4b3/3n2kp/3b4/B1pNn3/P1PpPr2/1p1P4/6K1/1R6 w - -
+go depth 7
+ucinewgame
+position fen rk3b1N/6p1/qp1p4/nb2p2p/1pPPPpn1/RNB2PPB/4K3/7R b - -
+go depth 7
+ucinewgame
+position fen 3k4/3P4/8/2P4R/8/1K4p1/8/4b3 b - -
+go depth 7
+ucinewgame
+position fen rnbr4/1pppqk2/1b2p3/pP3pp1/P2PP1np/3Q1P1K/1BPN2PP/1R3BNR b - -
+go depth 7
+ucinewgame
+position fen 5b1r/6k1/pp1p2np/1P2nqpP/P1bP2p1/4KP2/2P2R1N/1RQ2B2 w - -
+go depth 7
+ucinewgame
+position fen 1n3k2/8/2bn4/B1p4K/P1PpPb1N/1p1PR3/8/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/1k6/1p6/1K6/4n1p1/5r2/8 w - -
+go depth 7
+ucinewgame
+position fen r4q1r/pb1k2bp/P1p2B2/3pp3/1PBPP3/5NP1/1P1NKn1P/7R w - -
+go depth 7
+ucinewgame
+position fen 8/1k2Nr2/3Q4/Pp6/4r3/1p5K/1b6/8 w - -
+go depth 7
+ucinewgame
+position fen 1rbk2nr/pp1pbppp/n1pq4/4p3/P1B1PP2/2P4P/1P1P2P1/RNBQ1KNR w - -
+go depth 7
+ucinewgame
+position fen rnNk4/6rb/1p2q3/6pp/Qb1PPP2/P3BN1P/1P4K1/1b1B3R b - -
+go depth 7
+ucinewgame
+position fen 7b/8/1p3k2/PPb2N2/1R2K3/3B4/8/8 b - -
+go depth 7
+ucinewgame
+position fen r1r3n1/1p5k/1PP1p1p1/5p1p/5P1P/1R6/2K2b2/7b w - -
+go depth 7
+ucinewgame
+position fen 1nb1qbn1/r4k1r/pp1p3p/N4ppP/P5P1/1P6/2PPPPRN/1R1QKB2 w - -
+go depth 7
+ucinewgame
+position fen 6Q1/3k1n2/8/1P1P4/2RP3P/8/4K3/1N6 w - -
+go depth 7
+ucinewgame
+position fen 3Nk3/p4r2/b2p3p/5P1P/PbBp4/6pR/1QPR2P1/4K3 b - -
+go depth 7
+ucinewgame
+position fen 1nbqkb1r/3pp1pp/1pp5/4Pp2/rP1P4/pB3N2/PBPN1PPn/1R1QK2R w Kk -
+go depth 7
+ucinewgame
+position fen 8/4k3/8/4n2P/3P4/8/4K3/N7 w - -
+go depth 7
+ucinewgame
+position fen rnb4r/3p3k/1p3p2/pP1p3P/1P1p3N/5B2/5BK1/1RR5 b - -
+go depth 7
+ucinewgame
+position fen r4nk1/6bp/2p5/p6P/5pP1/8/K4B2/4R3 b - -
+go depth 7
+ucinewgame
+position fen 2k1n1r1/8/8/8/1K4n1/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen r7/3kN3/N7/1pK1P3/5R1P/2P2p2/8/8 w - -
+go depth 7
+ucinewgame
+position fen 1R6/r3k3/Q5p1/pp1p1p2/P4P2/4BqP1/2K3P1/R3b3 w - -
+go depth 7
+ucinewgame
+position fen 8/4k3/3Q4/Rp1KP3/6bP/1pPN1p2/3N4/8 b - -
+go depth 7
+ucinewgame
+position fen 8/1R3k2/3r4/2K5/5P1p/p5b1/8/8 b - -
+go depth 7
+ucinewgame
+position fen 7Q/b1k5/4P3/8/8/8/4B1P1/3K4 b - -
+go depth 7
+ucinewgame
+position fen r2k1bnr/pp2qpp1/B6p/2p1p2Q/P3p1bP/R1PP4/1P1K4/1NB3NR w - -
+go depth 7
+ucinewgame
+position fen 8/4k2N/2Bp1b1R/3q1n2/4p3/8/7n/4K3 b - -
+go depth 7
+ucinewgame
+position fen 1r2kb1r/4p1pp/2p2p2/p1p2n1n/2P1PP2/2q5/R2PKN1P/1NB2B1R w k -
+go depth 7
+ucinewgame
+position fen 1n6/b4k2/p2p4/P2P4/P1p2B1Q/2N2K2/4B3/7R b - -
+go depth 7
+ucinewgame
+position fen 1n3r1k/1bqpP2p/Bp4p1/P5BP/3pPp2/5R2/P4PP1/R2K2N1 b - -
+go depth 7
+ucinewgame
+position fen 3r4/p1p3p1/n3P1kp/Pr4P1/2bbP3/1P3PN1/2K1N2q/2R5 w - -
+go depth 7
+ucinewgame
+position fen 1n2rk2/8/rpbRp2p/p4N2/P1P1pP1p/8/4PKB1/b5nR w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/pp6/3pp2p/5ppP/P1N5/1P5N/2PPPPP1/1RBQKB1R b Kkq -
+go depth 7
+ucinewgame
+position fen k7/8/1b5P/1b6/8/r7/4p3/4KN2 w - -
+go depth 7
+ucinewgame
+position fen 8/2r1b1kB/2b5/7n/3p4/2p4r/1n3K2/7R w - -
+go depth 7
+ucinewgame
+position fen 5R1r/k4N2/5P1r/8/2p5/2P3K1/8/4N3 w - -
+go depth 7
+ucinewgame
+position fen rn1qk1r1/4n2p/1p2p1p1/8/P5P1/4P2P/3b1KbR/3rR1N1 w - -
+go depth 7
+ucinewgame
+position fen 8/k7/B3p3/2K1P2p/4P2P/8/3N4/8 b - -
+go depth 7
+ucinewgame
+position fen k3r3/r7/1P6/8/6p1/7n/2K5/8 b - -
+go depth 7
+ucinewgame
+position fen 8/2p5/1p6/1p3p2/5P1p/r1k5/3n2K1/5N2 w - -
+go depth 7
+ucinewgame
+position fen 1k4n1/1p2B2p/3pp3/4Qp1P/2pP4/1R2b3/8/K5RB b - -
+go depth 7
+ucinewgame
+position fen b2r2nr/n2p4/6pb/p1p2kp1/2p2N1P/P4P2/4P2P/3K1B1R b - -
+go depth 7
+ucinewgame
+position fen 1n2k3/r1Q1bp2/b2p3p/RPP1NP2/1P6/2Rp1Pr1/5KBq/3q4 b - -
+go depth 7
+ucinewgame
+position fen 5r2/4k3/8/2K5/5P1p/p5b1/1R6/1B6 w - -
+go depth 7
+ucinewgame
+position fen 1B6/5R1n/2r1kbp1/5p1r/pP5P/2P5/2N5/2R3K1 w - -
+go depth 7
+ucinewgame
+position fen 7k/8/5rpb/p3p2p/PR2PP1P/2N5/3QK1R1/6N1 w - -
+go depth 7
+ucinewgame
+position fen 2r1k1Br/2p4p/4pbp1/ppP1P3/P3bB2/1PN1QP1P/3K2P1/3R2R1 w - -
+go depth 7
+ucinewgame
+position fen 8/8/8/3kP2P/8/4K3/3N4/8 b - -
+go depth 7
+ucinewgame
+position fen k7/8/3N4/3K4/8/2P5/4r3/8 w - -
+go depth 7
+ucinewgame
+position fen k7/8/p1b5/3r4/8/8/4KB2/2Rq4 w - -
+go depth 7
+ucinewgame
+position fen 3N3Q/2nk4/8/2R4p/1r1p3P/8/5B2/3K4 w - -
+go depth 7
+ucinewgame
+position fen rnb1kr2/p2p1p1p/1p6/6p1/1bP2qP1/1PNPP2n/P1RKN2P/3QB1R1 b - -
+go depth 7
+ucinewgame
+position fen r1bqkbr1/p1pppp1p/6pn/1p2nQ2/2PP4/8/PP2PPPP/RNB1KBNR w KQq -
+go depth 7
+ucinewgame
+position fen 1rb2rk1/1p1qppb1/1pn1Pnp1/2p4p/2Pp3P/PN1PBPP1/1P6/R2K1BNR b - -
+go depth 7
+ucinewgame
+position fen 6nr/1p3k1p/5p1b/1qp1p1p1/pPN3P1/B1P1pP1P/P2PKQBR/4R1N1 b - -
+go depth 7
+ucinewgame
+position fen 1k6/8/4p3/1B2P2p/1K2P2P/8/8/5N2 b - -
+go depth 7
+ucinewgame
+position fen 2r5/n3b3/5kp1/pP1P1p1r/P1bp1P1p/B3P1Q1/5KPn/R5R1 w - -
+go depth 7
+ucinewgame
+position fen 3k4/2B5/5P2/8/8/6N1/5K2/8 b - -
+go depth 7
+ucinewgame
+position fen r1N2bk1/1b2p2r/2n3p1/pPpP1p2/1P3P1p/P3PN1Q/R4KPn/2B3R1 b - -
+go depth 7
+ucinewgame
+position fen r4bnr/ppp2p1p/4k3/1B1q1b2/1n1pPpp1/3P1P2/P1PNQ1PP/R1B2KR1 w - -
+go depth 7
+ucinewgame
+position fen 1rbqk2r/p1p1pn1p/Qpn4b/1B1pPpp1/N5P1/5P2/PPPP3P/R1B1K1NR w KQk -
+go depth 7
+ucinewgame
+position fen Br2rB2/b7/p6p/1N5k/PPp1P3/3p4/8/2RK4 w - -
+go depth 7
+ucinewgame
+position fen rnbq1bn1/pppppkp1/6r1/5p1p/PP6/B1P2N2/3PPPPP/RN1QKB1R w KQ -
+go depth 7
+ucinewgame
+position fen 2bkrb2/3r4/p1n2ppp/2PppP1P/Q1p1P2B/N2R1N2/P2P4/3R1K2 w - -
+go depth 7
+ucinewgame
+position fen 1n4R1/B4r1k/bP6/4p3/2pP1P1P/5p2/3n4/4R1K1 b - -
+go depth 7
+ucinewgame
+position fen rnq1kbnr/N1p1pppp/pp2b3/3p4/2P2PP1/3P3P/PP2P3/R1BQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 8/k7/8/8/B3Kb2/2N3p1/3r4/8 b - -
+go depth 7
+ucinewgame
+position fen 8/8/6k1/1n1P3p/3n4/3K3p/1RP5/8 w - -
+go depth 7
+ucinewgame
+position fen 8/p7/P3k2B/1K6/8/7p/8/8 w - -
+go depth 7
+ucinewgame
+position fen 5k2/1Q6/8/p2p1p2/R4p2/5bP1/3B2P1/4bK2 w - -
+go depth 7
+ucinewgame
+position fen r4k1B/p1b5/PRP5/2P4r/B1N5/5KP1/1P5P/2q5 w - -
+go depth 7
+ucinewgame
+position fen 8/q7/5k2/p2r3r/PP2p1P1/2KP4/2Rnp1B1/4N1N1 b - -
+go depth 7
+ucinewgame
+position fen 8/2b5/2k1b3/6P1/2P5/1p1N4/4K1p1/N6R w - -
+go depth 7
+ucinewgame
+position fen 8/6r1/p2k1P1p/P2pR2P/1b6/1b1p2P1/3R4/5K2 w - -
+go depth 7
+ucinewgame
+position fen r2n1r2/4k2p/1p6/5pp1/P5P1/7P/1R1Kb3/1r6 w - -
+go depth 7
+ucinewgame
+position fen 6b1/1r2k3/1p5N/P2PPP2/Bn4P1/6BK/8/1b3R2 b - -
+go depth 7
+ucinewgame
+position fen r4nk1/p5bp/2p5/5p1P/6P1/4R1B1/K7/8 b - -
+go depth 7
+ucinewgame
+position fen 4Q3/5Q2/1k6/8/8/3K3B/8/8 b - -
+go depth 7
+ucinewgame
+position fen 3rk2r/p4pQ1/3p1npb/1pp3P1/P2pN3/5R1b/1PK4P/2B4R b k -
+go depth 7
+ucinewgame
+position fen 1k6/4b3/p2p2Qr/Ppp2pP1/4R3/R2K3b/1P2r2P/2B5 w - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/p1pppppp/1p6/8/P7/7N/1PPPPPPP/RNBQKB1R b KQkq -
+go depth 7
+ucinewgame
+position fen k5N1/5n1p/P1b5/3p4/6n1/3p3K/1q5B/8 b - -
+go depth 7
+ucinewgame
+position fen r1b2bnr/ppp1kppp/2n5/1B1qp3/1P1pP3/3P1P2/P1PQ2PP/RNB1K1NR w KQ -
+go depth 7
+ucinewgame
+position fen 2r5/pbk3r1/2p3p1/1pn2P1P/PP1N3R/1PB4P/3K2B1/1r6 w - -
+go depth 7
+ucinewgame
+position fen 4k2r/B1p2r2/5p1p/Q2R3n/PP4n1/2p4q/4PR1P/4K3 b - -
+go depth 7
+ucinewgame
+position fen rnbqkb1r/ppp1p1pp/5n2/3p4/P1P2p2/R2P4/1P2PPPP/1NBQKBNR b Kkq -
+go depth 7
+ucinewgame
+position fen 3r1nk1/7p/2p4b/p5PP/5p2/K2RB3/8/8 b - -
+go depth 7
+ucinewgame
+position fen 2b1kr2/1p1p1p1p/r1n2q1b/pQP1pPB1/P2p4/2N2P1N/1P2K1BP/R3R3 b - -
+go depth 7
+ucinewgame
+position fen 8/3Nk2P/8/4P3/8/5K2/8/8 b - -
+go depth 7
+ucinewgame
+position fen r1bk3r/p1p1p2p/Qpqn3b/1B1pP1p1/1PPn1pP1/3P1P2/PN1B3P/1R2K1NR b - -
+go depth 7
+ucinewgame
+position fen 8/kr6/8/8/2P3K1/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen 1Nk5/4n2p/4PppQ/6PP/4P3/2p2q2/b2r4/1RB1K1R1 w - -
+go depth 7
+ucinewgame
+position fen 3N3k/1n2r3/7B/8/2K3p1/6P1/8/1b5R w - -
+go depth 7
+ucinewgame
+position fen 2k5/K3R3/2N5/8/7P/5p2/3r4/2b5 b - -
+go depth 7
+ucinewgame
+position fen 6n1/6k1/8/8/7N/8/8/N2K4 b - -
+go depth 7
+ucinewgame
+position fen rR6/2b3kr/3pb3/1P1NN2P/p3nP1P/8/8/1KB4R b - -
+go depth 7
+ucinewgame
+position fen k2B4/n7/7p/3p4/8/1q1p4/4N1Kn/3b4 b - -
+go depth 7
+ucinewgame
+position fen rnbq2r1/3pb3/pp3p1k/1P1p3p/3p2P1/2P3K1/4B1N1/1R2B2R b - -
+go depth 7
+ucinewgame
+position fen rnbqkbnr/ppp1pppp/8/3p4/2P2P2/3P4/PP2P1PP/RNBQKBNR w KQkq -
+go depth 7
+ucinewgame
+position fen 8/7k/4P3/8/P3P3/7N/N7/5K2 w - -
+go depth 7
+ucinewgame
+position fen 7k/8/5PP1/7P/2p5/7K/8/3R3b b - -
+go depth 7
+ucinewgame
+position fen b4r2/8/3R4/p4B1k/q1P2P1p/8/2K5/8 w - -
+go depth 7
+ucinewgame
+position fen 8/6Bp/7P/5k2/5P2/B1Rp2pr/N5K1/3R4 w - -
+go depth 7
+ucinewgame
+position fen rnbqk2r/1p1p1pp1/2p1pb1n/p6p/8/P2P3P/1PP1PP2/RNBQKBNR b KQkq -
+go depth 7
+ucinewgame
+position fen 6R1/6p1/4q2n/4k3/2K1b3/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen b7/b4N2/1k6/4r2P/P3p3/8/4K3/8 b - -
+go depth 7
+ucinewgame
+position fen 4k3/8/8/1Pn5/8/6B1/5K2/1b6 w - -
+go depth 7
+ucinewgame
+position fen 3k2b1/2p1r3/5b2/pN2ppPr/p1P4R/P2P1PR1/2K5/B3qBN1 w - -
+go depth 7
+ucinewgame
+position fen 7k/R7/5PP1/2p4P/4K3/8/8/5b2 b - -
+go depth 7
+ucinewgame
+position fen r1bqk1n1/p2pbpp1/npr5/2p1p3/1P1P1NPp/5P1B/P1P1P2P/RNBQK2R w KQq -
+go depth 7
+ucinewgame
+position fen 8/8/8/3Bk3/1p1p4/8/7K/1b6 b - -
+go depth 7
+ucinewgame
+position fen 1n1qkb1r/r2b2np/pp2pp2/1Npp2p1/2B2P2/1PPPP1PP/P2B1Q2/R4KNR w k -
+go depth 7
+ucinewgame
+position fen 1nbq1bnr/rp3k2/p2p3p/4pppP/P1NB4/1P3N2/2PPPPP1/1R1QKBR1 w - -
+go depth 7
+ucinewgame
+position fen r1bq1b2/p4kp1/1p1pp2r/1Pp1P1pp/P1K2P1P/7R/2P1PB2/RNnQ1BN1 b - -
+go depth 7
+ucinewgame
+position fen 1n3R2/3k4/3r3b/2pp2Pn/P7/2p4r/8/1bK2B2 b - -
+go depth 7
+ucinewgame
+position fen 1k4n1/b7/5P2/3b4/3p1bPp/6RP/4KN2/1B6 w - -
+go depth 7
+ucinewgame
+position fen 3N4/3k4/n1r5/4Q2p/7P/2R1B3/8/3K4 w - -
+go depth 7
+ucinewgame
+position fen r5rk/1p2B3/n7/3pp1p1/P6N/1p3qPK/7P/RN4b1 b - -
+go depth 7
+ucinewgame
+position fen r1bqkbnr/ppp2ppp/2n5/1B2p3/1P1pP3/3P1P2/P1P3PP/RNBQK1NR b KQkq -
+go depth 7
+ucinewgame
+position fen r3q2r/pkpn1pp1/1p3N2/2bPpP1p/P3P2P/6P1/1P1PK1B1/RNBQ1R2 w - -
+go depth 7
+ucinewgame
+position fen 1rbk2r1/1p5Q/p1pb4/1q2P2p/P4pnP/1PP2P2/3K4/RN4NR b - -
+go depth 7
+ucinewgame
+position fen 8/8/2P5/7k/K7/7p/1q6/7Q w - -
+go depth 7
+ucinewgame
+position fen 8/r7/8/1p6/4k1p1/4n3/8/1K4R1 b - -
+go depth 7
+ucinewgame
+position fen 8/3b1k2/1N1P1n2/1P3P2/p3N1p1/P1RK4/r7/4b3 b - -
+go depth 7
+ucinewgame
+position fen 8/4k3/3NB3/2P5/8/8/8/1K6 b - -
+go depth 7
+ucinewgame
+position fen 6r1/1bk4P/p4R2/Ppp5/1P3n2/1P3B1P/1N3K2/1rBr4 w - -
+go depth 7
+ucinewgame
+position fen 8/k4r2/3r4/1P1N4/K5p1/8/8/6n1 b - -
+go depth 7
+ucinewgame
+position fen 3rk3/1q1b2b1/4p2r/1ppp4/B1P3np/3PB3/4N1P1/1R3KR1 b - -
+go depth 7
+ucinewgame
+position fen 8/q7/5k2/p5r1/PP1rp1P1/1K1P4/2RNp1B1/1n2N3 b - -
+go depth 7
+ucinewgame
+position fen 3n4/k2B2r1/r7/p3p3/6p1/4K1B1/1b6/3N4 w - -
+go depth 7
+ucinewgame
+position fen 3b4/2r5/7k/8/4b3/2p4B/1n2K3/3r3n w - -
+go depth 7
+ucinewgame
+position fen k3r3/8/6b1/p7/8/8/8/5K2 w - -
+go depth 7
+ucinewgame
+position fen 1b2b3/4P1r1/8/4k2P/2P5/r7/2R1pK2/8 b - -
+go depth 7
+ucinewgame
+position fen 1n1R4/4k3/5r2/2p3bn/P2p3r/2p5/4B3/1b1K4 w - -
+go depth 7
+ucinewgame
+position fen 2k1rbn1/3R4/2P5/3p1P2/3N4/6n1/2K5/8 w - -
+go depth 7
+ucinewgame
+position fen 2k5/4P3/r7/1PNP2pP/6p1/5r2/nK6/8 b - -
+go depth 7
+ucinewgame
+position fen 1nbqkb1r/3pp1pp/1p6/2p1Pp2/rP1P4/pBB2N2/P1PN1PPn/2RQK2R b Kk -
+go depth 7
+ucinewgame
+position fen Nb2n3/4B1qr/1p5k/5P1P/1pP3pN/p4R1P/P7/R1K2B2 b - -
+go depth 7
+ucinewgame
+position fen r5nr/1b1p1p2/3qNk1b/pppP2p1/1nP4P/P4P2/2QRPK1P/5BNR w - -
+go depth 7
+ucinewgame
+position fen 2N3n1/8/4P3/P2k4/4b3/1K5p/6P1/4R3 w - -
+go depth 7
+ucinewgame
+position fen rn1qkb1r/3b3p/ppp1pp2/1N1p1np1/2B2P2/1PPPP1PP/P7/R1BQ1KNR w kq -
+go depth 7
+ucinewgame
+position fen 5B2/P1k5/7P/4P1P1/2K1b3/8/8/8 w - -
+go depth 7
+ucinewgame
+position fen b3nbr1/k4Bp1/q3p3/3p3p/P2P4/2K2nQ1/6R1/8 b - -
+go depth 7
+ucinewgame
+position fen 8/P5k1/4pnp1/1p1b1R1p/7P/2r5/3b4/5K2 b - -
+go depth 7
+ucinewgame
+position fen 4k2r/6pp/2p1pp2/p3PP1n/1bPpq3/2N4N/1rR2KBP/6R1 w - -
+go depth 7
+ucinewgame
+position fen 5R2/8/k2P2n1/1p6/1p1RN2P/1P3qK1/8/7r w - -
+go depth 7
+ucinewgame
+position fen R7/5qp1/7n/2K1k3/4b3/8/8/8 b - -
+go depth 7
+ucinewgame
+position fen B1k2b2/p4r2/1P3p1n/P1p1p1NP/2P2N2/R7/8/4K2R b - -
+go depth 7
+ucinewgame
+position fen 8/1B3n1n/8/P2p1P1p/1p6/1Pk4P/2p1R2b/2K2RN1 w - -
+go depth 7
+ucinewgame
+position fen 8/2q2P2/2P5/8/6kp/pK6/8/8 b - -
+go depth 7
+ucinewgame
+position fen 3k1b2/pn1r4/1P2B3/P1pNp1pP/2P5/R4R2/8/4K3 b - -
+go depth 7
+ucinewgame
+position fen 2R1r3/1k2b3/1p5R/pP2pp2/8/6K1/PN6/1n1B4 w - -
+go depth 7
+ucinewgame
+position fen r4bkr/p3p1pp/n2P1Q2/2p5/5P1P/P2b4/1N2P2R/R1B1KBN1 w - -
+go depth 7
+ucinewgame
+position fen 8/4N3/3pb3/8/3N1k2/8/3K4/3R4 w - -
+go depth 7
+ucinewgame
+position fen 8/8/4k3/1P6/8/6BR/5K2/nb6 w - -
+go depth 7
+ucinewgame
+position fen 4Q3/1b4k1/1N4p1/1P1p1p2/Pp3PnP/3pR3/4PNB1/2R1K3 w - -
+go depth 7
+ucinewgame
+position fen 1r1k1bn1/pb2p2r/np6/P1pP2pQ/3Pp2P/BP3N2/5PP1/R1N2K1R w - -
+go depth 7
+ucinewgame
+position fen r1bn3r/2p3pp/1N1k2Pn/pP3p2/1b1ppq1P/BP3P1R/Q1PPPK2/4RBN1 w - -
+go depth 7
