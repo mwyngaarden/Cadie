@@ -1,13 +1,13 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
-#include <cassert>
-#include <cstdlib>
-#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <utility>
+#include <cassert>
+#include <cstdlib>
+#include <cstring>
 #include "pos.h"
 #include "eval.h"
 #include "gen.h"

@@ -1,8 +1,8 @@
 #ifndef ZOBRIST_H
 #define ZOBRIST_H
 
-#include "types.h"
 #include <cstdint>
+#include "types.h"
 
 void zobrist_init();
 void zobrist_validate();

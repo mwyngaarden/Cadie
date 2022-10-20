@@ -1,10 +1,10 @@
 #ifndef PERFT_H
 #define PERFT_H
 
-#include "types.h"
 #include <array>
-#include <cstdint>
 #include <vector>
+#include <cstdint>
+#include "types.h"
 
 void perft_validate(int argc, char* argv[]);
 

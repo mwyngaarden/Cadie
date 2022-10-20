@@ -30,8 +30,8 @@ Cadie can be compiled at the command line using the make command.  There are cur
 
 ## Thanks
 
-The fine people at https://www.TalkChess.com for their advice and https://www.ChessProgramming.org for their documentation.  
-Andrew Grant (https://github.com/AndyGrant/Ethereal) for transposition table features, evaluation features and ideas, and his positional suite for evaluation tuning.  
-Fabien Letouzey (https://www.fruitchess.com) for search and evaluation features.
-Marco Belli (https://github.com/elcabesa/vajolet) for his huge volume of chess positions that were invaluable for move generation debugging.
+The fine people at https://www.TalkChess.com for their advice and https://www.ChessProgramming.org for their documentation.   
+Andrew Grant (https://github.com/AndyGrant/Ethereal) for transposition table features, evaluation features and ideas, and his positional suite for evaluation tuning.   
+Fabien Letouzey (https://www.fruitchess.com) for search and evaluation features.   
+Marco Belli (https://github.com/elcabesa/vajolet) for his huge volume of chess positions that were invaluable for move generation debugging.  
 

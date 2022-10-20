@@ -28,7 +28,6 @@ int LMReduction[32][32];
 int Evals[PliesMax];
 Move Killers[2][PliesMax][2];
 
-
 constexpr int HistoryMax = DepthMax * DepthMax;
 static_assert(HistoryMax < numeric_limits<i16>::max());
 i16 History[2][128][128];

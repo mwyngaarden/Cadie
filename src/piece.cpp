@@ -1,8 +1,8 @@
-#include "piece.h"
-#include "types.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include "piece.h"
+#include "types.h"
 using namespace std;
 
 u8 P12ToP256[12];

@@ -1,10 +1,10 @@
-#include "zobrist.h"
+#include <iomanip>
+#include <vector>
+#include <cstdint>
 #include "piece.h"
 #include "pos.h"
 #include "square.h"
-#include <cstdint>
-#include <iomanip>
-#include <vector>
+#include "zobrist.h"
 using namespace std;
 
 struct ZobristInfo {

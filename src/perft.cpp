@@ -1,14 +1,14 @@
 #include <array>
 #include <chrono>
 #include <cmath>
-#include <cstdint>
-#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cstdint>
+#include <cstring>
 
 #if defined(_MSC_VER)
 #include <intrin.h>
@@ -26,6 +26,7 @@
 #include "tt.h"
 #include "types.h"
 #include "uci.h"
+
 using namespace std;
 struct FenInfo {
     string fen;

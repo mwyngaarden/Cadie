@@ -19,6 +19,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+    // maintain order!
     square_init();
     search_init();
     piece_init();

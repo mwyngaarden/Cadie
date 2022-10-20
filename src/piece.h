@@ -1,10 +1,10 @@
 #ifndef PIECE_H
 #define PIECE_H
 
+#include <utility>
+#include <cstdint>
 #include "types.h"
 #include "util.h"
-#include <cstdint>
-#include <utility>
 
 extern u8 P12ToP256[12];
 extern int P256ToP12[256];

@@ -12,7 +12,9 @@ SRC_PATH = .
 # Space-separated pkg-config libraries used by this project
 LIBS =
 # General compiler flags
-COMPILE_FLAGS = -std=c++2a -Wall -Wextra -pedantic -Wshadow -fopenmp
+COMPILE_FLAGS  = -std=c++2a -fopenmp -Wall -Werror -Wextra -Wpedantic -Wshadow -Wunused -Wuninitialized -Wmaybe-uninitialized
+COMPILE_FLAGS += -Wswitch-default -Wswitch-enum -Wduplicated-branches -Wduplicated-cond -Wunsafe-loop-optimizations
+COMPILE_FLAGS += -Wunused-macros
 
 # Additional release-specific flags
 RCOMPILE_FLAGS = -O3 -flto -march=native -DNDEBUG -fno-exceptions -fno-rtti

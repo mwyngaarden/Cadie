@@ -1,11 +1,11 @@
+#include <iomanip>
+#include <iostream>
 #include "gen.h"
 #include "move.h"
 #include "piece.h"
 #include "pos.h"
 #include "square.h"
 #include "types.h"
-#include <iomanip>
-#include <iostream>
 
 using namespace std;
 

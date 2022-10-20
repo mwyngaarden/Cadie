@@ -1,15 +1,15 @@
 #ifndef MOVE_H
 #define MOVE_H
 
+#include <limits>
+#include <sstream>
+#include <string>
+#include <cassert>
+#include <cstdint>
 #include "piece.h"
 #include "square.h"
 #include "types.h"
 #include "util.h"
-#include <cassert>
-#include <cstdint>
-#include <limits>
-#include <sstream>
-#include <string>
 
 class Move {
 public:

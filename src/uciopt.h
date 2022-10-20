@@ -66,6 +66,9 @@ public:
             assert(false);
         case String:
             return string_value_;
+        default:
+            assert(false);
+            return std::string();
         }
     }
 
@@ -79,10 +82,10 @@ public:
         case Combo:     return "combo";
         case Button:    return "button";
         case String:    return "string";
+        default:
+            assert(false);
+            return std::string();
         }
-
-        assert(false);
-        return std::string();
     }
 
     int clamp(int value) const
@@ -126,6 +129,7 @@ public:
             oss << string_def_;
             break;
         case Button:
+        default:
             assert(false);
             break;
         }
@@ -156,6 +160,7 @@ public:
             string_value_ = value;
             break;
         case Button:
+        default:
             assert(type_ != Button);
             break;
         }
@@ -172,6 +177,7 @@ public:
             return combo_value_;
         case String:
             return string_value_;
+        case Button:
         default:
             return std::string();
         }

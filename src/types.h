@@ -48,7 +48,7 @@ struct Value {
     int mg = 0;
     int eg = 0;
 
-    constexpr bool value_is_ok() const
+    bool value_is_ok() const
     {
         // 30000 is completely arbitrary
         
