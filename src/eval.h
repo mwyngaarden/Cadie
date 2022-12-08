@@ -1,10 +1,6 @@
 #ifndef EVAL_H
 #define EVAL_H
 
-#ifdef _MSC_VER
-#include <emmintrin.h>
-#endif
-
 #include <bit>
 #include "htable.h"
 #include "pos.h"
@@ -43,14 +39,12 @@ struct EvalEntry {
 
 static_assert(sizeof(EvalEntry) == 8);
 
-extern HashTable<1024 * 16, EvalEntry> ehtable;
+extern HashTable<16 * 1024, EvalEntry> ehtable;
 
 void eval_init();
 
-i16 eval_psqt(int phase, int p12, int sq);
-
 int eval(const Position& pos, int alpha, int beta);
 
-void eval_error(int argc, char* argv[]);
+void eval_tune(int argc, char* argv[]);
 
 #endif

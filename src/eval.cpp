@@ -19,7 +19,6 @@ using namespace std;
 random_device rd;
 mt19937 mt(rd());
 //mt19937 mt(123456);
-uniform_int_distribution<int> uid(-5, 5);
 
 i16 PSQT[PhaseCount][12][128];
 
@@ -115,24 +114,21 @@ constexpr int BishopMobInit     = -10; // T2 -6
 constexpr int RookMobInit       =  -2; // T2 -7
 constexpr int QueenMobInit      =  -2;
 
-template <int Side> static int piece_on_semiopen    (const Position& pos, int orig);
-template <int Side> static int minor_on_outpost     (const Position& pos, int orig);
+template <side_t Side> static int piece_on_semiopen (const Position& pos, int orig);
+template <side_t Side> static int minor_on_outpost  (const Position& pos, int orig);
 
-template <int Side> static Value eval_pieces        (const Position& pos);
+template <side_t Side> static Value eval_pieces     (const Position& pos);
+template <side_t Side> static Value eval_knight     (const Position& pos, int orig);
+template <side_t Side> static Value eval_bishop     (const Position& pos, int orig);
+template <side_t Side> static Value eval_rook       (const Position& pos, int orig);
+template <side_t Side> static Value eval_queen      (const Position& pos, int orig);
+template <side_t Side> static Value eval_king       (const Position& pos);
+template <side_t Side> static Value eval_shelter    (const Position& pos);
+template <side_t Side> static Value eval_storm      (const Position& pos);
+template <side_t Side> static Value eval_mate       (const Position& pos);
 
-template <int Side> static Value eval_knight        (const Position& pos, int orig);
-template <int Side> static Value eval_bishop        (const Position& pos, int orig);
-template <int Side> static Value eval_rook          (const Position& pos, int orig);
-template <int Side> static Value eval_queen         (const Position& pos, int orig);
-
-template <int Side> static Value eval_king          (const Position& pos);
-template <int Side> static Value eval_shelter       (const Position& pos);
-template <int Side> static Value eval_storm         (const Position& pos);
-
-template <int Side> static Value eval_mate          (const Position& pos);
-
-static Value eval_complexity                        (const Position& pos, const Value& val);
-static int   eval_scale_factor                      (const Position& pos, const Value& val);
+static Value eval_complexity    (const Position& pos, const Value& val);
+static int eval_scale_factor    (const Position& pos, const Value& val);
 
 static int pawns_on_file_a(const Position& pos);
 static int pawns_on_file_h(const Position& pos);
@@ -158,11 +154,11 @@ void eval_init()
             for (int sq = A1; sq <= H8; sq++) {
                 if (!sq88_is_ok(sq)) continue;
 
-                const int side      = p12 & 1;
-                const int ptype     = p12 / 2;
-                const int sqref     = side ? sq88_reflect(sq) : sq;
-                const i16 svalue    = psqt_values[phase][ptype][sqref];
-                const int factor    = (*PsqtFactors[ptype])[phase];
+                side_t side = p12 & 1;
+                int ptype   = p12 / 2;
+                int sqref   = side ? sq88_reflect(sq) : sq;
+                i16 svalue  = psqt_values[phase][ptype][sqref];
+                int factor  = (*PsqtFactors[ptype])[phase];
             
                 PSQT[phase][p12][sq] = svalue * factor / 100;
             }
@@ -309,7 +305,7 @@ void eval_init()
 
 }
 
-template <int Side>
+template <side_t Side>
 int piece_on_semiopen(const Position& pos, int orig)
 {
     constexpr u8 mpawn = make_pawn(Side);
@@ -320,7 +316,7 @@ int piece_on_semiopen(const Position& pos, int orig)
     int op = 0;
 
     for (int sq = orig + pincr; sq >= A2 && sq <= H7; sq += pincr) {
-        const u8 piece = pos[sq];
+        u8 piece = pos[sq];
 
         mp += piece == mpawn;
         op += piece == opawn;
@@ -334,7 +330,7 @@ int piece_on_semiopen(const Position& pos, int orig)
         return FileClosed;
 }
 
-template <int Side>
+template <side_t Side>
 Value eval_knight(const Position& pos, int orig)
 {
     Value val;
@@ -345,15 +341,15 @@ Value eval_knight(const Position& pos, int orig)
     val.eg += PSQT[PhaseEg][WN12 + Side][orig];
 
     constexpr u8 mpawn  = make_pawn(Side);
-    const int pincr     = pawn_incr(Side);
-    const int outpost   = minor_on_outpost<Side>(pos, orig);
+    int pincr     = pawn_incr(Side);
+    int outpost   = minor_on_outpost<Side>(pos, orig);
 
     val += KnightOutpostBonus * outpost;
 
     int mob = KnightMobInit;
         
     for (auto inc : KnightIncrs) {
-        const int sq = orig + inc;
+        int sq = orig + inc;
 
         mob += MobBonus[WN12 + Side][pos[sq]];
     }
@@ -361,7 +357,7 @@ Value eval_knight(const Position& pos, int orig)
     val += Value { KnightMobFactor.mg * mob, KnightMobFactor.eg * mob };
   
     {
-        const int pcount = pos.pawns(Side);
+        int pcount = pos.pawns(Side);
         constexpr int pbonus[9] = { -5, -4, -3, -2, -1, 0, 1, 2, 3 };
 
         int bonus = pbonus[pcount];
@@ -378,7 +374,7 @@ Value eval_knight(const Position& pos, int orig)
     return val;
 }
 
-template <int Side>
+template <side_t Side>
 Value eval_bishop(const Position& pos, int orig)
 {
     Value val;
@@ -390,9 +386,9 @@ Value eval_bishop(const Position& pos, int orig)
 
     constexpr u8 mpawn  = make_pawn(Side);
     constexpr u8 opawn  = make_pawn(flip_side(Side));
-    const int pincr     = pawn_incr(Side);
+    int pincr     = pawn_incr(Side);
 
-    const int outpost = minor_on_outpost<Side>(pos, orig);
+    int outpost = minor_on_outpost<Side>(pos, orig);
 
     val += BishopOutpostBonus * outpost;
 
@@ -443,7 +439,7 @@ Value eval_bishop(const Position& pos, int orig)
     return val;
 }
 
-template <int Side>
+template <side_t Side>
 Value eval_rook(const Position& pos, int orig)
 {
     Value val;
@@ -453,26 +449,26 @@ Value eval_rook(const Position& pos, int orig)
     val.mg += PSQT[PhaseMg][WR12 + Side][orig];
     val.eg += PSQT[PhaseEg][WR12 + Side][orig];
     
-    constexpr int mside =           Side;
-    constexpr int oside = flip_side(Side);
+    constexpr side_t mside =           Side;
+    constexpr side_t oside = flip_side(Side);
     constexpr u8 opawn  = make_pawn(oside);
-    const int mksq      = pos.king_sq(mside);
-    const int oksq      = pos.king_sq(oside);
+    int mksq      = pos.king_sq(mside);
+    int oksq      = pos.king_sq(oside);
     
-    const int rfile     = sq88_file(orig);
-    const int rrank     = sq88_rank(orig, mside);
+    int rfile     = sq88_file(orig);
+    int rrank     = sq88_rank(orig, mside);
 
-    const int kfile     = sq88_file(oksq);
-    const int kfdiff    = abs(rfile - kfile);
-    const int krank     = sq88_rank(oksq, mside);
-    const int so        = piece_on_semiopen<Side>(pos, orig);
+    int kfile     = sq88_file(oksq);
+    int kfdiff    = abs(rfile - kfile);
+    int krank     = sq88_rank(oksq, mside);
+    int so        = piece_on_semiopen<Side>(pos, orig);
     
     if (rrank == Rank7) {
         if (krank == Rank8)
             val += RookSeventhRankBonus;
         else {
-            const int f = mside == White ? A7 : A2;
-            const int t = mside == White ? H7 : H2;
+            int f = mside == White ? A7 : A2;
+            int t = mside == White ? H7 : H2;
 
             int op = 0;
 
@@ -528,7 +524,7 @@ Value eval_rook(const Position& pos, int orig)
     val += Value { RookMobFactor.mg * mob, RookMobFactor.eg * mob };
 
     {
-        const int pcount = pos.pawns(mside);
+        int pcount = pos.pawns(mside);
         constexpr int pbonus[9] = { 5, 4, 3, 2, 1, 0, -1, -2, -3 };
 
         int bonus = pbonus[pcount];
@@ -542,7 +538,7 @@ Value eval_rook(const Position& pos, int orig)
     return val;
 }
 
-template <int Side>
+template <side_t Side>
 Value eval_queen(const Position& pos, int orig)
 {
     Value val;
@@ -552,20 +548,20 @@ Value eval_queen(const Position& pos, int orig)
     val.mg += PSQT[PhaseMg][WQ12 + Side][orig];
     val.eg += PSQT[PhaseEg][WQ12 + Side][orig];
 
-    constexpr int mside =           Side;
-    constexpr int oside = flip_side(Side);
+    constexpr side_t mside =           Side;
+    constexpr side_t oside = flip_side(Side);
     constexpr u8 opawn  = make_pawn(oside);
 
-    const int ksq       = pos.king_sq(oside);
-    const int qrank     = sq88_rank(orig, mside);
-    const int krank     = sq88_rank(ksq, mside);
+    int ksq       = pos.king_sq(oside);
+    int qrank     = sq88_rank(orig, mside);
+    int krank     = sq88_rank(ksq, mside);
 
     if (qrank == Rank7) {
         if (krank == Rank8)
             val += QueenSeventhRankBonus;
         else {
-            const int f = mside == White ? A7 : A2;
-            const int t = mside == White ? H7 : H2;
+            int f = mside == White ? A7 : A2;
+            int t = mside == White ? H7 : H2;
 
             int op = 0;
 
@@ -591,36 +587,36 @@ Value eval_queen(const Position& pos, int orig)
     return val;
 }
 
-template <int Side>
+template <side_t Side>
 Value eval_shelter(const Position& pos)
 {
-    constexpr int mside =           Side;
-    constexpr int oside = flip_side(Side);
+    constexpr side_t mside =           Side;
+    constexpr side_t oside = flip_side(Side);
 
     constexpr u8 oflag = make_flag(oside);
     constexpr u8 mpawn = make_pawn(mside);
 
     constexpr int pincr = pawn_incr(mside);
 
-    const int ksq = pos.king_sq(mside);
+    int ksq = pos.king_sq(mside);
 
     int penalty = 0;
     
     for (int offset = -1; offset <= 1; offset++) {
         
-        const int mul = offset ? 1 : 2;
+        int mul = offset ? 1 : 2;
         
         int p = -36;
 
         for (int sq = ksq + pincr + offset; sq88_is_ok(sq); sq += pincr) {
-            const u8 piece = pos[sq];
+            u8 piece = pos[sq];
 
             if (piece & oflag)
                 break;
             
             else if (piece == mpawn) {
-                const int rank = sq88_rank(sq, mside);
-                const int dist = Rank8 - rank;
+                int rank = sq88_rank(sq, mside);
+                int dist = Rank8 - rank;
 
                 p += dist * dist;
 
@@ -636,11 +632,11 @@ Value eval_shelter(const Position& pos)
     return Value { penalty, 0 };
 }
 
-template <int Side>
+template <side_t Side>
 Value eval_storm(const Position& pos, int ksq)
 {
-    constexpr int mside =           Side;
-    constexpr int oside = flip_side(Side);
+    constexpr side_t mside =           Side;
+    constexpr side_t oside = flip_side(Side);
     constexpr u8 opawn  = make_pawn(oside);
     constexpr int pincr = pawn_incr(mside);
 
@@ -665,14 +661,14 @@ Value eval_storm(const Position& pos, int ksq)
     return Value { penalty, 0 };
 }
 
-template <int Side>
+template <side_t Side>
 Value eval_mate(const Position& pos)
 {
-    constexpr int mside =           Side;
-    constexpr int oside = flip_side(Side);
+    constexpr side_t mside =           Side;
+    constexpr side_t oside = flip_side(Side);
 
-    const int mksq      = pos.king_sq(mside);
-    const int oksq      = pos.king_sq(oside);
+    int mksq      = pos.king_sq(mside);
+    int oksq      = pos.king_sq(oside);
 
     Value val;
 
@@ -682,27 +678,27 @@ Value eval_mate(const Position& pos)
     if (pos.minors(mside) < 2 && pos.majors(mside) == 0)
         return val;
 
-    const int kdist = sq88_dist(mksq, oksq);
-    const int edist = sq88_dist_edge(oksq);
-    const int cdist = sq88_dist_corner(oksq);
+    int kdist = sq88_dist(mksq, oksq);
+    int edist = sq88_dist_edge(oksq);
+    int cdist = sq88_dist_corner(oksq);
 
     assert(kdist >= 0 && kdist <= 7);
     assert(edist >= 0 && edist <= 3);
     assert(cdist >= 0 && cdist <= 3);
 
-    const int penalty = 5 * kdist + 5 * cdist + 20 * edist;
+    int penalty = 5 * kdist + 5 * cdist + 20 * edist;
 
     return Value { 0, -penalty };
 }
 
 Value eval_complexity(const Position& pos, const Value& val)
 {
-    const int eg        = val.eg;
-    const int sign      = (eg > 0) - (eg < 0);
-    const int pawns     = pos.pawns();
-    const int minors    = pos.minors();
-    const int majors    = pos.majors();
-    const bool pflanked = pawns_on_file_a(pos) && pawns_on_file_h(pos);
+    int eg        = val.eg;
+    int sign      = (eg > 0) - (eg < 0);
+    int pawns     = pos.pawns();
+    int minors    = pos.minors();
+    int majors    = pos.majors();
+    bool pflanked = pawns_on_file_a(pos) && pawns_on_file_h(pos);
 
     Value c = ComplexityPawnsTotal      * pawns
             + ComplexityPawnsFlanked    * pflanked
@@ -771,13 +767,13 @@ int eval_scale_factor(const Position& pos, const Value& val)
     return min(ScaleNormal.eg, ScaleM.eg * hi_pawns + ScaleB.eg);
 }
 
-template <int Side>
+template <side_t Side>
 Value eval_king(const Position& pos)
 {
-    constexpr int mside =           Side;
-    constexpr int oside = flip_side(Side);
+    constexpr side_t mside =           Side;
+    constexpr side_t oside = flip_side(Side);
 
-    const int ksq = pos.king_sq(mside);
+    int ksq = pos.king_sq(mside);
 
     Value val;
     
@@ -800,8 +796,8 @@ Value eval_king(const Position& pos)
 
     int dest;
 
-    for (const int orig : pos.plist(WN12 + oside)) {
-        for (const int inc : KnightIncrs) {
+    for (int orig : pos.plist(WN12 + oside)) {
+        for (int inc : KnightIncrs) {
             dest = orig + inc;
 
             if (kzone.test(36 + dest)) {
@@ -811,8 +807,8 @@ Value eval_king(const Position& pos)
         }
     }
     
-    for (const int orig : pos.plist(WB12 + oside)) {
-        for (const int inc : BishopIncrs) {
+    for (int orig : pos.plist(WB12 + oside)) {
+        for (int inc : BishopIncrs) {
             for (dest = orig + inc; pos[dest] == PieceNone256; dest += inc) {
                 if (kzone.test(36 + dest)) {
                     ++batt;
@@ -829,8 +825,8 @@ next_bishop:
         continue;
     }
     
-    for (const int orig : pos.plist(WR12 + oside)) {
-        for (const int inc : RookIncrs) {
+    for (int orig : pos.plist(WR12 + oside)) {
+        for (int inc : RookIncrs) {
             for (dest = orig + inc; pos[dest] == PieceNone256; dest += inc) {
                 if (kzone.test(36 + dest)) {
                     ++ratt;
@@ -847,8 +843,8 @@ next_rook:
         continue;
     }
     
-    for (const int orig : pos.plist(WQ12 + oside)) {
-        for (const int inc : QueenIncrs) {
+    for (int orig : pos.plist(WQ12 + oside)) {
+        for (int inc : QueenIncrs) {
             for (dest = orig + inc; pos[dest] == PieceNone256; dest += inc) {
                 if (kzone.test(36 + dest)) {
                     ++qatt;
@@ -865,15 +861,15 @@ next_queen:
         continue;
     }
 
-    const int att_weight[8] = { 0, 0, 50, 75, 88, 94, 97, 99 };
-    const int att_count = min(7, qatt + ratt + batt + natt);
-    const int att_value = 4 * qatt + 2 * ratt + batt + natt;
+    int att_weight[8] = { 0, 0, 50, 75, 88, 94, 97, 99 };
+    int att_count = min(7, qatt + ratt + batt + natt);
+    int att_value = 4 * qatt + 2 * ratt + batt + natt;
    
-    const int e = att_weight[att_count] * 25 * att_value / 100;
+    int e = att_weight[att_count] * 25 * att_value / 100;
     
     val += Value { -e, 0 };
 
-    const int so = piece_on_semiopen<Side>(pos, ksq);
+    int so = piece_on_semiopen<Side>(pos, ksq);
 
     if (so == FileSemi)
         val -= KingSemiPenalty;
@@ -889,14 +885,14 @@ next_queen:
     return val;
 }
 
-template <int Side>
+template <side_t Side>
 int minor_on_outpost(const Position& pos, int orig)
 {
     constexpr int pincr = pawn_incr(Side);
     constexpr u8 mpawn  = make_pawn(Side);
     constexpr u8 opawn  = flip_pawn(mpawn);
-    const int sqref     = Side == White ? orig : sq88_reflect(orig);
-    const int bonus     = minor_outpost_bonus[sqref];
+    int sqref     = Side == White ? orig : sq88_reflect(orig);
+    int bonus     = minor_outpost_bonus[sqref];
 
     if (bonus == 0) return 0;
 
@@ -915,7 +911,7 @@ int minor_on_outpost(const Position& pos, int orig)
     return op ? 0 : bonus * mp;
 }
 
-template <int Side>
+template <side_t Side>
 Value eval_pieces(const Position& pos)
 {
     Value val;
@@ -924,6 +920,8 @@ Value eval_pieces(const Position& pos)
     for (int orig : pos.plist(WB12 + Side)) val += eval_bishop<Side>(pos, orig);
     for (int orig : pos.plist(WR12 + Side)) val += eval_rook  <Side>(pos, orig);
     for (int orig : pos.plist(WQ12 + Side)) val += eval_queen <Side>(pos, orig);
+    
+    if (pos.bishop_pair<Side>()) val += BishopPairBonus;
   
     return val;
 }
@@ -948,11 +946,9 @@ int pawns_on_file_h(const Position& pos)
     return count;
 }
 
-int eval(const Position& pos, int alpha, int beta)
+int eval_internal(const Position& pos, int alpha, int beta)
 {
     //assert(!pos.in_check());
-
-    // i64 time_begin = Util::now();
 
     EvalEntry eentry;
 
@@ -960,22 +956,26 @@ int eval(const Position& pos, int alpha, int beta)
         return eentry.score + TempoBonus;
     
     Value val;
-    
+
+    if (pos.pawns())
+        phtable.prefetch(pos.pawn_key());
+
     // Major and minor pieces
     
     val += eval_pieces<White>(pos);
     val -= eval_pieces<Black>(pos);
-
-    if (pos.bishop_pair(White)) val += BishopPairBonus;
-    if (pos.bishop_pair(Black)) val -= BishopPairBonus;
     
     // Evaluation of pawns is done separately because all pawns share a hash
     // entry since the pawn key is formed from all pawns
    
     PawnEntry pentry;
 
-    val += eval_pawns(pos, pentry);
-    val += eval_passers(pos, pentry);
+    // TODO maybe after lazy eval instead?
+    
+    if (pos.pawns()) {
+        val += eval_pawns(pos, pentry);
+        val += eval_passers(pos, pentry);
+    }
 
     if (UseLazyEval) {
         if (pos.pieces(White) > 1 && pos.pieces(Black) > 1) {
@@ -992,17 +992,16 @@ int eval(const Position& pos, int alpha, int beta)
 
     val += eval_king<White>(pos);
     val -= eval_king<Black>(pos);
-    
+   
+    // TODO maybe do this before lazy eval?
     val += eval_complexity(pos, val);
 
-    const int sfactor = eval_scale_factor(pos, val);
+    int sfactor = eval_scale_factor(pos, val);
     
     //val += eval_mate<White>(pos);
     //val -= eval_mate<Black>(pos);
 
     int score = val.lerp(pos.phase(), sfactor);
-
-    // score += uid(mt);
 
     if (pos.side() == Black) score = -score;
 
@@ -1010,21 +1009,22 @@ int eval(const Position& pos, int alpha, int beta)
 
     ehtable.set(pos.key(), eentry);
     
-    //i64 time_end = Util::now();
-
-    //global_stats.time_eval += time_end - time_begin;
-    //global_stats.evals_made++;
-
     return score + TempoBonus;
 }
 
-i16 eval_psqt(int phase, int p12, int sq)
+int eval(const Position& pos, int alpha, int beta)
 {
-    assert(phase_is_ok(phase));
-    assert(piece12_is_ok(p12));
-    assert(sq88_is_ok(sq));
+    Timer timer(Profile >= ProfileLevel::Medium);
 
-    return PSQT[phase][p12][sq];
+    int e = eval_internal(pos, alpha, beta);
+    
+    if (timer.stop()) {
+        gstats.time_eval_ns += timer.elapsed_time<Timer::Nano>();
+        gstats.cycles_eval += timer.elapsed_cycles();
+        gstats.evals_count++;
+    }
+
+    return e;
 }
 
 // Begin tuner
@@ -1035,16 +1035,16 @@ double sigmoid(const Position& pos, int eval)
 {
     if (pos.side() == Black) eval = -eval;
 
-    const double K = 2.47;
-    const double e = -K * eval / 400;
+    double K = 2.47;
+    double e = -K * eval / 400;
 
     return 1 / (1 + exp(e));
 }
 
 double eval_error(const Position& pos)
 {
-    const int    ev     = eval(pos, -ScoreMate, ScoreMate);
-    const double error  = pow(pos.outcome() - sigmoid(pos, ev), 2);
+    int    ev     = eval(pos, -ScoreMate, ScoreMate);
+    double error  = pow(pos.outcome() - sigmoid(pos, ev), 2);
 
     return error;
 }
@@ -1343,7 +1343,7 @@ private:
     void perturb() { for (Terms& t : terms_) t.perturb(); }
 };
 
-void eval_error(int argc, char* argv[])
+void eval_tune(int argc, char* argv[])
 {
     assert(argc >= 1);
 
@@ -1445,7 +1445,7 @@ void eval_error(int argc, char* argv[])
         
     for (Term& t : gterms) t.perturb();
 
-    const size_t trials = 100;
+    size_t trials = 100;
     double error_first = 0;
 
     Pool pool(terms, trials);

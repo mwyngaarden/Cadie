@@ -59,7 +59,7 @@ int sq88_rank(int sq)
     return sq >> 4;
 }
 
-int sq88_rank(int sq, int side)
+int sq88_rank(int sq, side_t side)
 {
     const int rank = sq88_rank(sq);
 

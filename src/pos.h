@@ -11,7 +11,6 @@
 #include "piece.h"
 #include "square.h"
 #include "types.h"
-#include "util.h"
 #include "zobrist.h"
 
 class Position {
@@ -26,7 +25,8 @@ public:
     static constexpr int BlackCastleFlags = BlackCastleQFlag | BlackCastleKFlag;
     static constexpr int CastleFlags = BlackCastleQFlag | WhiteCastleQFlag | BlackCastleKFlag | WhiteCastleKFlag;
 
-    Position() { }
+    //Position() { }
+    Position() = default;
     Position(const std::string fen, double outcome = 1);
     Position(const char fen[]) : Position(std::string(fen)) { }
 
@@ -40,8 +40,6 @@ public:
     
     std::string to_fen() const;
 
-    int is_ok(bool check_test = true) const;
-
     u64 key() const { return key_; }
     u64 key(u64 key) { return key_ = key; }
 
@@ -51,7 +49,7 @@ public:
 
     void get_board(u8* board) const { memcpy(board, square_, 16 * 12); }
 
-    void mark_pins(BitSet& pins) const;
+    void mark_pins(std::bitset<128>& pins) const;
 
     bool move_is_check       (const Move& move) const;
     bool move_is_legal       (const Move& move) const;
@@ -59,7 +57,7 @@ public:
     bool move_is_recap       (const Move& move) const;
 
     bool ep_is_valid    (int sq)             const;
-    bool side_attacks   (int side, int dest) const;
+    bool side_attacks   (side_t side, int dest) const;
     bool piece_attacks  (int orig, int dest) const;
 
     int see_est(const Move& move) const;
@@ -124,9 +122,9 @@ public:
         return plist_[p12];
     }
 
-    bool has_bishop_on(int side, int color) const;
+    bool has_bishop_on(side_t side, int color) const;
 
-    int king_sq(int side) const
+    int king_sq(side_t side) const
     {
         assert(side_is_ok(side));
 
@@ -135,9 +133,9 @@ public:
 
     int king_sq() const { return king_sq(side_); }
 
-    void king_zone(std::bitset<192>& bs, int side) const;
+    void king_zone(std::bitset<192>& bs, side_t side) const;
 
-    u8 side()       const { return side_; }
+    side_t side()   const { return side_; }
     u8 cap_sq()     const { return cap_sq_; }
     u8 ep_sq()      const { return ep_sq_; }
     u8 ep_sq(u8 sq)       { return ep_sq_ = sq; }
@@ -145,19 +143,19 @@ public:
     u8  half_moves()  const { return half_moves_; }
     u16 full_moves()  const { return full_moves_; }
 
-    bool can_castle_k(int side) const { return (flags_ & (WhiteCastleKFlag << side)) != 0; }
-    bool can_castle_q(int side) const { return (flags_ & (WhiteCastleQFlag << side)) != 0; }
-    bool can_castle  (int side) const { return (flags_ & (WhiteCastleFlags << side)) != 0; }
-    bool can_castle_k(        ) const { return can_castle_k(side_); }
-    bool can_castle_q(        ) const { return can_castle_q(side_); }
-    bool can_castle  (        ) const { return can_castle(side_); }
+    bool can_castle_k(side_t side) const { return (flags_ & (WhiteCastleKFlag << side)) != 0; }
+    bool can_castle_q(side_t side) const { return (flags_ & (WhiteCastleQFlag << side)) != 0; }
+    bool can_castle  (side_t side) const { return (flags_ & (WhiteCastleFlags << side)) != 0; }
+    bool can_castle_k(           ) const { return can_castle_k(side_); }
+    bool can_castle_q(           ) const { return can_castle_q(side_); }
+    bool can_castle  (           ) const { return can_castle(side_); }
 
     // draw by insufficient material
 
-    bool draw_mat_insuf(        ) const;
-    bool draw_mat_insuf(int side) const;
-    bool non_pawn_mat  (        ) const;
-    bool non_pawn_mat  (int side) const;
+    bool draw_mat_insuf(           ) const;
+    bool draw_mat_insuf(side_t side) const;
+    bool non_pawn_mat  (           ) const;
+    bool non_pawn_mat  (side_t side) const;
 
     void counts(int& wp, int& wn, int& wb, int& wr, int& wq, 
                 int& bp, int& bn, int& bb, int& br, int& bq) const
@@ -213,14 +211,14 @@ public:
 
     int phase() const;
     
-    int pawns  (int side)   const { return plist(WP12 + side).size(); }
-    int knights(int side)   const { return plist(WN12 + side).size(); }
-    int bishops(int side)   const { return plist(WB12 + side).size(); }
-    int rooks  (int side)   const { return plist(WR12 + side).size(); }
-    int queens (int side)   const { return plist(WQ12 + side).size(); }
-    int minors (int side)   const { return knights(side) + bishops(side); }
-    int majors (int side)   const { return rooks(side) + queens(side); }
-    int pieces (int side)   const { return knights(side) + bishops(side) + rooks(side); }
+    int pawns  (side_t side)   const { return plist(WP12 + side).size(); }
+    int knights(side_t side)   const { return plist(WN12 + side).size(); }
+    int bishops(side_t side)   const { return plist(WB12 + side).size(); }
+    int rooks  (side_t side)   const { return plist(WR12 + side).size(); }
+    int queens (side_t side)   const { return plist(WQ12 + side).size(); }
+    int minors (side_t side)   const { return knights(side) + bishops(side); }
+    int majors (side_t side)   const { return rooks(side) + queens(side); }
+    int pieces (side_t side)   const { return knights(side) + bishops(side) + rooks(side); }
 
     int pawns()             const { return pawns(White) + pawns(Black); }
     int knights()           const { return knights(White) + knights(Black); }
@@ -231,8 +229,8 @@ public:
     int majors()            const { return majors(White) + majors(Black); }
     int pieces()            const { return pieces(White) + pieces(Black); }
     
-    int dsbishops(int side) const;
-    int lsbishops(int side) const;
+    int dsbishops(side_t side) const;
+    int lsbishops(side_t side) const;
 
     void swap_sides();
 
@@ -252,7 +250,16 @@ public:
         return square(m.orig());
     }
 
-    bool bishop_pair(int side) const;
+    template <side_t Side>
+    bool bishop_pair() const
+    {
+        u8 flags = 0;
+
+        for (auto sq : plist(WB12 + Side))
+            flags |= 1 << sq88_color(sq);
+
+        return flags == 3;
+    }
 
     friend bool operator==(const Position& lhs, const Position& rhs);
 
@@ -281,9 +288,10 @@ private:
     u64 pawn_key_       = 0;
 
     u8 square_[16 * 12];
+
     u8 flags_           = 0;
 
-    u8 side_            = -1;
+    side_t side_        = SideCount;
     u8 ep_sq_           = SquareNone;
     u8 cap_sq_          = SquareNone;
     u8 half_moves_      = 0;

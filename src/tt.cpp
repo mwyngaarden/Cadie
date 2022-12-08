@@ -1,52 +1,44 @@
-// includes
-
 #include <bit>
-
-#ifdef _MSC_VER
-#include <emmintrin.h>
-#endif
 
 #include <cassert>
 #include <cstdint>
 #include "tt.h"
 
-// namespaces
-
 using namespace std;
-
-// constants
 
 constexpr size_t TTSizeMB = 16;
 
-// variables
-
 TransTable thtable(TTSizeMB);
 
-// prototypes
-
-// functions
-
-TransTable::TransTable(size_t size_mb)
+TransTable::TransTable(size_t mb)
 {
-    size_mb_ = size_mb;
+    assert(mb >= 1 && mb <= 1024);
 
-    count_ = size_mb * 1024 * 1024 / sizeof(TransTable::Cluster);
+    size_ = mb * 1024 * 1024;
+    
+    while (popcount(size_) > 1) size_ &= size_ - 1;
+    assert(popcount(size_) == 1);
 
-    while (popcount(count_) > 1) count_ &= count_ - 1;
-
+    count_ = size_ / sizeof(TransTable::Cluster);
     assert(popcount(count_) == 1);
 
     mask_ = count_ - 1;
+}
+
+void TransTable::init()
+{
+    assert(clusters_.empty());
 
     clusters_.resize(count_);
 
-    reset();
+    if (clusters_.capacity() > count_) {
+        assert(false);
+        clusters_.shrink_to_fit();
+    }
 }
 
 bool TransTable::get(u64 key, int ply, Move& move, i16& eval, i16& score, i8& depth, u8& bound)
 {
-    ++reads;
-
     Cluster& c = clusters_[key & mask_];
 
     key = mod_key(key);
@@ -55,15 +47,13 @@ bool TransTable::get(u64 key, int ply, Move& move, i16& eval, i16& score, i8& de
         Entry& e = c.entries[i];
 
         if (e.key == key) {
-            e.gen = gen_;
+            e.set_gen(gen_);
 
             depth   = e.depth;
-            bound   = e.bound;
+            bound   = e.get_bound();
             move    = e.move;
             score   = score_from_tt(e.score, ply);
             eval    = e.eval;
-
-            ++hits;
 
             return true;
         }
@@ -84,8 +74,8 @@ void TransTable::set(u64 key, int ply, Move& move, i16 eval, i16 score, i8 depth
 
     // FIXME
     for (i = 0; i < ClusterCount && c.entries[i].key != key; i++) {
-        i8 a =           e->depth - (gen_ -           e->gen);
-        i8 b = c.entries[i].depth - (gen_ - c.entries[i].gen);
+        i8 a =           e->depth - (gen_ -           e->get_gen());
+        i8 b = c.entries[i].depth - (gen_ - c.entries[i].get_gen());
 
         if (a >= b)
             e = &c.entries[i];
@@ -99,8 +89,8 @@ void TransTable::set(u64 key, int ply, Move& move, i16 eval, i16 score, i8 depth
 
     e->key      = key;
     e->depth    = depth;
-    e->bound    = bound;
-    e->gen      = gen_;
+    e->set_bound(bound);
+    e->set_gen(gen_);
     e->move     = move;
     e->score    = score_to_tt(score, ply);
     e->eval     = eval;

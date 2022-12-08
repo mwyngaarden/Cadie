@@ -303,7 +303,8 @@ u64 zobrist_castle(u8 flags)
 
 u64 zobrist_ep(int sq)
 {
-    if (sq == SquareNone) return 0; // HACK
+    // HACK
+    if (sq == SquareNone) return 0;
 
     int file = sq88_file(sq);
 
@@ -312,7 +313,7 @@ u64 zobrist_ep(int sq)
     return keys[ZobristEpIndex + file];
 }
 
-u64 zobrist_side()
+u64 zobrist_side(side_t side)
 {
-    return keys[ZobristSideIndex];
+    return side == White ? keys[ZobristSideIndex] : 0;
 }

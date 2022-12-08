@@ -7,6 +7,7 @@
 #include <vector>
 #include <cassert>
 
+// TODO templatize
 class UCIOption {
 public:
     enum OptionType {

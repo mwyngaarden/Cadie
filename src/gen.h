@@ -6,7 +6,8 @@
 #include "pos.h"
 #include "types.h"
 
-enum GenType { Pseudo, Legal, Tactical };
+enum class GenMode { Pseudo, Legal, Tactical };
+enum class GenState { Normal, Stalemate, Checkmate };
 
 extern u8 CastleLUT[128];
 
@@ -17,7 +18,9 @@ constexpr int QueenIncrs[8]     = { -17, -16, -15,  -1, 1, 15, 16, 17 };
 
 void gen_init();
 
-std::size_t gen_moves(MoveList& moves, const Position& pos, GenType gtype);
+std::size_t gen_moves(MoveList& moves, const Position& pos, GenMode mode);
+
+GenState gen_state(const Position& pos);
 
 int  delta_incr   (int orig, int dest);
 bool pseudo_attack(int orig, int dest, u8 piece);

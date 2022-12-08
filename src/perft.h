@@ -6,7 +6,7 @@
 #include <cstdint>
 #include "types.h"
 
-void perft_validate(int argc, char* argv[]);
+void perft(int argc, char* argv[]);
 
 i64 perft(int depth, i64& illegal_moves, i64& total_microseconds, i64& total_cycles, bool startpos);
 

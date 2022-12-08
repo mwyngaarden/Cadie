@@ -2,9 +2,9 @@
 #include <iomanip>
 #include "eval.h"
 #include "gen.h"
+#include "list.h"
 #include "piece.h"
 #include "see.h"
-#include "util.h"
 
 using namespace std;
 
@@ -17,26 +17,34 @@ const int SEEValue[PieceCount] = {
     ValuePiece[King][PhaseMg]
 };
 
-using AttList = Util::List<int, 16>;
+struct SeeInfo {
+    std::string fen;
+    std::string move;
+    int value;
+};
+
+
+
+using AttList = List<int, 16>;
 
 struct CmbList { AttList alist[2]; };
 
 static void see_hidden  (CmbList& clist, const Position& pos, int orig, int dest);
-static int  see_recurse (CmbList& clist, const Position& pos, int side, int dest, int avalue);
-static void see_attacks (AttList& alist, const Position& pos, int side, int dest);
+static int  see_recurse (CmbList& clist, const Position& pos, side_t side, int dest, int avalue);
+static void see_attacks (AttList& alist, const Position& pos, side_t side, int dest);
 static void see_add     (AttList& alist, const Position& pos, int sq);
 
-int see_move(const Position& pos, Move m)
+int see_move(const Position& pos, const Move& m)
 {
     CmbList clist;
 
-    const int orig = m.orig();
-    const int dest = m.dest();
+    int orig = m.orig();
+    int dest = m.dest();
     
     u8 piece = pos[orig];
 
-    const int aside = is_black(piece);
-    const int dside = flip_side(aside);
+    side_t aside = is_black(piece);
+    side_t dside = flip_side(aside);
 
     if (m.is_promo())
         piece = to_piece256(aside, m.promo_piece());
@@ -47,7 +55,7 @@ int see_move(const Position& pos, Move m)
 
     int dvalue = 0;
 
-    const u8 cpiece = pos[dest];
+    u8 cpiece = pos[dest];
 
     if (cpiece != PieceNone256)
         dvalue += SEEValue[P256ToP6[cpiece]];
@@ -87,7 +95,7 @@ int see_move(const Position& pos, Move m)
     return dvalue;
 }
 
-int see_recurse(CmbList& clist, const Position& pos, int side, int dest, int avalue)
+int see_recurse(CmbList& clist, const Position& pos, side_t side, int dest, int avalue)
 {
     int orig;
     int dvalue;
@@ -124,7 +132,7 @@ int see_recurse(CmbList& clist, const Position& pos, int side, int dest, int ava
     return max(dvalue, 0);
 }
 
-void see_attacks(AttList& alist, const Position& pos, int side, int dest)
+void see_attacks(AttList& alist, const Position& pos, side_t side, int dest)
 {
     assert(sq88_is_ok(dest));
     assert(side_is_ok(side));
@@ -138,9 +146,9 @@ void see_attacks(AttList& alist, const Position& pos, int side, int dest)
     // sliders
 
     for (const auto& p : P12Flag) {
-        for (const auto orig : pos.plist(p.first + side)) {
+        for (auto orig : pos.plist(p.first + side)) {
             if (pseudo_attack(orig, dest, p.second)) {
-                const int incr = delta_incr(orig, dest);
+                int incr = delta_incr(orig, dest);
 
                 int sq = orig;
 
@@ -158,15 +166,15 @@ void see_attacks(AttList& alist, const Position& pos, int side, int dest)
 
     // pawns
 
-    const int pincr = pawn_incr(side);
-    const u8 pawn = make_pawn(side);
+    int pincr = pawn_incr(side);
+    u8 pawn = make_pawn(side);
 
     if (int orig = dest - pincr - 1; pos[orig] == pawn) see_add(alist, pos, orig);
     if (int orig = dest - pincr + 1; pos[orig] == pawn) see_add(alist, pos, orig);
 
     // king
 
-    const int king = pos.king_sq(side);
+    int king = pos.king_sq(side);
 
     if (pseudo_attack(king, dest, KingFlag256)) see_add(alist, pos, king);
 }
@@ -176,7 +184,7 @@ void see_hidden(CmbList& clist, const Position& pos, int orig, int dest)
     assert(sq88_is_ok(orig));
     assert(sq88_is_ok(dest));
 
-    const int incr = delta_incr(orig, dest);
+    int incr = delta_incr(orig, dest);
 
     if (incr == 0)
         return;
@@ -195,9 +203,9 @@ void see_add(AttList& alist, const Position& pos, int sq)
 {
     assert(sq88_is_ok(sq));
 
-    const u8 piece = pos[sq];
+    u8 piece = pos[sq];
 
-    const int ptype = P256ToP6[piece];
+    int ptype = P256ToP6[piece];
 
     int index;
 
@@ -209,11 +217,11 @@ void see_add(AttList& alist, const Position& pos, int sq)
 
 void see_validate()
 {
-    const int p = SEEValue[Pawn];
-    const int n = SEEValue[Knight];
-    const int b = SEEValue[Bishop];
-    const int r = SEEValue[Rook];
-    const int q = SEEValue[Queen];
+    int p = SEEValue[Pawn];
+    int n = SEEValue[Knight];
+    int b = SEEValue[Bishop];
+    int r = SEEValue[Rook];
+    int q = SEEValue[Queen];
 
     // shamelessly ripped from https://github.com/jdart1/arasan-chess/src/unit.cpp
     

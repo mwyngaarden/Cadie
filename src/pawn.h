@@ -18,7 +18,6 @@ extern Value PawnPassedBase;
 extern Value PawnCandidateFactor;
 extern Value PawnCandidateBase;
 
-
 struct PawnEntry {
     static constexpr std::size_t KeyBits = 32;
 

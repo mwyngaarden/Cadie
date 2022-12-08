@@ -1,14 +1,11 @@
 #ifndef TT_H
 #define TT_H
 
-#ifdef _MSC_VER
-#include <emmintrin.h>
-#endif
-
 #include <algorithm>
 #include <vector>
 #include <cstring>
 #include "eval.h"
+#include "mem.h"
 #include "move.h"
 #include "search.h"
 #include "types.h"
@@ -33,10 +30,14 @@ public:
         Move move;
         i16 score;
         i16 eval;
-        i8 depth;
-        u8 gen : 6;
-        u8 bound : 2;
-        u16 pad;
+        i16 depth;
+        u16 gb;
+
+        u32 get_gen  () const { return (gb >> 2) & 0x3ful; }
+        u32 get_bound() const { return  gb       & 0x03ul; }
+
+        void set_gen  (u32 gen  ) { gb = (gb & (~0xfcul)) | ((gen   & 0x0000003ful) << 2); }
+        void set_bound(u32 bound) { gb = (gb & (~0x03ul)) |  (bound & 0x00000003ul)      ; }
     };
 
     static_assert(sizeof(Entry) == 16);
@@ -45,26 +46,20 @@ public:
 
     static_assert(sizeof(Cluster) == 64);
 
-    TransTable(std::size_t size_mb);
+    TransTable(std::size_t mb);
 
-    bool get(u64 key, int ply, Move& move, i16& eval, i16& score, i8& depth, u8& bound);
-    void set(u64 key, int ply, Move& move, i16  eval, i16  score, i8  depth, u8  bound);
+    void init();
+
+    bool get(u64 key, int ply, Move& move, i16& eval, i16& score, i8& depth, u8& b);
+    void set(u64 key, int ply, Move& move, i16  eval, i16  score, i8  depth, u8  b);
 
     std::size_t count() const { return count_; }
-
-    void reset_stats()
-    {
-        hits = 0;
-        reads = 0;
-    }
 
     void reset()
     {
         gen_ = 0;
         
-        std::memset((void *)clusters_.data(), 0, clusters_.size() * sizeof(Cluster));
-
-        reset_stats();
+        std::memset((void *)clusters_.data(), 0, size_);
     }
 
     void inc_gen()
@@ -82,7 +77,7 @@ public:
             for (std::size_t j = 0; j < ClusterCount; j++) {
                 const Entry& e = c.entries[j];
 
-                pm += e.bound && e.gen == gen_;
+                pm += e.get_bound() && e.get_gen() == gen_;
             }
         }
 
@@ -94,19 +89,14 @@ public:
         return static_cast<Key>(key >> (64 - KeyBits));
     }
 
-    void prefetch(u64 key) const
+    void prefetch(u64 key)
     {
-#ifdef _MSC_VER
-        _mm_prefetch((char*)&clusters_[key & mask_], _MM_HINT_T0);
-#else
-        __builtin_prefetch(&clusters_[key & mask_]);
-#endif
+        my_prefetch(&clusters_[key & mask_]);
     }
 
-    std::size_t size_mb() const { return size_mb_; }
+    std::size_t size() const { return size_; }
+    std::size_t size_mb() const { return size_ / 1024 / 1024; }
 
-    u64 hits;
-    u64 reads;
 
 private:
     std::vector<Cluster> clusters_;
@@ -114,9 +104,9 @@ private:
     u64 count_;
     u64 mask_;
 
-    u8 gen_;
+    u8 gen_ = 0;
 
-    std::size_t size_mb_;
+    std::size_t size_;
 };
 
 extern TransTable thtable;

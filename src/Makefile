@@ -12,24 +12,23 @@ SRC_PATH = .
 # Space-separated pkg-config libraries used by this project
 LIBS =
 # General compiler flags
-COMPILE_FLAGS  = -std=c++2a -fopenmp -Wall -Werror -Wextra -Wpedantic -Wshadow -Wunused -Wuninitialized -Wmaybe-uninitialized
-COMPILE_FLAGS += -Wswitch-default -Wswitch-enum -Wduplicated-branches -Wduplicated-cond -Wunsafe-loop-optimizations
-COMPILE_FLAGS += -Wunused-macros
+COMPILE_FLAGS  = -std=c++2a -fopenmp \
+	-Wall -Werror -Wextra -Wpedantic -Wshadow -Wunused -Wuninitialized \
+	-Wmaybe-uninitialized -Wswitch-default -Wswitch-enum -Wduplicated-branches \
+	-Wduplicated-cond -Wunsafe-loop-optimizations -Wunused-macros
 
 # Additional release-specific flags
 RCOMPILE_FLAGS = -O3 -flto -march=native -DNDEBUG -fno-exceptions -fno-rtti
-# RCOMPILE_FLAGS = -O0 -march=native -DNDEBUG -g -ggdb3
 
 # Additional debug-specific flags
-DCOMPILE_FLAGS = -g -ggdb3 -O0
-# DCOMPILE_FLAGS = -g -ggdb3 -O0 -fno-stack-protector
+DCOMPILE_FLAGS = -g -ggdb3
 
 # General linker settings
 LINK_FLAGS = -pthread -fopenmp
 # Additional release-specific linker settings
 RLINK_FLAGS =
 # Additional debug-specific linker settings
-DLINK_FLAGS =
+DLINK_FLAGS = -pg
 # Destination directory, like a jail or mounted system
 DESTDIR = /
 #### END PROJECT SETTINGS ####
@@ -106,7 +105,7 @@ END_TIME = read st < $(TIME_FILE) ; \
 release: dirs
 	@echo "Beginning release build"
 	@$(START_TIME)
-	@$(MAKE) -j 12 all --no-print-directory
+	@$(MAKE) all --no-print-directory
 	@echo -n "Total build time: "
 	@$(END_TIME)
 
@@ -115,7 +114,7 @@ release: dirs
 debug: dirs
 	@echo "Beginning debug build"
 	@$(START_TIME)
-	@$(MAKE) -j 12 all --no-print-directory
+	@$(MAKE) all --no-print-directory
 	@echo -n "Total build time: "
 	@$(END_TIME)
 

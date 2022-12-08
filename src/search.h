@@ -2,7 +2,6 @@
 #define SEARCH_H
 
 #include <atomic>
-#include <chrono>
 #include <mutex>
 #include <optional>
 #include <sstream>
@@ -12,29 +11,30 @@
 #include "eval.h"
 #include "move.h"
 #include "pos.h"
+#include "timer.h"
 #include "tt.h"
 #include "types.h"
 #include "uci.h"
 #include "uciopt.h"
-#include "util.h"
 
 extern std::thread search_thread;
 
 extern KeyStack  key_stack;
 extern MoveStack move_stack;
 
-extern std::atomic_bool Stop;
+extern std::atomic_bool Searching;
+extern std::atomic_bool StopRequest;
 
 struct Node {
     const Position& pos;
 
-    const int ply;
-    const int depth;
     const int alpha;
     const int beta;
+    const int ply;
+    const int depth;
     const bool pv_node;
     const bool root;
-    const int side;
+    const side_t side;
     const bool in_check;
     
     bool cut_node;
@@ -55,14 +55,14 @@ struct Node {
 
     i16 bs = -ScoreMate;
 
-    Node(const Position& pos_, int ply_, int d, int a, int b, Move sm_ = MoveNone) :
+    Node(const Position& pos_, int alpha_, int beta_, int ply_, int depth_, Move sm_ = MoveNone) :
         pos(pos_), 
+        alpha(alpha_), 
+        beta(beta_), 
         ply(ply_), 
-        depth(d), 
-        alpha(a), 
-        beta(b), 
-        pv_node(b > a + 1),
-        root(ply_ == 0), 
+        depth(depth_), 
+        pv_node(beta > alpha + 1),
+        root(ply == 0), 
         side(pos.side()), 
         in_check(pos.in_check()),
         tt_key(pos.key() ^ sm_),
@@ -72,137 +72,92 @@ struct Node {
 };
 
 struct SearchLimits {
-    int depth;
+    int depth       = 0;
 
-    bool infinite;
+    bool infinite   = false;
 
-    i64 nodes;
-    i64 time;
-    i64 time_min;
-    i64 time_max;
-    i64 inc;
-    i64 movetime;
-    i64 begin;
+    i64 nodes       = 0;
+    i64 time        = 0;
+    i64 time_min    = 0;
+    i64 time_max    = 0;
+    i64 inc         = 0;
+    i64 movetime    = 0;
 
-    int movestogo;
+    int movestogo   = 0;
 
-    void reset()
+    Timer timer;
+
+    SearchLimits(bool s = false)
     {
-        depth       = 0;
-
-        infinite    = false;
-
-        nodes       = 0;
-        time        = 0;
-        time_min    = 0;
-        time_max    = 0;
-        inc         = 0;
-        movetime    = 0;
-        begin       = 0;
-
-        movestogo   = 0;
+        timer.start(s);
     }
 
-    double time_usage_percent() const
+    bool using_tm() const { return time || inc; }
+
+    double time_elapsed() const
     {
-        assert(time_limited());
+        assert(using_tm());
 
-        const double dur = Util::now() - begin;
-
-        return dur / max_time();
-    }
-
-    i64 max_time() const
-    {
-        assert(time_limited());
-
-        return std::max(movetime, time_max);
-    }
-
-    bool time_limited() const
-    {
-        return time > 0 || movetime > 0;
+        return static_cast<double>(timer.elapsed_time()) / time_max;
     }
 
     std::string dump() const
     {
         std::ostringstream oss;
 
-        oss << "depth = " << depth << std::endl;
-
-        oss << "infinite = " << infinite << std::endl;
-        
-        oss << "nodes = " << nodes << std::endl;
-        oss << "time = " << time << std::endl;
-        oss << "time_min = " << time_min << std::endl;
-        oss << "time_max = " << time_max << std::endl;
-        oss << "inc = " << inc << std::endl;
-        oss << "movetime = " << movetime << std::endl;
-        oss << "begin = " << begin << std::endl;
-
-        oss << "movestogo = " << movestogo << std::endl;
+        oss << "depth = " << depth << std::endl
+            << "infinite = " << infinite << std::endl
+            << "nodes = " << nodes << std::endl
+            << "time = " << time << std::endl
+            << "time_min = " << time_min << std::endl
+            << "time_max = " << time_max << std::endl
+            << "inc = " << inc << std::endl
+            << "movetime = " << movetime << std::endl
+            << "movestogo = " << movestogo << std::endl;
 
         return oss.str();
     }
+
+    int depth_min() const { return using_tm() ? 5 : 0; }
 };
 
-extern SearchLimits search_limits;
-
 struct SearchInfo {
-
-    static constexpr i64 NodesCountdown = 1 << 11;
-
     jmp_buf jump_buffer; 
 
-    int depth_max;
-    int seldepth_max;
-    int score_best;
+    int depth_max       = 0;
+    int seldepth        = 0;
+    int score_best      = ScoreNone;
 
-    i64 nodes;
-    i64 nodes_countdown;
+    i64 nodes           = 0;
+    i64 nodes_countdown = 0;
 
-    Move move_best;
+    Move move_best      = MoveNone;
 
-    int stability;
-
-    UCIOptionList opt_list;
+    int stability       = 0;
 
     Position pos;
 
-    void reset()
-    {
-        depth_max       = 0;
-        seldepth_max    = 0;
-        score_best      = ScoreNone;
+    SearchInfo() = default;
+    SearchInfo(Position p) : pos(p) { }
 
-        nodes           = 0;
-        nodes_countdown = NodesCountdown;
-
-        move_best       = MoveNone;
-
-        stability       = 0;
-
-        opt_list        = UCIOptionList();
-
-        pos             = Position(Position::StartPos);
-    }
-
-    void update(int depth, int score, PV& pv, bool incomplete);
+    void update(int depth, int score, PV& pv, bool complete);
 
     void uci_bestmove() const;
 
     void check();
 };
 
-extern SearchInfo search_info;
+extern SearchInfo sinfo;
+extern SearchLimits slimits;
+
+extern Move Killers[2][PliesMax][2];
+extern i16 History[2][128][128];
 
 void search_init();
 void search_go();
 void search_stop();
 void search_reset();
 void search_start();
-
-int search_iter(Position& pos, int depth_max, PV& pv);
 
 void search_root();
 

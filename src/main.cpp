@@ -3,6 +3,7 @@
 #include <thread>
 #include <cstdlib>
 #include <cstring>
+#include "bench.h"
 #include "gen.h"
 #include "perft.h"
 #include "piece.h"
@@ -19,7 +20,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    // maintain order!
+    // Maintain order!
     square_init();
     search_init();
     piece_init();
@@ -29,11 +30,13 @@ int main(int argc, char* argv[])
     uci_init();
 
     if (argc >= 2) {
-        if (strcmp(argv[1], "-p") == 0)
-            perft_validate(argc - 2, argv + 2);
-        else if (strcmp(argv[1], "-e") == 0)
-            eval_error(argc - 2, argv + 2);
-        else if (strcmp(argv[1], "-v") == 0) {
+        if (strcmp(argv[1], "bench") == 0)
+            benchmark(argc - 2, argv + 2);
+        else if (strcmp(argv[1], "perft") == 0)
+            perft(argc - 2, argv + 2);
+        else if (strcmp(argv[1], "tune") == 0)
+            eval_tune(argc - 2, argv + 2);
+        else if (strcmp(argv[1], "validate") == 0) {
             zobrist_validate();
             see_validate();
         }
@@ -43,7 +46,7 @@ int main(int argc, char* argv[])
 
     setvbuf(stdin, nullptr, _IONBF, 0);
     setvbuf(stdout, nullptr, _IONBF, 0);
-
+    
     uci_loop();
 
     return EXIT_SUCCESS;

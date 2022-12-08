@@ -4,17 +4,18 @@
 #include <utility>
 #include <cstdint>
 #include "types.h"
-#include "util.h"
 
 extern u8 P12ToP256[12];
 extern int P256ToP12[256];
 extern int P256ToP6[256];
 
-using PieceList = Util::List<u8, 9>;
+using PieceList = List<u8, 9>;
 
-constexpr int White             =  0;
-constexpr int Black             =  1;
-constexpr int SideCount         =  2;
+typedef u8 side_t;
+
+constexpr side_t White          =  0;
+constexpr side_t Black          =  1;
+constexpr side_t SideCount      =  2;
 
 constexpr int Pawn              =  0;
 constexpr int Knight            =  1;
@@ -122,19 +123,19 @@ constexpr bool is_slider(u8 piece) { return (piece & QueenFlags256) != PieceNone
 
 constexpr u8 flip_pawn(u8 piece) { return piece ^ (ColorFlags256 | PawnFlags256); }
 constexpr u8 flip_flag(u8 piece) { return piece ^ ColorFlags256; }
-constexpr u8 make_pawn(int side) { return WhitePawn256 << side; }
-constexpr u8 make_flag(int side) { return side + 1; }
-constexpr int flip_side(int side) { return side ^ 1; }
+constexpr u8 make_pawn(side_t side) { return WhitePawn256 << side; }
+constexpr u8 make_flag(side_t side) { return side + 1; }
+constexpr int flip_side(side_t side) { return side ^ 1; }
 
-constexpr bool side_is_ok(int side) { return (side & ~1) == 0; }
+constexpr bool side_is_ok(side_t side) { return side == White || side == Black; }
 constexpr bool piece_is_ok(int ptype) { return ptype >= Pawn && ptype <= King; }
 constexpr bool piece12_is_ok(int piece) { return piece >= WhitePawn12 && piece <= BlackKing12; }
-constexpr int piece12_to_side(int piece) { return piece & 1; }
+constexpr side_t piece12_to_side(int piece) { return piece & 1; }
 
 bool piece256_is_ok(u8 piece);
 char piece256_to_char(u8 piece);
 u8 char_to_piece256(char c);
-u8 to_piece256(int side, int piece);
-int to_piece12(int side, int piece);
+u8 to_piece256(side_t side, int piece);
+int to_piece12(side_t side, int piece);
 
 #endif

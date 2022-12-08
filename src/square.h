@@ -36,7 +36,7 @@ int sq88_dist_corner(int sq);
 int sq88_dist_edge  (int sq);
 int sq88_quadrant   (int sq);
 int sq88_rank       (int sq);
-int sq88_rank       (int sq, int side);
+int sq88_rank       (int sq, side_t side);
 
 constexpr bool sq88_is_ok(int sq)
 {
@@ -58,7 +58,7 @@ constexpr bool file_is_ok(int file)
     return file >= FileA && file <= FileH;
 }
 
-constexpr int pawn_incr(int side)
+constexpr int pawn_incr(side_t side)
 {
     return 16 - 32 * side;
 }

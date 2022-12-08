@@ -59,7 +59,7 @@ bool piece256_is_ok(u8 piece)
     return P256ToP12[piece] != PieceNone12;
 }
 
-int to_piece12(int side, int ptype)
+int to_piece12(side_t side, int ptype)
 {
     assert(side_is_ok(side));
     assert(piece_is_ok(ptype));
@@ -67,7 +67,7 @@ int to_piece12(int side, int ptype)
     return (ptype << 1) | side;
 }
 
-u8 to_piece256(int side, int ptype)
+u8 to_piece256(side_t side, int ptype)
 {
     assert(side_is_ok(side));
     assert(piece_is_ok(ptype));

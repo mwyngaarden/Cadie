@@ -16,3 +16,19 @@ try see ordering at greater depths and not always
 reduce under promotions in search
 try see also in sort if pv
 retry simple tt scheme dl
+
+piecetype iterators
+
+2841 mean of (ga1.0,sp1.2,gl2.2,f2.1,st2.3.1) @ 2'+1"
+
+scale Tempo
+
+fix Value, use 1 32 bit value
+
+adaptive lazy eval
+
+output current line for long searches, every N seconds
+
+templatize plist
+
+validate htable object and keybits

@@ -1,11 +1,13 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <bitset>
 #include <cassert>
 #include <cstdint>
+#include "list.h"
 
-constexpr bool DebugLog = false;
+constexpr char CADIE_VERSION[] = "1.3";
+constexpr char CADIE_DATE[] = __DATE__;
+constexpr char CADIE_TIME[] = __TIME__;
 
 #ifndef NDEBUG
 constexpr bool Debug = true;
@@ -13,7 +15,9 @@ constexpr bool Debug = true;
 constexpr bool Debug = false;
 #endif
 
-using BitSet = std::bitset<128>;
+enum class ProfileLevel : int { None, Low, Medium, High };
+
+constexpr ProfileLevel Profile = ProfileLevel::None;
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -24,7 +28,8 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
-// TODO tune
+using KeyStack = List<u64, 1024>;
+
 constexpr int DepthMin =  -4;
 constexpr int DepthMax = 127;
 constexpr int PliesMax = DepthMax - DepthMin + 2;

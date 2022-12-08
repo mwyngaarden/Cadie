@@ -1,42 +1,31 @@
 #ifndef HTABLE_H
 #define HTABLE_H
 
-#ifdef _MSC_VER
-#include <emmintrin.h>
-#endif
-
 #include <bit>
 #include <vector>
 #include <cassert>
 #include <cstdint>
+#include <cstring>
+#include "mem.h"
 
-template <std::size_t KBytes, class HashEntry>
+template <std::size_t K, class T>
 class HashTable {
 public:
-    static constexpr std::size_t TableKBytes    = KBytes;
-    static constexpr std::size_t EntryBytes     = sizeof(HashEntry);
+    static constexpr std::size_t Bytes = K * 1024;
+    static constexpr std::size_t Count = Bytes / sizeof(T);
+    static constexpr std::size_t Mask  = Count - 1;
+    
+    static_assert(std::popcount(Bytes) == 1);
+    static_assert(std::popcount(Count) == 1);
 
     HashTable()
     {
-        count_ = TableKBytes * 1024 / EntryBytes;
-        
-        while (std::popcount(count_) > 1)
-            count_ &= count_ - 1;
-
-        assert(std::popcount(count_) == 1);
-
-        mask_ = count_ - 1;
-
-        entries_.resize(count_);
+        entries_.resize(Count);
     }
 
     void reset()
     {
-        hits_       = 0;
-        reads_      = 0;
-        used_       = 0;
-
-        memset((void *)entries_.data(), 0, entries_.size() * sizeof(HashEntry));
+        std::memset((void *)entries_.data(), 0, Bytes);
     }
 
     std::size_t permille() const
@@ -49,20 +38,16 @@ public:
         return count;
     }
 
-    bool get(uint64_t key, HashEntry& he)
+    bool get(uint64_t key, T& e)
     {
-        if (key == 0) return false; // HACK
+        assert(key != 0);
 
-        reads_++;
+        T& candidate = entries_[key & Mask];
 
-        HashEntry& candidate = entries_[key & mask_];
+        e.key = key >> (64 - T::KeyBits);
 
-        he.key = key >> (64 - HashEntry::KeyBits);
-
-        if (he.key == candidate.key) {
-            hits_++;
-
-            he = candidate;
+        if (e.key == candidate.key) {
+            e = candidate;
 
             return true;
         }
@@ -70,34 +55,24 @@ public:
         return false;
     }
     
-    void set(uint64_t key, HashEntry& he)
+    void set(uint64_t key, T& e)
     {
+        assert(key != 0);
+
         if (key == 0) return; // HACK
 
-        he.key = key >> (64 - HashEntry::KeyBits);
+        e.key = key >> (64 - T::KeyBits);
 
-        entries_[key & mask_] = he;
+        entries_[key & Mask] = e;
     }
 
     void prefetch(uint64_t key)
     {
-#ifdef _MSC_VER
-        _mm_prefetch((char*)&entries_[key & mask_], _MM_HINT_T0);
-#else
-        __builtin_prefetch(&entries_[key & mask_]);
-#endif
+        my_prefetch(&entries_[key & Mask]);
     }
 
 private:
-
-    std::vector<HashEntry> entries_;
-
-    uint64_t hits_       = 0;
-    uint64_t reads_      = 0;
-    uint64_t used_       = 0;
-
-    uint64_t count_;
-    uint64_t mask_;
+    std::vector<T> entries_;
 };
 
 #endif
