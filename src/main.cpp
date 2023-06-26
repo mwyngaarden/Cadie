@@ -5,6 +5,7 @@
 #include <cstring>
 #include "bench.h"
 #include "gen.h"
+#include "misc.h"
 #include "perft.h"
 #include "piece.h"
 #include "pos.h"
@@ -13,19 +14,30 @@
 #include "square.h"
 #include "string.h"
 #include "tt.h"
-#include "types.h"
 #include "uci.h"
 #include "uciopt.h"
 using namespace std;
 
+static void help(char* exe)
+{
+    assert(exe != nullptr);
+
+    cout << "Usage: " << exe << " [options]" << endl
+         << "Options:" << endl
+         << "  bench [depth=N] [file=path] [num=N] [hash=MB] [nodes=N] [random] [time=ms] [mates] [option.K=V]" << endl
+         << "  perft [depth=N] [file=path] [num=N] [report=N]" << endl
+         << "  tune <path> [full]" << endl
+         << "  validate" << endl
+         << "  help" << endl;
+}
+
 int main(int argc, char* argv[])
 {
+    gstats.time_init = Timer::now();
+
     // Maintain order!
-    square_init();
     search_init();
-    piece_init();
     eval_init();
-    gen_init();
     zobrist_init();
     uci_init();
 
@@ -36,6 +48,8 @@ int main(int argc, char* argv[])
             perft(argc - 2, argv + 2);
         else if (strcmp(argv[1], "tune") == 0)
             eval_tune(argc - 2, argv + 2);
+        else if (strcmp(argv[1], "help") == 0)
+            help(argv[0]);
         else if (strcmp(argv[1], "validate") == 0) {
             zobrist_validate();
             see_validate();

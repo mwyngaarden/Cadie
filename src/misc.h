@@ -1,11 +1,11 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef MISC_H
+#define MISC_H
 
 #include <cassert>
 #include <cstdint>
 #include "list.h"
 
-constexpr char CADIE_VERSION[] = "1.3";
+constexpr char CADIE_VERSION[] = "1.5";
 constexpr char CADIE_DATE[] = __DATE__;
 constexpr char CADIE_TIME[] = __TIME__;
 
@@ -15,9 +15,11 @@ constexpr bool Debug = true;
 constexpr bool Debug = false;
 #endif
 
-enum class ProfileLevel : int { None, Low, Medium, High };
+#define PROFILE_NONE 0
+#define PROFILE_SOME 1
+#define PROFILE_ALL  2
 
-constexpr ProfileLevel Profile = ProfileLevel::None;
+#define PROFILE PROFILE_SOME
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -31,11 +33,11 @@ typedef int64_t i64;
 using KeyStack = List<u64, 1024>;
 
 constexpr int DepthMin =  -4;
-constexpr int DepthMax = 127;
+constexpr int DepthMax = 120;
 constexpr int PliesMax = DepthMax - DepthMin + 2;
 constexpr int MovesMax = 128;
 
-// phase
+constexpr bool ply_is_ok(int ply) { return ply >= 0 && ply < PliesMax; }
 
 constexpr int PhaseMg       = 0;
 constexpr int PhaseEg       = 1;
@@ -55,9 +57,9 @@ struct Value {
 
     bool value_is_ok() const
     {
-        // 30000 is completely arbitrary
+        // arbitrary
         
-        return abs(mg) < 30000 && abs(eg) < 30000;
+        return abs(mg) < 20000 && abs(eg) < 20000;
     }
 
     constexpr int operator[](int phase) const

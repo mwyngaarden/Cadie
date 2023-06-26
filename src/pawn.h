@@ -2,9 +2,9 @@
 #define PAWN_H
 
 #include <cstdint>
-#include "htable.h"
+#include "ht.h"
+#include "misc.h"
 #include "pos.h"
-#include "types.h"
 
 extern Value PawnDoubledPenalty;
 extern Value PawnBackwardPenalty;
@@ -19,9 +19,9 @@ extern Value PawnCandidateFactor;
 extern Value PawnCandidateBase;
 
 struct PawnEntry {
-    static constexpr std::size_t KeyBits = 32;
+    static constexpr std::size_t LockBits = 32;
 
-    u32 key     = 0;
+    u32 lock    = 0;
     i16 mg      = 0;
     i16 eg      = 0;
     u64 passed  = 0;
@@ -29,7 +29,9 @@ struct PawnEntry {
 
 static_assert(sizeof(PawnEntry) == 16);
 
-extern HashTable<1024, PawnEntry> phtable;
+constexpr std::size_t PHSizeMBDefault = 1;
+
+extern HT<PHSizeMBDefault * 1024, PawnEntry> ptable;
 
 Value eval_passers  (const Position& pos, PawnEntry& pentry);
 Value eval_pawns    (const Position& pos, PawnEntry& pentry);

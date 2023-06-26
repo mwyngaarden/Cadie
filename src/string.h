@@ -11,9 +11,8 @@ public:
     Tokenizer(const std::string& s, char delim = ' ')
     {
         std::stringstream ss(s);
-        std::string token;
 
-        while (std::getline(ss, token, delim))
+        for (std::string token; std::getline(ss, token, delim); )
             tokens_.push_back(token);
     }
     

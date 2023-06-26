@@ -10,36 +10,35 @@ using namespace std;
 struct ZobristInfo {
     const char* fen;
     u64 key;
-
-    ZobristInfo(const char* f, u64 k)
-        : fen(f)
-        , key(k)
-    {
-    }
 };
 
 void zobrist_validate()
 {
     vector<ZobristInfo> fens {
-        ZobristInfo("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 0x463b96181691fc9cull),
-        ZobristInfo("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", 0x823c9b50fd114196ull),
-        ZobristInfo("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2", 0x0756b94461c50fb0ull),
-        ZobristInfo("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2", 0x662fafb965db29d4ull),
-        ZobristInfo("rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 0x22a48b5a8e47ff78ull),
-        ZobristInfo("rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPPKPPP/RNBQ1BNR b kq - 0 3", 0x652a607ca3f242c1ull),
-        ZobristInfo("rnbq1bnr/ppp1pkpp/8/3pPp2/8/8/PPPPKPPP/RNBQ1BNR w - - 0 4", 0x00fdd303c946bdd9ull),
-        ZobristInfo("rnbqkbnr/p1pppppp/8/8/PpP4P/8/1P1PPPP1/RNBQKBNR b KQkq c3 0 3", 0x3c8123ea7b067637ull),
-        ZobristInfo("rnbqkbnr/p1pppppp/8/8/P6P/R1p5/1P1PPPP1/1NBQKBNR b Kkq - 0 4", 0x5c3f9b829b279560ull)
+        { "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 0x463b96181691fc9cull },
+        { "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", 0x823c9b50fd114196ull },
+        { "rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2", 0x0756b94461c50fb0ull },
+        { "rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2", 0x662fafb965db29d4ull },
+        { "rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3", 0x22a48b5a8e47ff78ull },
+        { "rnbqkbnr/ppp1p1pp/8/3pPp2/8/8/PPPPKPPP/RNBQ1BNR b kq - 0 3", 0x652a607ca3f242c1ull },
+        { "rnbq1bnr/ppp1pkpp/8/3pPp2/8/8/PPPPKPPP/RNBQ1BNR w - - 0 4", 0x00fdd303c946bdd9ull },
+        { "rnbqkbnr/p1pppppp/8/8/PpP4P/8/1P1PPPP1/RNBQKBNR b KQkq c3 0 3", 0x3c8123ea7b067637ull },
+        { "rnbqkbnr/p1pppppp/8/8/P6P/R1p5/1P1PPPP1/1NBQKBNR b Kkq - 0 4", 0x5c3f9b829b279560ul }
     };
+
+    int failed = 0;
 
     for (size_t i = 0; i < fens.size(); i++) {
         Position pos(fens[i].fen);
 
+        failed += pos.key() != fens[i].key;
+
         cout << hex
-             << "  have key: 0x" << setw(16) << setfill('0') << right << pos.key() << endl
-             << "  want key: 0x" << setw(16) << setfill('0') << fens[i].key << endl
-             << endl;
+             << "have key: 0x" << setw(16) << setfill('0') << right << pos.key() << endl
+             << "want key: 0x" << setw(16) << setfill('0') << fens[i].key << endl;
     }
+    
+    cout << "zobrist failures " << failed << endl;
 }
 
 // 12 * 64 + 8 + 4 + 1
@@ -253,10 +252,10 @@ static constexpr u64 keys[781] = {
     0xf8d626aaaf278509ull
 };
 
-static constexpr int ZobristPieceIndex = 0;
+static constexpr int ZobristPieceIndex  =   0;
 static constexpr int ZobristCastleIndex = 768;
-static constexpr int ZobristEpIndex = 772;
-static constexpr int ZobristSideIndex = 780;
+static constexpr int ZobristEpIndex     = 772;
+static constexpr int ZobristSideIndex   = 780;
 
 static u64 ZobristCastleFast[16];
 
@@ -289,14 +288,12 @@ u64 zobrist_piece(int piece, int sq)
 
     int index = 64 * (piece ^ 1) + sq64;
 
-    // int index = 64 * piece + sq64;
-
     return keys[ZobristPieceIndex + index];
 }
 
 u64 zobrist_castle(u8 flags)
 {
-    assert(flags >= 0 && flags < 16);
+    assert(flags < 16);
 
     return ZobristCastleFast[flags];
 }
@@ -313,7 +310,7 @@ u64 zobrist_ep(int sq)
     return keys[ZobristEpIndex + file];
 }
 
-u64 zobrist_side(side_t side)
+u64 zobrist_side()
 {
-    return side == White ? keys[ZobristSideIndex] : 0;
+    return keys[ZobristSideIndex];
 }

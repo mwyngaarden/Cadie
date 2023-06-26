@@ -22,25 +22,23 @@ fstream dfile;
 
 GlobalStats gstats;
 
+std::thread sthread;
+
 enum class Direction { In, Out };
 
 static void uci_go          (const string& s);
 static void uci_position    (const string& s);
-static void uci_setoption   (const string& s);
 static void uci_ucinewgame  ();
 static void uci_stop        ();
 static void uci_uci         ();
 static void uci_dump        ();
 
-static string uci_debug_filename();
+static string uci_log_filename();
 
 template <Direction D>
 static void uci_log         (const string& s);
 
 // UCI options with default values
-
-bool UseTransTable        =  true;
-bool KillerMoves          =  true;
 
 bool NMPruning            =  true;
 int  NMPruningDepthMin    =     2;
@@ -58,52 +56,36 @@ bool DeltaPruning         =  true;
 int DPMargin              =   200;
 
 bool Razoring             =  true;
-int  RazoringMargin       =   500;
+int  RazoringFactor       =   200;
 
-int  QSearchMargin        =   250;
-int  AspMargin            =    15;
+int  AspMargin            =    10;
 int  TempoBonus           =    15;
 
-bool UseLazyEval          =  true;
-int  LazyMargin           =   900;
-
-int  UciTimeBuffer        =    15;
-int  UciNodesBuffer       =   500;
+int  MoveOverhead         =    15;
 bool UciLog               = false;
 
 int  FutilityFactor       =    50;
-int  FutilityDepthMax     =     4; // 3,5
 
-int  Z0                   =     1; // 1,3
-int  Z1                   =     3; // 2,4 // 3
-int  Z2                   =     1; // 0,2
-int  Z3                   =     3; // 2,4
-int  Z4                   =     3; // 2,4
-int  Z5                   =     3; // 2,4
-int  Z7                   =     3; // 1,3
-int  Z8                   =     6; // 5,7
-int  Z9                   =     3; // 3,5
-int  Z10                  =     2; // 0,2
+bool EasyMove             =  true;
+int  EMMargin             =   250;
+int  EMShare              =    25;
 
 UCIOptionList opt_list;
 
 void uci_init()
 {
     cout << "Cadie " << CADIE_VERSION << " (" << CADIE_DATE << ' ' << CADIE_TIME << ") by Martin Wyngaarden" << endl;
-    cout << "Compiled with Debug = " << Debug << " ProfileLevel = " << static_cast<std::underlying_type<ProfileLevel>::type>(Profile) << endl;
+    cout << "Debug = " << Debug << " PROFILE = " << PROFILE << endl;
 
-    opt_list.add(UCIOption("Hash", 1, thtable.size_mb(), 1024));
+    opt_list.add(UCIOption("Hash", TTSizeMBMin, ttable.size_mb(), TTSizeMBMax));
     opt_list.add(UCIOption("Clear Hash"));
 
     opt_list.add(UCIOption("Razoring", Razoring));
-    opt_list.add(UCIOption("RazoringMargin", 0, RazoringMargin, 750));
+    opt_list.add(UCIOption("RazoringFactor", 0, RazoringFactor, 750));
 
     opt_list.add(UCIOption("NMPruning", NMPruning));
     opt_list.add(UCIOption("NMPruningDepthMin", 1, NMPruningDepthMin, 4));
 
-    opt_list.add(UCIOption("KillerMoves", KillerMoves));
-    opt_list.add(UCIOption("UseTransTable", UseTransTable));
-    
     opt_list.add(UCIOption("SingularExt", SingularExt));
     opt_list.add(UCIOption("SEMovesMax", 3, SEMovesMax, 7));
     opt_list.add(UCIOption("SEDepthMin", 3, SEDepthMin, 7));
@@ -116,47 +98,35 @@ void uci_init()
     opt_list.add(UCIOption("DeltaPruning", DeltaPruning));
     opt_list.add(UCIOption("DPMargin", 50, DPMargin, 500));
 
-    opt_list.add(UCIOption("QSearchMargin", 0, QSearchMargin, 500));
     opt_list.add(UCIOption("AspMargin", 5, AspMargin, 30));
     opt_list.add(UCIOption("TempoBonus", 0, TempoBonus, 50));
     
-    opt_list.add(UCIOption("UseLazyEval", UseLazyEval));
-    opt_list.add(UCIOption("LazyMargin", 50, LazyMargin, 1000));
-    
-    opt_list.add(UCIOption("UciTimeBuffer", 1, UciTimeBuffer, 200));
-    opt_list.add(UCIOption("UciNodesBuffer", 1, UciNodesBuffer, 100000));
+    opt_list.add(UCIOption("MoveOverhead", 1, MoveOverhead, 2000));
+    opt_list.add(UCIOption("UciLog", UciLog));
     
     opt_list.add(UCIOption("FutilityFactor", 10, FutilityFactor, 100));
-    opt_list.add(UCIOption("FutilityDepthMax", 0, FutilityDepthMax,  10));
     
-    opt_list.add(UCIOption("Z0",      0,   Z0,  10));
-    opt_list.add(UCIOption("Z1",      0,   Z1,  10));
-    opt_list.add(UCIOption("Z2",      0,   Z2,  10));
-    opt_list.add(UCIOption("Z3",      0,   Z3,  10));
-    opt_list.add(UCIOption("Z4",      0,   Z4,  10));
-    opt_list.add(UCIOption("Z5",      0,   Z5,  10));
-    opt_list.add(UCIOption("Z7",      0,   Z7,  10));
-    opt_list.add(UCIOption("Z8",      0,   Z8,  10));
-    opt_list.add(UCIOption("Z9",      0,   Z9,  10));
-    opt_list.add(UCIOption("Z10",     0,   Z10, 10));
+    opt_list.add(UCIOption("EasyMove", EasyMove));
+    opt_list.add(UCIOption("EMMargin", 10, EMMargin, 1000));
+    opt_list.add(UCIOption("EMShare",   1, EMShare,    99));
+    
+    if (UciLog) {
+        dfile.open(uci_log_filename(), ios::out | ios::app);
+        assert(dfile.is_open());
+    }
 }
 
 void uci_loop()
 {
-    if (UciLog) {
-        dfile.open(uci_debug_filename(), ios::out | ios::app);
-        assert(dfile.is_open());
-    }
-
-    thtable.init();
+    ttable.init();
 
     uci_position("position startpos");
-    
-    string line;
-        
+   
+#if PROFILE >= PROFILE_SOME
     gstats.stimer.start();
-    
-    while (getline(cin, line)) {
+#endif
+
+    for (string line; getline(cin, line); ) {
         uci_log<Direction::In>(line);
 
         if (line.empty() || line[0] == '#')
@@ -168,41 +138,38 @@ void uci_loop()
 
         iss >> skipws >> token;
 
-        if (token == "quit")
-            break;
-
-        else if (token == "debug")
-            continue;
-
-        else if (token == "setoption")
-            uci_setoption(line);
-
-        else if (token == "dump")
+        if (token == "dump")
             uci_dump();
+        
+        else if (token == "go")
+            uci_go(line);
 
         else if (token == "isready") {
             uci_stop();
             uci_send("readyok");
         }
-
-        else if (token == "uci")
-            uci_uci();
-
-        else if (token == "stop")
-            uci_stop();
-
-        else if (token == "ucinewgame") {
-            uci_stop();
-            uci_ucinewgame();
-        }
-
+        
         else if (token == "position") {
             uci_stop();
             uci_position(line);
         }
 
-        else if (token == "go")
-            uci_go(line);
+        else if (token == "setoption")
+            uci_setoption(line);
+
+        else if (token == "stop")
+            uci_stop();
+
+        else if (token == "uci")
+            uci_uci();
+
+        else if (token == "ucinewgame") {
+            uci_stop();
+            uci_ucinewgame();
+        }
+        
+        else if (token == "quit")
+            break;
 
         else
             uci_send("info string unknown command: %s", token.c_str());
@@ -210,7 +177,9 @@ void uci_loop()
 
     uci_stop();
 
+#if PROFILE >= PROFILE_SOME
     gstats.stimer.stop();
+#endif
 }
 
 void uci_go(const string& s)
@@ -221,31 +190,24 @@ void uci_go(const string& s)
 
     assert(fields.size() > 0);
 
-    UciTimeBuffer = opt_list.get("UciTimeBuffer").spin_value();
+    MoveOverhead = opt_list.get("MoveOverhead").spin_value();
 
-    slimits = SearchLimits(true);
+    slimits = SearchLimits();
 
-    const side_t side = sinfo.pos.side();
+    i64 time[SideCount] = { };
+    i64 inc[SideCount] = { };
 
     for (size_t i = 1; i < fields.size(); i++) {
         const string token = fields[i];
 
-        if (token == "wtime") {
-            ++i;
-            if (side == White) slimits.time = stoll(fields[i]);
-        }
-        else if (token == "btime") {
-            ++i;
-            if (side == Black) slimits.time = stoll(fields[i]);
-        }
-        else if (token == "winc") {
-            ++i;
-            if (side == White) slimits.inc = stoll(fields[i]);
-        }
-        else if (token == "binc") {
-            ++i;
-            if (side == Black) slimits.inc = stoll(fields[i]);
-        }
+        if (token == "wtime")
+            time[White] = stoll(fields[++i]);
+        else if (token == "btime")
+            time[Black] = stoll(fields[++i]);
+        else if (token == "winc")
+            inc[White] = stoll(fields[++i]);
+        else if (token == "binc")
+            inc[Black] = stoll(fields[++i]);
         else if (token == "movestogo")
             slimits.movestogo = stoi(fields[++i]);
         else if (token == "depth")
@@ -260,31 +222,37 @@ void uci_go(const string& s)
             assert(false);
     }
 
+    slimits.time = time[sinfo.pos.side()];
+    slimits.inc = inc[sinfo.pos.side()];
+
     if (slimits.movetime)
-        slimits.movetime -= UciTimeBuffer;
+        slimits.movetime = max(slimits.movetime - MoveOverhead, (i64)1);
     
-    else if (slimits.time || slimits.inc) {
-        const int movestogo = slimits.movestogo ? slimits.movestogo : 30;
-        const i64 remaining = slimits.time + (movestogo - 1) * slimits.inc;
+    else if (slimits.time) {
+        i64 bound = max(slimits.time - MoveOverhead, (i64)1);
 
-        i64 ntime = max(min((i64)round(remaining / movestogo * 0.40), slimits.time - UciTimeBuffer), (i64)0);
-        i64 xtime = max(min((i64)round(remaining / movestogo * 2.39), slimits.time - UciTimeBuffer), (i64)1);
+        i64 mtg = slimits.movestogo ? slimits.movestogo : 50;
+        i64 rem = slimits.time + (mtg - 1) * slimits.inc;
+        i64 tpm = rem / mtg;
 
-        assert(ntime <= xtime);
+        i64 ntime = clamp((i64)(tpm * 0.40 + 0.5),    (i64)0, bound);
+        i64 xtime = clamp((i64)(tpm * 2.39 + 0.5), ntime + 1, bound);
+        i64 ptime = clamp((i64)(tpm * 5.00 + 0.5), xtime + 0, bound);
 
-        slimits.time_min = ntime;
-        slimits.time_max = xtime;
+        assert(ntime <= xtime && xtime <= ptime);
+
+        slimits.time_min   = ntime;
+        slimits.time_max   = xtime;
+        slimits.time_panic = ptime;
     }
 
-    search_thread = thread(search_start);
+    sinfo.timer.start();
 
-    while (!Searching) this_thread::sleep_for(chrono::microseconds(100));
+    sthread = thread(search_start);
 }
 
 void uci_send(const char format[], ...)
 {
-    gstats.iotimer.start();
-
     va_list arg_list;
     char buf[4096];
 
@@ -295,17 +263,11 @@ void uci_send(const char format[], ...)
     fprintf(stdout, "%s\n", buf);
 
     uci_log<Direction::Out>(buf);
-    
-    gstats.iotimer.stop();
-    gstats.iotimer.accrue();
 }
 
 string uci_score(int score)
 {
     ostringstream oss;
-
-    // TODO tune
-    // if (score == -1 || score == 1) score = 0;
 
     if (score_is_mate(score)) {
         int count;
@@ -313,7 +275,7 @@ string uci_score(int score)
         if (score > 0)
             count = (ScoreMate - score + 1) / 2;
         else
-            count = -(score + ScoreMate + 1) / 2;
+            count = -(ScoreMate + score + 1) / 2;
 
         oss << "mate " << count;
     }
@@ -351,21 +313,19 @@ void uci_position(const string& s)
 
     sinfo = SearchInfo(Position(fen));
 
-    move_stack.clear();
-    move_stack.add(MoveNone);
-    move_stack.add(MoveNone);
+    mstack.clear();
+    mstack.add(MoveNone);
+    mstack.add(MoveNone);
 
-    key_stack.clear();
-    key_stack.add(sinfo.pos.key());
+    kstack.clear();
+    kstack.add(sinfo.pos.key());
 
     for (auto m : moves) {
         Move move = sinfo.pos.note_move(m);
 
-        MoveUndo undo;
-        sinfo.pos.make_move(move, undo);
+        UndoMove undo;
 
-        key_stack.add(sinfo.pos.key());
-        move_stack.add(move);
+        sinfo.pos.make_move(move, undo);
     }
 }
 
@@ -395,28 +355,26 @@ void uci_setoption(const string& s)
 
     if (opt.get_type() != UCIOption::Button) {
         opt.set_value(value);
-
-        if (name == "Hash") {
-            int mb = opt.clamp(stoi(value));
             
-            thtable = TransTable(mb);
-            thtable.init();
+        if (name == "Hash") {
+            assert(!Searching);
+
+            ttable = TT(opt.spin_value());
+            ttable.init();
         }
         else if (name == "UciLog") {
             UciLog = opt.check_value();
 
             if (!UciLog && dfile.is_open())
                 dfile.close();
-            else if (UciLog && !dfile.is_open()) {
-                dfile.open(uci_debug_filename(), ios::out | ios::app);
-                assert(dfile.is_open());
-            }
+            else if (UciLog && !dfile.is_open())
+                dfile.open(uci_log_filename(), ios::out | ios::app);
         }
     }
+    // Button
     else {
-
         if (name == "Clear Hash")
-            thtable.reset();
+            ttable.reset();
     }
 }
 
@@ -434,16 +392,16 @@ void uci_uci()
 void uci_stop()
 {
     if (!Searching) {
-        assert(!search_thread.joinable());
+        assert(!sthread.joinable());
         assert(!StopRequest);
         return;
     }
         
-    assert(search_thread.joinable());
+    assert(sthread.joinable());
 
     StopRequest = true;
 
-    search_thread.join();
+    sthread.join();
     
     Searching = false;
     StopRequest = false;
@@ -469,9 +427,8 @@ void uci_log(const string& s)
     if (!UciLog) return;
                 
     assert(dfile.is_open());
-    assert(gstats.stimer.status() == Timer::Started);
-
-    i64 elapsed = gstats.stimer.elapsed_time();
+    
+    i64 elapsed = Timer::now() - gstats.time_init;
 
     ostringstream oss;
 
@@ -483,14 +440,14 @@ void uci_log(const string& s)
     dfile.flush();
 }
 
-string uci_debug_filename()
+string uci_log_filename()
 {
     string filename;
 
-    for (size_t i = 0; i < 100 && filename.empty(); i++) {
+    for (size_t i = 0; i < 1000 && filename.empty(); i++) {
         stringstream oss;
 
-        oss << "debug_" << setfill('0') << setw(4) << i << ".log";
+        oss << "uci_" << setfill('0') << setw(5) << i << ".log";
 
         if (!filesystem::exists(filesystem::path { oss.str() }))
             filename = oss.str();

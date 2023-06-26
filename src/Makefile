@@ -4,7 +4,7 @@
 # The name of the executable to be created
 BIN_NAME := cadie
 # Compiler used
-CXX = g++-11
+CXX = g++-12
 # Extension of source files used in the project
 SRC_EXT = cpp
 # Path to the source directory, relative to the makefile
@@ -18,7 +18,7 @@ COMPILE_FLAGS  = -std=c++2a -fopenmp \
 	-Wduplicated-cond -Wunsafe-loop-optimizations -Wunused-macros
 
 # Additional release-specific flags
-RCOMPILE_FLAGS = -O3 -flto -march=native -DNDEBUG -fno-exceptions -fno-rtti
+RCOMPILE_FLAGS = -O3 -flto=auto -march=native -DNDEBUG -fno-rtti
 
 # Additional debug-specific flags
 DCOMPILE_FLAGS = -g -ggdb3

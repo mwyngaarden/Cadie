@@ -4,7 +4,7 @@
 #include <array>
 #include <vector>
 #include <cstdint>
-#include "types.h"
+#include "misc.h"
 
 void perft(int argc, char* argv[]);
 

@@ -11,10 +11,12 @@
 #include "search.h"
 #include "eval.h"
 #include "gen.h"
+#include "history.h"
+#include "math.h"
 #include "move.h"
 #include "pawn.h"
 #include "pos.h"
-#include "sort.h"
+#include "order.h"
 #include "tt.h"
 
 using namespace std;
@@ -24,97 +26,20 @@ atomic_bool StopRequest = false;
 
 SearchInfo      sinfo;
 SearchLimits    slimits;
-MoveStack       move_stack;
-KeyStack        key_stack;
-thread          search_thread;
+MoveStack       mstack;
+KeyStack        kstack;
 
-int Reductions[32][32];
+int LMReductions[64][64];
 int Evals[PliesMax];
-Move Killers[2][PliesMax][2];
 
-constexpr int HistoryMax = DepthMax * DepthMax;
-static_assert(HistoryMax < numeric_limits<i16>::max());
-i16 History[2][128][128];
+History history;
 
+static int qsearch(Position& pos, int alfa, int beta, const int ply, const int depth, PV& pv);
+static int  search(Position& pos, int alfa, int beta, const int ply, const int depth, PV& pv, Move sm = MoveNone);
 
-static int isearch  (Position& pos);
-static int  search  (Position& pos, int alpha, int beta, const int ply, const int depth, PV& pv, Move sm = MoveNone);
-static int qsearch  (Position& pos, int alpha, int beta, const int ply, const int depth, PV& pv);
-
-static int search_aspirate(Position& pos, int d, PV& pv, int score);
-
-static void history_adjust(const Node& node, Move m, int bonus);
-
-static void pv_append(PV& dst, const PV& src)
-{
-    for (int i = 0; i < PliesMax - 1; i++)
-        if ((dst[i + 1] = src[i]) == MoveNone)
-            break;
-}
-
-int calc_extensions(const Node& node, const Move& m, bool gives_check)
-{
-    return (node.depth <= Z0 && gives_check) || (node.pv_node && (gives_check || node.pos.move_is_recap(m)));
-}
-
-bool move_is_dangerous(const Node& node, const Move& m, bool gives_check)
-{
-    return m.is_tactical() || node.in_check || gives_check;
-}
-
-bool move_is_safe(const Node& node, const Move& m, int& see)
-{
-    if (m.is_under()) return false;
-
-    u8 mpiece = node.pos[m.orig()];
-
-    assert(piece256_is_ok(mpiece));
-
-    if (is_king(mpiece)) return true;
-
-    if (m.is_capture()) {
-        u8 opiece = m.capture_piece();
-    
-        assert(piece256_is_ok(opiece));
-
-        int mptype = P256ToP6[mpiece];
-        int optype = P256ToP6[opiece];
-
-        assert(piece_is_ok(mptype));
-        assert(piece_is_ok(optype));
-
-        if (optype >= mptype) return true;
-    }
-
-    if (see == -10000) see = see_move(node.pos, m);
-
-    return see >= 0;
-}
-
-int calc_reductions(const Node& node, const Move& m, bool gives_check, int move_count, int& see)
-{
-    int red = 0;
-
-    if (node.depth >= Z1 && move_count >= Z2 && !move_is_dangerous(node, m, gives_check)) {
-
-        red = Reductions[min(node.depth, 31)][min(move_count, 31)];
-
-        // Only extend 2/3 is PV node
-        if (node.pv_node)
-            red -= red / Z3;
-    }
-    else if (  !node.pv_node
-            && node.depth >= Z4
-            && move_count >= Z5
-            && move_is_dangerous(node, m, gives_check)
-            && !move_is_safe(node, m, see))
-        red = 1;
-
-    if (m == Killers[node.side][node.ply][0] || m == Killers[node.side][node.ply][1])
-        red = max(0, red - 1);
-
-    return red;
-}
+static void search_init(Position pos);
+static int search_aspirate(Position pos, int depth, PV& pv, int score);
+static void search_iterate();
 
 static string pv_string(PV& pv)
 {
@@ -123,526 +48,650 @@ static string pv_string(PV& pv)
     for (size_t i = 0; pv[i] != MoveNone; i++) {
         if (i > 0) oss << ' ';
 
-        oss << pv[i].to_string();
+        oss << pv[i].str();
     }
 
     return oss.str();
 }
 
-int calc_reduction(int depth, int move)
+u8 calc_bound(int score, int alfa, int beta)
 {
-    assert(depth > 0 && move > 0);
+    u8 bound = 0;
 
-    double p0 = log(min(depth, 31)) / log(2);
-    double p1 = log(min(move, 31)) / log(2);
+    if (score < beta) bound |= BoundUpper;
+    if (score > alfa) bound |= BoundLower;
 
-    return round(p0 * p1 * 0.25);
+    return bound;
+}
+
+static int calc_lmr(int d, int m)
+{
+    assert(d > 0 && m > 0);
+
+    return log2(d) * log2(m) * 0.25 + 0.5;
 }
 
 void search_init()
 {
-    for (int d = 1; d < 32; d++)
-        for (int m = 1; m < 32; m++)
-            Reductions[d][m] = calc_reduction(d, m);
+    for (int d = 1; d < 64; d++)
+        for (int m = 1; m < 64; m++)
+            LMReductions[d][m] = calc_lmr(d, m);
 }
 
-int search(Position& pos, int alpha, int beta, const int ply, const int depth, PV& pv, Move sm)
+static void pv_append(PV& dst, const PV& src)
 {
-    assert(key_stack.back() == pos.key());
-    assert(alpha >= -ScoreMate && alpha < beta && beta <= ScoreMate);
+    for (int i = 0; i < PliesMax - 1; i++)
+        if ((dst[i + 1] = src[i]) == MoveNone)
+            break;
+}
+
+static int calc_reductions(const Node& node, const Move& m, bool checks, int score, int& see)
+{
+    assert(node.mlegal > 0);
+
+    int red = 0;
+
+    if (   node.depth >= 3
+        && node.mlegal >= 2
+        && !node.pos.move_is_dangerous(m, checks))
+    {
+        int i = min(node.depth, 63);
+        int j = min(node.mlegal - 1, 63);
+
+        red = LMReductions[i][j];
+
+        if (node.pv_node)
+            red -= red / 2;
+
+        if (Order::is_special(score))
+            --red;
+        else {
+            red -= score >=  2048;
+            // TODO test adjustments
+            red += score <= -1024;
+        }
+
+        // TODO red += !node.improving;
+    }
+
+    else if (  !node.pv_node
+            && node.depth >= 3
+            && node.mlegal >= 4
+            && node.pos.move_is_dangerous(m, checks)
+            && !node.pos.move_is_safe(m, see))
+        red = 1;
+
+    return max(red, 0);
+}
+
+static int calc_extensions(const Node& node, const Move& m, bool checks, bool singular)
+{
+    if (node.depth <= 2 && checks)
+        return 1;
+
+    if (singular)
+        return 1;
+
+    if (node.pv_node) {
+        if (checks)
+            return 1;
+
+        if (node.pos.move_is_recap(m))
+            return 1;
+    }
+
+    return 0;
+}
+
+int search(Position& pos, int alfa, int beta, const int ply, const int depth, PV& pv, Move sm)
+{
+    assert(kstack.back() == pos.key());
+    assert(alfa >= -ScoreMate && alfa < beta && beta <= ScoreMate);
     assert(depth <= DepthMax);
+    assert(pos.key() == pos.calc_key());
 
     if (depth <= 0)
-        return qsearch(pos, alpha, beta, ply, 0, pv);
+        return qsearch(pos, alfa, beta, ply, 0, pv);
 
-    thtable.prefetch(pos.key());
-    ehtable.prefetch(pos.key());
+    ttable.prefetch(pos.key());
+    etable.prefetch(pos.key());
 
-    sinfo.seldepth = max(ply, sinfo.seldepth);
+    sinfo.depth_sel = max(sinfo.depth_sel, ply + 1);
 
+#if PROFILE >= PROFILE_SOME
     gstats.nodes_search++;
+#endif
 
     // Do we need to abort the search?
-    sinfo.check();
+    if (sinfo.initialized) sinfo.checkup();
+  
+    Node node(pos, alfa, beta, ply, depth, sm);
 
     pv[0] = MoveNone;
-   
-    // set node score to -scoremate for white, inverse for black
-    Node node(pos, alpha, beta, ply, depth, sm);
 
-    PV pv_child;
-    int depth_next;
+    int score;
+    int ndepth;
 
     if (!node.root) {
-        if (pos.draw_mat_insuf() || key_stack_rep(pos))
+        if (pos.draw_mat_insuf() || kstack_rep(pos))
             return ScoreDraw;
 
         if (ply >= PliesMax)
-            return node.in_check ? 0 : eval(pos, alpha, beta);
+            return pos.checkers() ? ScoreDraw : eval(pos, ply);
 
-        alpha = max(mated_in(ply), alpha);
-        beta  = min(mate_in(ply + 1), beta);
+        // mate distance pruning
+        
+        alfa = max(mated_in(ply), alfa);
+        beta = min(mate_in(ply + 1), beta);
 
-        if (alpha >= beta) return alpha;
+        if (alfa >= beta) return alfa;
     }
+    
+    if ((node.hit = ttable.get(node.entry, node.key, node.ply))) {
+        if (node.entry.depth >= depth && !node.pv_node) {
+            bool cut = ((node.entry.bound & BoundLower) && node.entry.score >= beta)
+                    || ((node.entry.bound & BoundUpper) && node.entry.score <= alfa);
 
-    bool tt_hit = false;
-
-    if (UseTransTable) {
-        tt_hit = thtable.get(node.tt_key, ply, node.tt_move, node.tt_eval, node.tt_score, node.tt_depth, node.tt_bound);
-
-        if (tt_hit) {
-            // set eval here from tt_eval
-
-            if (node.tt_depth >= depth && !node.pv_node) {
-                bool cutoff = node.tt_bound == BoundExact
-                          || (node.tt_bound == BoundLower && node.tt_score >= beta)
-                          || (node.tt_bound == BoundUpper && node.tt_score <= alpha);
-
-                if (cutoff)
-                    return node.tt_score;
-            }
-
-            // if .... set singular move and score
+            if (cut) return node.entry.score;
         }
+
+        node.eval = node.entry.eval;
     }
-   
-    // TODO refactor
-    if (node.in_check)
-        node.eval = -ScoreMate;
-    else if (node.tt_eval != ScoreNone)
-        node.eval = node.tt_eval;
-    else if (move_stack.back() == MoveNull)
-        node.eval = -Evals[node.ply - 1] + 2 * TempoBonus;
     else
-        node.eval = eval(pos, alpha, beta);
+        node.eval = pos.checkers() ? mated_in(ply) : eval(pos, ply);
 
     Evals[ply] = node.eval;
 
-    bool improving = !node.in_check && (ply < 2 || Evals[ply] > Evals[ply - 2]);
+    node.improving = !pos.checkers() && ply >= 2 && Evals[ply] > Evals[ply - 2];
 
-    if (node.root && sinfo.move_best != MoveNone)
-        node.tt_move = sinfo.move_best;
+    if (node.root && sinfo.bm)
+        node.entry.move = sinfo.bm;
 
-    if (!node.in_check && !node.pv_node) {
+    if (node.hit) {
+        bool adjust = ((node.entry.bound & BoundLower) && node.eval < node.entry.score)
+                   || ((node.entry.bound & BoundUpper) && node.eval > node.entry.score);
 
-        if (Razoring) {
-            if (depth <= 3 && node.eval + RazoringMargin < beta) {
-                int score = qsearch(pos, alpha, beta, ply, 0, pv_child);
+        if (adjust) node.eval = node.entry.score;
+    }
 
-                if (score < beta)
-                    return score;
-                else if (depth == 1)
-                    return beta;
-            }
-        }
+    history.rem_killers(pos.side(), ply + 2);
 
-        if (StaticNMP) {
-            if (   depth <= StaticNMPDepthMax
-                && pos.non_pawn_mat(node.side) 
-                && node.eval >= beta + (depth - improving) * StaticNMPFactor)
+    if (pos.checkers()) goto move_loop;
+   
+    if (!node.pv_node) {
+
+        if (   StaticNMP
+            && depth <= StaticNMPDepthMax
+            && pos.non_pawn_mat(pos.side())
+            && node.eval >= beta + (depth - node.improving) * StaticNMPFactor)
             return node.eval;
+
+        if (   Razoring
+            && depth <= 3
+            && node.eval + RazoringFactor * depth < beta)
+        {
+            score = qsearch(pos, alfa, beta, ply, 0, pv);
+
+            if (score < beta)
+                return score;
+            else if (depth == 1)
+                return beta;
         }
 
-        if (NMPruning) {
-            if (   depth >= NMPruningDepthMin
-                && move_stack.back(0) != MoveNull
-                && move_stack.back(1) != MoveNull
-                // TODO double check this
-                // && node.eval is not mate
-                && node.eval >= beta
-                && pos.non_pawn_mat(node.side))
-            {
-                bool null_ok = !tt_hit || node.tt_score >= beta || node.tt_bound < BoundUpper;
+        if (   NMPruning
+            && depth >= NMPruningDepthMin
+            && mstack.back(0) != MoveNull
+            && mstack.back(1) != MoveNull
+            && !score_is_mate(beta)
+            && node.eval >= beta
+            && pos.non_pawn_mat(pos.side()))
+        {
+            ndepth = depth - (3 + depth / 3);
+       
+            UndoNull undo;
 
-                if (null_ok) {
-                    depth_next = depth - (3 + depth / 3);
-               
-                    NullUndo undo;
+            pos.make_null(undo);
+            score = -search(pos, -beta, -beta + 1, ply + 1, ndepth, node.pv);
+            pos.unmake_null(undo);
 
-                    pos.make_null(undo);
-                    int score = -search(pos, -beta, -beta + 1, ply + 1, depth_next, pv_child);
-                    pos.unmake_null(undo);
-
-                    if (score >= beta)
-                        return score_is_mate(score) ? beta : score;
-                }
-            }
+            if (score >= beta)
+                return score_is_mate(score) ? beta : score;
         }
     }
 
-    if (!node.in_check && node.depth <= FutilityDepthMax) {
-        int score = node.eval + node.depth * FutilityFactor;
+    if (depth <= 4) {
+        score = node.eval + depth * FutilityFactor;
 
-        if (score <= alpha) {
-            node.score = score;
+        if (score <= alfa) {
+            node.bs = score;
             node.futile = true;
         }
     }
 
-    // FIXME if futile only add tacticals and checks
+move_loop:
 
     MoveList qmoves;
-    
-    Sort sort(node);
+    Order order(node);
+    UndoMove undo;
 
-    int move_count = 0;
-    MoveUndo undo;
+    for (Move m = order.next(); m; m = order.next()) {
+        assert(alfa < beta);
 
-    int sort_score;
-    
-    for (Move m = sort.next(sort_score); m; m = sort.next(sort_score)) {
-        assert(alpha < beta);
-
-        if (m == node.sm || !pos.move_is_legal(m)) continue;
-
-        move_count++;
-
-        if (node.sm && move_count >= SEMovesMax) break;
+        if (!pos.move_is_legal(m))
+            continue;
         
-        bool gives_check = pos.move_is_check(m);
+        ++node.mlegal;
 
-        int see = -10000;
-
-        // TODO test with removal of m != node.tt_move
-        if (   node.futile
-            && m != node.tt_move
-            && !gives_check 
-            && !m.is_tactical())
+#if PROFILE >= PROFILE_SOME
+        sinfo.moves_max = max(sinfo.moves_max, node.mlegal);
+#endif
+        
+        if (m == node.sm)
             continue;
+        
+        if (node.sm && node.mlegal >= SEMovesMax)
+            break;
+       
+        bool checks = pos.move_is_check(m);
 
-        // TODO test
-        if (node.futile && !move_is_safe(node, m, see))
-            continue;
+        int& see = order.see(pos, false);
 
-        if (!score_is_mate(node.score)) {
-            if (   node.depth <= Z7
-                && move_count >= node.depth * Z8
-                && !move_is_dangerous(node, m, gives_check))
+        if (node.futile) {
+            if (!m.is_tactical() && !checks)
                 continue;
 
-            if (   node.depth <= Z9
-                && !move_is_dangerous(node, m, gives_check)
-                && !move_is_safe(node, m, see))
-                continue;
-            
-            if (   node.depth <= Z10
-                && m.is_tactical()
-                && !move_is_safe(node, m, see))
+            if (!pos.move_is_safe(m, see))
                 continue;
         }
 
-        int ext = calc_extensions(node, m, gives_check);
-        int red = calc_reductions(node, m, gives_check, move_count - 1, see);
+        if (!score_is_mate(node.bs)) {
+            if (   depth <= 3
+                && node.mlegal >= depth * 6
+                && !pos.move_is_dangerous(m, checks))
+                continue;
+
+            if (   depth <= 6
+                && !pos.move_is_dangerous(m, checks)
+                && !pos.move_is_safe(m, see))
+                continue;
+            
+            if (   depth <= 3
+                && m.is_tactical()
+                && !pos.move_is_safe(m, see))
+                continue;
+        }
+
+        int ext = calc_extensions(node, m, checks, order.is_singular());
+        int red = calc_reductions(node, m, checks, order.score(), see);
+
+        assert(!ext || !red);
 
         if (!m.is_tactical()) qmoves.add(m);
 
         if (   SingularExt
             && !ext
-            && m == node.tt_move
+            && m == node.entry.move
             && !node.root 
             && depth >= SEDepthMin
             && !node.sm
-            && !node.in_check
-            && !score_is_mate(node.tt_score)
-            && node.tt_bound <= BoundExact
-            && node.tt_depth >= depth - SEDepthOffset)
+            && !pos.checkers()
+            && !score_is_mate(node.entry.score)
+            && (node.entry.bound & BoundLower)
+            && node.entry.depth >= depth - SEDepthOffset)
         {
-            // TODO tune
-            int lbound = node.tt_score - 4 * depth;
-
-            int score = search(pos, lbound, lbound + 1, ply, depth - 4, pv_child, m);
+            int lbound = node.entry.score - 4 * depth;
+            
+            score = search(pos, lbound, lbound + 1, ply, depth - 4, node.pv, m);
 
             ext = score <= lbound;
         }
 
+        ndepth = depth + ext - 1;
+        assert(ndepth >= 0);
+
+        // Don't reduce to qs
+        if (red && ndepth - red <= 0)
+            red = ndepth - 1;
+
+        if (node.root) {
+            sinfo.cm     = m;
+            sinfo.cm_num = node.mlegal;
+        }
+
         pos.make_move(m, undo);
 
-        depth_next = depth + ext - 1;
-       
-        if (red && depth_next - red <= 0) red = depth_next - 1;
+        if ((node.pv_node && node.mlegal > 1) || red) {
+            score = -search(pos, -alfa - 1, -alfa, ply + 1, ndepth - red, node.pv);
 
-        if ((node.pv_node && move_count > 1) || red) {
-            node.score = -search(pos, -alpha - 1, -alpha, ply + 1, depth_next - red, pv_child);
-
-            if (node.score > alpha)
-                node.score = -search(pos, -beta, -alpha, ply + 1, depth_next, pv_child);
+            if (score > alfa) {
+                if (node.root) sinfo.fail_highs++;
+                score = -search(pos, -beta, -alfa, ply + 1, ndepth, node.pv);
+                if (node.root) sinfo.fail_highs--;
+            }
         }
         else
-            node.score = -search(pos, -beta, -alpha, ply + 1, depth_next, pv_child);
-        
+            score = -search(pos, -beta, -alfa, ply + 1, ndepth, node.pv);
+
         pos.unmake_move(m, undo);
 
-        if (node.score > node.bs) {
-            node.bs = node.score;
+        if (score > node.bs) {
+            node.bs = score;
 
-            if (node.score > alpha) {
-                alpha = node.score;
+            if (node.root && node.mlegal == 1)
+                sinfo.fail_low = node.bs <= alfa;
+
+            if (node.bs > alfa) {
+                alfa = node.bs;
                 node.bm = m;
 
                 if (node.pv_node) {
                     pv[0] = m;
 
-                    pv_append(pv, pv_child); 
+                    pv_append(pv, node.pv); 
 
-                    if (node.root && move_count > 1 && depth > 1)
-                        sinfo.update(depth, node.score, pv, false);
+                    if (node.root && node.mlegal > 1 && depth > 1)
+                        sinfo.update(depth, node.bs, pv, false);
                 }
 
-                // fail high
-                if (alpha >= beta) break;
+                if (alfa >= beta) break;
             }
         }
     }
 
-    if (!move_count) {
-        if (node.sm)
-            return alpha;
-        else if (node.in_check)
-            return mated_in(ply);
-        else
-            return ScoreDraw;
+    if (!node.mlegal)
+        return pos.checkers() ? mated_in(ply) : ScoreDraw;
+    
+    if (node.bs <= -ScoreMate) {
+        assert(node.bs == -ScoreMate);
+        return max(alfa, mated_in(ply + 1));
     }
 
-    if (node.bs <= -ScoreMate)
-        return max(alpha, mated_in(ply + 1));
+    if (!node.sm && alfa > node.oalfa && !node.bm.is_tactical()) {
+        assert(node.bm.is_valid());
 
-    if (!node.sm && alpha > node.alpha && !node.bm.is_tactical()) {
-        assert(node.bm != MoveNone);
+        history.add_counter(pos, node.bm);
+        history.add_killer(pos.side(), node.ply, node.bm);
 
-        if (KillerMoves) {
-            if ((node.bm != Killers[node.side][node.ply][0] && node.bm != Killers[node.side][node.ply][1])
-                || node.bm == Killers[node.side][node.ply][1]) {
-                Killers[node.side][node.ply][1] = Killers[node.side][node.ply][0];
-                Killers[node.side][node.ply][0] = node.bm;
-            }
-        }
-
-        history_adjust(node, node.bm, depth * depth);
-
-        for (Move& m : qmoves) {
-            if (m != node.bm) {
-                int bonus = -1 - depth * depth / 2;
-
-                history_adjust(node, m, bonus);
-            }
-        }
+        history.inc(pos, depth, node.bm);
+        history.dec(pos, depth, node.bm, qmoves);
     }
 
-    if (UseTransTable) {
-        node.tt_bound = node.bs >= beta ? BoundLower : node.bs > node.alpha ? BoundExact : BoundUpper;
+    Entry& e = node.entry;
 
-        thtable.set(node.tt_key, ply, node.bm, node.eval, node.bs, depth, node.tt_bound);
-    }
+    e.move  = node.bm;
+    e.eval  = pos.checkers() ? -ScoreMate : Evals[ply];
+    e.score = score_to_tt(node.bs, ply);
+    e.depth = depth;
+    e.bound = calc_bound(node.bs, node.oalfa, beta);
+
+    ttable.set(e, node.key);
 
     return node.bs;
 }
 
-int qsearch(Position& pos, int alpha, int beta, const int ply, const int depth, PV& pv)
+int qsearch(Position& pos, int alfa, int beta, const int ply, const int depth, PV& pv)
 {
-    assert(key_stack.back() == pos.key());
+    assert(kstack.back() == pos.key());
     assert(depth <= 0);
-    assert(alpha >= -ScoreMate && alpha < beta && beta <= ScoreMate);
-     
-    thtable.prefetch(pos.key());
-    ehtable.prefetch(pos.key());
-    
-    sinfo.seldepth = max(ply, sinfo.seldepth);
+    assert(alfa >= -ScoreMate && alfa < beta && beta <= ScoreMate);
 
+    ttable.prefetch(pos.key());
+    etable.prefetch(pos.key());
+
+#if PROFILE >= PROFILE_SOME
     gstats.nodes_qsearch++;
+#endif
 
     // Do we need to abort the search?
-    sinfo.check();
+    if (sinfo.initialized) sinfo.checkup();
     
-    Node node(pos, alpha, beta, ply, depth);
-
-    PV pv_child;
+    Node node(pos, alfa, beta, ply, depth);
 
     if (node.pv_node)
         pv[0] = MoveNone;
 
     if (!node.root) {
-        if (pos.draw_mat_insuf() || key_stack_rep(pos))
+        if (pos.draw_mat_insuf() || kstack_rep(pos))
             return ScoreDraw;
 
         if (ply >= PliesMax)
-            return eval(pos, alpha, beta);
-            // TODO check
-            //return node.in_check ? 0 : eval(pos, alpha, beta);
+            return pos.checkers() ? 0 : eval(pos, ply);
     }
 
-    if (UseTransTable) {
-        bool tt_hit = thtable.get(pos.key(), ply, node.tt_move, node.tt_eval, node.tt_score, node.tt_depth, node.tt_bound);
+    i8 tt_depth = depth < 0 && !node.pos.checkers() ? -1 : 0;
 
-        if (tt_hit) {
-            bool cutoff = node.tt_bound == BoundExact
-                || (node.tt_bound == BoundLower && node.tt_score >= beta)
-                || (node.tt_bound == BoundUpper && node.tt_score <= alpha);
+    if ((node.hit = ttable.get(node.entry, node.key, node.ply))) {
+        if (node.entry.depth >= tt_depth && !node.pv_node) {
+            bool cut = ((node.entry.bound & BoundLower) && node.entry.score >= beta)
+                    || ((node.entry.bound & BoundUpper) && node.entry.score <= alfa);
 
-            if (cutoff)
-                return node.tt_score;
+            if (cut) return node.entry.score;
         }
+
+        node.eval = node.entry.eval;
+    }
+    else
+        node.eval = pos.checkers() ? mated_in(ply) : eval(pos, ply);
+    
+    node.bs = node.eval;
+
+    if (node.hit) {
+        bool adjust = ((node.entry.bound & BoundLower) && node.eval < node.entry.score)
+                   || ((node.entry.bound & BoundUpper) && node.eval > node.entry.score);
+
+        if (adjust) node.bs = node.entry.score;
     }
 
-    // TODO refactor
-    if (node.in_check)
-        node.eval = -ScoreMate;
-    else if (node.tt_eval != ScoreNone)
-        node.eval = node.tt_eval;
-    else if (move_stack.back() == MoveNull)
-        node.eval = -Evals[node.ply - 1] + 2 * TempoBonus;
-    else
-        node.eval = eval(pos, alpha, beta);
-
-    Evals[ply] = node.eval;
-
-    if (!node.in_check) {
-        node.bs = node.eval;
-
-        if (node.bs > alpha) {
-            alpha = node.bs;
-
+    if (!pos.checkers()) {
+        if (node.bs > alfa) {
+            alfa = node.bs;
+        
             if (node.bs >= beta)
                 return node.bs;
         }
     }
-    
-    Sort sort(node);
 
-    int move_count = 0;
-    MoveUndo undo;
+    Order order(node);
+    UndoMove undo;
 
-    int sort_score;
+    size_t qevasions = 0;
 
-    for (Move m = sort.next(sort_score); m; m = sort.next(sort_score)) {
-        assert(alpha < beta);
-
-        int see = -10000;
-
-        if (!node.in_check && depth <= DepthMin && !pos.move_is_recap(m))
+    for (Move m = order.next(); m; m = order.next()) {
+        assert(alfa < beta);
+        
+        if (!pos.move_is_legal(m))
             continue;
 
-        if (   DeltaPruning 
-            && !node.in_check 
-            && (node.eval + pos.see_max(m) + DPMargin) <= alpha
-            && !(depth == 0 && pos.move_is_check(m)))
-            continue;
+        ++node.mlegal;
 
-        if (!node.in_check && !move_is_safe(node, m, see))
-            continue;
+        if (!pos.checkers()) {
+            if (depth <= DepthMin && !pos.move_is_recap(m))
+                continue;
+        
+            bool checks = pos.move_is_check(m);
 
-        if (!pos.move_is_legal(m)) continue;
+            if (depth == 0 && !m.is_tactical() && !checks)
+                continue;
+
+            if (   DeltaPruning
+                && node.eval + pos.see_max(m) + DPMargin <= alfa
+                && !(depth == 0 && checks))
+                continue;
+        
+            if (!pos.move_is_safe(m, order.see(pos, false)))
+                continue;
+        }
+
+        else if (!m.is_tactical()) {
+            qevasions++;
+
+            if (qevasions >= 2)
+                break;
+        }
 
         pos.make_move(m, undo);
-        move_count++;
-        node.score = -qsearch(pos, -beta, -alpha, ply + 1, depth - 1, pv_child);
+        int score = -qsearch(pos, -beta, -alfa, ply + 1, depth - 1, pv);
         pos.unmake_move(m, undo);
 
-        if (node.score > node.bs) {
-            node.bs = node.score;
+        if (score > node.bs) {
+            node.bs = score;
 
-            if (node.score > alpha) {
-                alpha = node.score;
+            if (score > alfa) {
+                alfa = score;
                 node.bm = m;
 
                 if (node.pv_node) {
                     pv[0] = m;
 
-                    pv_append(pv, pv_child);
+                    pv_append(pv, node.pv);
                 }
-            
-                // fail high
-                if (alpha >= beta) break;
+                
+                if (alfa >= beta) break;
             }
         }
     }
 
-    if (node.in_check && !move_count)
+    if (pos.checkers() && !node.mlegal)
         return mated_in(ply);
 
     if (node.bs <= -ScoreMate) {
         assert(node.bs == -ScoreMate);
-
-        return max(alpha, mated_in(ply + 1));
+        return max(alfa, mated_in(ply + 1));
     }
 
-    if (UseTransTable) {
-        node.tt_bound = node.bs >= beta ? BoundLower : node.bs > node.alpha ? BoundExact : BoundUpper;
+    Entry& e = node.entry;
 
-        thtable.set(pos.key(), ply, node.bm, node.eval, node.bs, 0, node.tt_bound);
-    }
+    e.move  = node.bm;
+    e.eval  = node.eval;
+    e.score = score_to_tt(node.bs, ply);
+    e.depth = tt_depth;
+    e.bound = calc_bound(node.bs, node.oalfa, beta);
+
+    ttable.set(e, node.key);
 
     return node.bs;
 }
 
-static int search_aspirate(Position& pos, int depth, PV& pv, int score)
+static int search_aspirate(Position pos, int depth, PV& pv, int score)
 {
     assert(depth > 0);
 
     if (depth == 1)
         return search(pos, -ScoreMate, ScoreMate, 0, depth, pv); 
 
-    int delta   = AspMargin;
-    int alpha   = max(score - delta, -ScoreMate);
-    int beta    = min(score + delta,  ScoreMate);
-    
-    while (true) {
-        score = search(pos, alpha, beta, 0, depth, pv);
+    int delta = AspMargin;
+    int alfa  = max(score - delta, -ScoreMate);
+    int beta  = min(score + delta,  ScoreMate);
 
-        if (score <= alpha) {
-            beta  = (alpha + beta) / 2;
-            alpha = max(alpha - delta, -ScoreMate);
+    while (true) {
+        score = search(pos, alfa, beta, 0, depth, pv);
+
+        if (score <= alfa) {
+            beta = (alfa + beta) / 2;
+            alfa = max(alfa - delta, -ScoreMate);
         } 
         else if (score >= beta) {
-            alpha = (alpha + beta) / 2;
-            beta  = min(beta + delta, ScoreMate);
+            alfa = (alfa + beta) / 2;
+            beta = min(beta + delta, ScoreMate);
         } 
         else
             return score;
 
-        delta += delta / 2;
+        delta += max(delta / 2, 1);
     }
 }
 
-int isearch(Position& pos)
+void search_init(Position pos)
 {
-    int depth = slimits.depth ? slimits.depth : DepthMax;
-    int score = 0;
+    MoveList moves;
+    
+    gen_moves(moves, pos, GenMode::Legal);
+
+    bool singular = moves.size() == 1;
+            
+    PV pv;
+
+    for (Move& m : moves) {
+        int score;
+
+        if (!singular) {
+            UndoMove undo;
+
+            pos.make_move(m, undo);
+            score = -search(pos, -ScoreMate, ScoreMate, 0, 1, pv); 
+            pos.unmake_move(m, undo);
+        }
+        else
+            score = 0;
+        
+        sinfo.smoves.add(m, score, ScoreNone);
+    }
+
+    if (singular)
+        sinfo.em = sinfo.smoves[0].move;
+    else {
+        sinfo.smoves.sort();
+    
+        if (EasyMove) {
+            MoveExt sm1 = sinfo.smoves[0];
+            MoveExt sm2 = sinfo.smoves[1];
+
+            int diff = sm1.score - sm2.score;
+
+            assert(diff >= 0);
+
+            if (Entry e; diff >= EMMargin && ttable.get(e, sinfo.pos.key(), 0) && e.move == sm1.move)
+                sinfo.em = sm1.move;
+        }
+    }
+
+    sinfo.initialized = true;
+}
+
+void search_iterate()
+{
+    search_init(sinfo.pos);
     
     PV pv;
 
-    for (int d = 1; d <= depth; d++) {
-        score = search_aspirate(pos, d, pv, score);
+    int score = 0;
 
-        assert(pos == sinfo.pos);
-
-        sinfo.update(d, score, pv, true);
-
-        if (slimits.using_tm() && slimits.time_elapsed() > 0.46)
+    for (int depth = 1; depth <= DepthMax; depth++) {
+        sinfo.depth_sel = 0;
+        
+        try {
+            score = search_aspirate(sinfo.pos, depth, pv, score);
+        } catch (int i) {
             break;
+        }
+
+        // Aspiration completed successfully without reaching time limit or node limit
+
+        sinfo.update(depth, score, pv);
+
+        if (slimits.depth && depth >= slimits.depth)
+            break;
+
+        if (slimits.time) {
+            if (sinfo.score_drop)
+                continue;
+
+            double share = EMShare / 100.0;
+
+            if (sinfo.time_share_min(slimits) > share && sinfo.bm == sinfo.em && sinfo.bm_updates == 1)
+                break;
+            
+            if (sinfo.time_share_max(slimits) >= 0.46)
+                break;
+        }
     }
 
-    return score;
-}
-
-void search_go()
-{
-    if (setjmp(sinfo.jump_buffer) != 0)
-        return;
-
-    thtable.inc_gen();
-
-    Position pos = sinfo.pos;
-
-    isearch(pos);
+    ttable.age();
 }
 
 void search_start()
 {
     Searching = true;
-
-    UseTransTable       = opt_list.get("UseTransTable").check_value();
-    KillerMoves         = opt_list.get("KillerMoves").check_value();
 
     NMPruning           = opt_list.get("NMPruning").check_value();
     NMPruningDepthMin   = opt_list.get("NMPruningDepthMin").spin_value();
@@ -660,71 +709,75 @@ void search_start()
     DPMargin            = opt_list.get("DPMargin").spin_value();
     
     Razoring            = opt_list.get("Razoring").check_value();
-    RazoringMargin      = opt_list.get("RazoringMargin").spin_value();
+    RazoringFactor      = opt_list.get("RazoringFactor").spin_value();
     
-    QSearchMargin       = opt_list.get("QSearchMargin").spin_value();
     AspMargin           = opt_list.get("AspMargin").spin_value();
     TempoBonus          = opt_list.get("TempoBonus").spin_value();
     
-    UseLazyEval         = opt_list.get("UseLazyEval").check_value();
-    LazyMargin          = opt_list.get("LazyMargin").spin_value();
-    
-    UciNodesBuffer      = opt_list.get("UciNodesBuffer").spin_value();
-    
     FutilityFactor      = opt_list.get("FutilityFactor").spin_value();
-    FutilityDepthMax    = opt_list.get("FutilityDepthMax").spin_value();
+
+    EasyMove            = opt_list.get("EasyMove").check_value();
+    EMMargin            = opt_list.get("EMMargin").spin_value();
+    EMShare             = opt_list.get("EMShare").spin_value();
     
-    Z0                  = opt_list.get("Z0").spin_value();
-    Z1                  = opt_list.get("Z1").spin_value();
-    Z2                  = opt_list.get("Z2").spin_value();
-    Z3                  = opt_list.get("Z3").spin_value();
-    Z4                  = opt_list.get("Z4").spin_value();
-    Z5                  = opt_list.get("Z5").spin_value();
-    Z7                  = opt_list.get("Z7").spin_value();
-    Z8                  = opt_list.get("Z8").spin_value();
-    Z9                  = opt_list.get("Z9").spin_value();
-    Z10                 = opt_list.get("Z10").spin_value();
+    GenState state = gen_state(sinfo.pos);
 
-    GenState gstate = gen_state(sinfo.pos);
+#if PROFILE >= PROFILE_ALL
+    for (size_t i = 0; i < 10000; i++) state = gen_state(sinfo.pos);
+#endif
 
-    if (gstate != GenState::Normal) {
-        int score;
-            
+    // No reason to search if there are no legal moves
+    if (state != GenState::Normal) {
         gstats.num += !gstats.exc;
+        gstats.stalemate += state == GenState::Stalemate;
+        gstats.checkmate += state != GenState::Stalemate;
 
-        if (gstate == GenState::Stalemate) {
-            score = ScoreDraw;
-            gstats.stalemate++;
-        }
-        else {
-            score = sinfo.pos.side() == White ? -ScoreMate : ScoreMate;
-            gstats.checkmate++;
-        }
+        int score = state == GenState::Stalemate
+                  ? ScoreDraw
+                  : (sinfo.pos.side() == White ? -ScoreMate : ScoreMate);
         
         uci_send("info depth 0 score %s", uci_score(score).c_str());
         uci_send("bestmove (none)");
     }
 
     else {
-        gstats.stimer.start(gstats.benchmarking);
-        search_go();
-        gstats.stimer.stop(gstats.benchmarking);
-        gstats.stimer.accrue(gstats.benchmarking);
+        gstats.stimer.start(true);
+
+        search_iterate();
 
         sinfo.uci_bestmove();
 
-        gstats.unfinished++;
-        gstats.num++;
+        gstats.stimer.stop(true);
+        gstats.stimer.accrue(true);
         
-        int d = sinfo.depth_max;
+        gstats.normal++;
+        gstats.num++;
 
-        assert(d >= 0);
+        int dn = sinfo.depth_max;
+        assert(dn > 0);
 
-        gstats.depth_min  = min(gstats.depth_min, d);
-        gstats.depth_max  = max(gstats.depth_max, d);
-        gstats.depth_sum += d;
+        gstats.depth_min  = min(gstats.depth_min, dn);
+        gstats.depth_max  = max(gstats.depth_max, dn);
+        gstats.depth_sum += dn;
+        
+        int ds = sinfo.depth_sel;
+        assert(ds > 0);
+
+        gstats.seldepth_min  = min(gstats.seldepth_min, ds);
+        gstats.seldepth_max  = max(gstats.seldepth_max, ds);
+        gstats.seldepth_sum += ds;
+
+        int mc = sinfo.moves_max;
+        assert(mc > 0);
+
+        gstats.lmoves_min  = min(gstats.lmoves_min, mc);
+        gstats.lmoves_max  = max(gstats.lmoves_max, mc);
+        gstats.lmoves_sum += mc;
+
+        gstats.bm_updates += sinfo.bm_updates;
+        gstats.bm_stable += sinfo.bm_stable;
    
-        i64 n = sinfo.nodes;
+        i64 n = sinfo.tnodes;
 
         gstats.nodes_min = min(gstats.nodes_min, n);
         gstats.nodes_max = max(gstats.nodes_max, n);
@@ -743,13 +796,21 @@ void search_start()
     }
 }
 
-bool key_stack_rep(const Position& pos)
+bool kstack_rep(const Position& pos)
 {
-    if (pos.half_moves() >= 100)
-        return !pos.in_check() || gen_state(pos) == GenState::Normal;
+    if (pos.half_moves() >= 100) {
+        if (!pos.checkers())
+            return true;
 
-    for (size_t i = 4; i <= (size_t)pos.half_moves() && i < key_stack.size(); i += 2)
-        if (key_stack.back(i) == key_stack.back())
+        MoveList moves;
+
+        gen_moves(moves, pos, GenMode::Legal);
+
+        return moves.size() > 0;
+    }
+
+    for (size_t i = 4; i <= (size_t)pos.half_moves() && i < kstack.size(); i += 2)
+        if (kstack.back(i) == kstack.back())
             return true;
 
     return false;
@@ -757,13 +818,13 @@ bool key_stack_rep(const Position& pos)
 
 void search_reset()
 {
-    memset(History, 0, sizeof(History));
-    memset(Evals,   0, sizeof(Evals));
-    memset(Killers, 0, sizeof(Killers));
+    memset(Evals, 0, sizeof(Evals));
 
-    ehtable.reset();
-    phtable.reset();
-    thtable.reset();
+    history.clear();
+
+    ttable.reset();
+    etable.reset();
+    ptable.reset();
 }
 
 int mate_in(int ply)
@@ -783,112 +844,192 @@ bool score_is_mate(int score)
     return abs(score) >= ScoreMate - PliesMax;
 }
 
-void history_adjust(const Node& node, Move m, int bonus)
-{
-    int orig = m.orig();
-    int dest = m.dest();
-
-    int value = History[node.side][orig][dest];
-
-    value += 32 * bonus - value * abs(bonus) / 128;
-    value  = clamp(value, -HistoryMax, HistoryMax);
-
-    History[node.side][orig][dest] = value;
-}
-
 void SearchInfo::update(int depth, int score, PV& pv, bool complete)
 {
-    if (depth <= depth_max)
-        return;
+    assert(depth >= 1);
+    assert(abs(score) < ScoreMate);
+    assert(pv[0].is_valid());
 
-    i64 dur = slimits.timer.elapsed_time(1);
+    if (!initialized) return;
 
-    if (depth >= slimits.depth_min() - 1) {
+    i64 dur = timer.elapsed_time(1);
+
+    // Don't flood stdout if time limited
+    bool send = !slimits.time_limited() || depth >= 6 || dur >= 100;
+
+    if (send) {
         ostringstream oss;
 
         oss << "info" 
-            << " depth " << depth
-            << " seldepth " << sinfo.seldepth
-            << " score " << uci_score(score)
-            << " time " << dur
-            << " nodes " << nodes
-            << " nps " << 1000 * nodes / dur
-            << " hashfull " << thtable.permille()
-            << " pv " << pv_string(pv);
+            << " depth "    << depth
+            << " seldepth " << depth_sel
+            << " score "    << uci_score(score)
+            << " time "     << dur
+            << " nodes "    << tnodes
+            << " nps "      << 1000 * tnodes / dur
+            << " hashfull " << ttable.permille()
+            << " pv "       << pv_string(pv);
 
         uci_send(oss.str().c_str());
     }
 
-    if (complete)
-        depth_max = depth;
+    depth_max = depth;
 
-    assert(pv[0] != MoveNone);
+    if (pv[0] == bm)
+        bm_stable   += complete;
+    else {
+        bm_stable    = 0;
+        bm_updates  += depth > 1;
+    }
 
-    stability = pv[0] == move_best ? stability + 1 : 0;
+    fail_low = false;
 
-    score_best = score;
-    move_best = pv[0];
+    score_drop = score - score_prev <= -10;
+    score_prev = score;
+
+    bm = pv[0];
 }
 
 void SearchInfo::uci_bestmove() const
 {
-    std::ostringstream oss;
+    i64 dur = timer.elapsed_time();
 
-    oss << "bestmove " << sinfo.move_best.to_string();
+    ostringstream oss;
+
+    oss << "info" 
+        << " depth "    << depth_max
+        << " seldepth " << depth_sel
+        << " time "     << dur
+        << " nodes "    << tnodes;
+    
+    uci_send(oss.str().c_str());
+
+    oss = ostringstream();
+
+    oss << "bestmove " << sinfo.bm.str();
 
     uci_send(oss.str().c_str());
 }
 
-void SearchInfo::check()
+void SearchInfo::uci_report(i64 dur) const
 {
-    ++nodes;
+    ostringstream oss;
 
-    if (--nodes_countdown >= 0)
+    oss << "info" 
+        << " depth "            << depth_max
+        << " seldepth "         << depth_sel
+        << " time "             << dur
+        << " nodes "            << tnodes
+        << " nps "              << 1000 * tnodes / dur
+        << " hashfull "         << ttable.permille()
+        << " currmove "         << cm.str()
+        << " currmovenumber "   << cm_num;
+
+    uci_send(oss.str().c_str());
+}
+
+double SearchInfo::factor() const
+{
+    const double N = 4;
+
+    double s = 1 + bm_stable;
+    double t = N + bm_stable + bm_updates;
+
+    double cdf = math::binomial_cdf(s, t, (N - 1) / N);
+
+    assert(cdf >= 0 && cdf <= 1);
+
+    return 1 - cdf;
+}
+
+void SearchInfo::checkup()
+{
+    assert(initialized);
+
+    ++tnodes;
+
+    if (--cnodes >= 0)
         return;
 
-    if (move_best == MoveNone)
-        return;
-    
-    if (!slimits.nodes)
-        nodes_countdown += UciNodesBuffer;
-    
-    if (slimits.using_tm() && depth_max < slimits.depth_min())
+    if (!bm.is_valid())
         return;
 
-    bool abort = false;
+    i64 cnodes_next = 250000;
+    i64 dur = -1;
 
-    if (StopRequest)
-        abort = true;
+    bool abort = StopRequest;
     
-    else if (slimits.nodes) {
-        i64 diff = nodes - slimits.nodes;
+    if (!abort && slimits.nodes) {
+        i64 diff = tnodes - slimits.nodes;
+            
+        cnodes_next = -diff / 2;
 
         if (diff >= 0)
             abort = true;
-        else
-            nodes_countdown = -diff / 10;
     }
 
-    else if (slimits.depth && depth_max >= slimits.depth)
-        abort = true;
+    if (!abort && slimits.time_limited()) {
+        i64 rem = 10000;
+       
+        if (dur == -1)
+            dur = timer.elapsed_time();
 
-    else {
-        i64 dur = slimits.timer.elapsed_time();
+        if (slimits.movetime) {
+            rem = min(rem, slimits.movetime - dur);
 
-        assert(dur >= 0);
-
-        if (slimits.movetime && dur >= slimits.movetime)
-            abort = true;
-
-        else if (slimits.time) {
-            i64 delta   = slimits.time_max - slimits.time_min;
-            i64 margin  = delta * pow(0.9, stability);
-
-            if (dur >= slimits.time_min + margin)
+            if (dur >= slimits.movetime)
                 abort = true;
         }
+
+        else if (slimits.time) {
+            i64 ntime = slimits.time_min;
+            i64 xtime = slimits.time_max;
+            i64 ptime = slimits.time_panic;
+      
+            if (dur < ntime)
+                rem = min(rem, ntime - dur);
+
+            else if (dur >= ptime)
+                abort = true;
+
+            else if (dur >= xtime) {
+                rem = min(rem, ptime - dur);
+
+                if (!fail_low)
+                    abort = true;
+            }
+
+            // dur >= ntime && dur < xtime
+            else {
+                rem = min(rem, xtime - dur);
+
+                if (!fail_low) {
+                    i64 delta = xtime - ntime;
+                    i64 margin = delta * (is_stable() ? factor() : 1.0);
+                    
+                    if (dur >= ntime + margin)
+                        abort = true;
+                }
+            }
+        }
+
+        i64 n = clamp(rem, (i64)1, (i64)10000) * 25;
+
+        cnodes_next = min(cnodes_next, n);
     }
    
-    if (abort)
-        longjmp(jump_buffer, 1);
+    if (abort) throw 1;
+        
+    cnodes = cnodes_next;
+
+    if (depth_max >= 6) {
+        if (dur == -1)
+            dur = timer.elapsed_time();
+
+        if (dur > 5000 && dur - rtime >= 1000) {
+            rtime = dur;
+
+            uci_report(dur);
+        }
+    }
 }

@@ -1,0 +1,8 @@
+bin/
+build/
+cadie*
+*.book
+*.obj
+*.out
+*.pgn
+*.sh

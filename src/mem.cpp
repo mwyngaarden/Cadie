@@ -11,9 +11,10 @@
 
 #include "mem.h"
 
-void * my_alloc(size_t size)
+namespace mem {
+
+void * alloc(size_t size)
 {
-    [[maybe_unused]]
     constexpr size_t alignment = 2 * 1024 * 1024;
 
     [[maybe_unused]]
@@ -38,20 +39,22 @@ void * my_alloc(size_t size)
     return p;
 }
 
-void my_free(void * p)
+void free(void * p)
 {
 #ifdef _MSC_VER
     _aligned_free(p);
 #else
-    free(p);
+    std::free(p);
 #endif
 }
 
-void my_prefetch(void * p)
+void prefetch(void * p)
 {
 #ifdef _MSC_VER
     _mm_prefetch((char *)p, _MM_HINT_T0);
 #else
     __builtin_prefetch(p);
 #endif
+}
+
 }

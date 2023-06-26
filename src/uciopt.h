@@ -7,7 +7,6 @@
 #include <vector>
 #include <cassert>
 
-// TODO templatize
 class UCIOption {
 public:
     enum OptionType {
@@ -54,7 +53,7 @@ public:
         string_value_ = def;
     }
 
-    std::string opt_to_string() const
+    std::string str() const
     {
         switch (type_) {
         case Check:
@@ -152,7 +151,7 @@ public:
             check_value_ = value == "true";
             break;
         case Spin:
-            spin_value_ = std::stoi(value);
+            spin_value_ = clamp(std::stoi(value));
             break;
         case Combo:
             combo_value_ = value;

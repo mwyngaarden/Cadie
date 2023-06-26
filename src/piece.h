@@ -1,13 +1,12 @@
 #ifndef PIECE_H
 #define PIECE_H
 
+#include <array>
 #include <utility>
 #include <cstdint>
-#include "types.h"
+#include "misc.h"
 
-extern u8 P12ToP256[12];
-extern int P256ToP12[256];
-extern int P256ToP6[256];
+enum class PieceAttr : int { Color2, Type6, Type12 };
 
 using PieceList = List<u8, 9>;
 
@@ -23,7 +22,7 @@ constexpr int Bishop            =  2;
 constexpr int Rook              =  3;
 constexpr int Queen             =  4;
 constexpr int King              =  5;
-constexpr int PieceCount        =  6;
+constexpr int PieceCount6       =  6;
 
 constexpr int WhitePawn12       =  0;
 constexpr int BlackPawn12       =  1;
@@ -37,7 +36,7 @@ constexpr int WhiteQueen12      =  8;
 constexpr int BlackQueen12      =  9;
 constexpr int WhiteKing12       = 10;
 constexpr int BlackKing12       = 11;
-constexpr int PieceNone12       = 12;
+constexpr int PieceCount12      = 12;
 
 constexpr int PieceList12[2][6] = {
     { WhitePawn12, WhiteKnight12, WhiteBishop12, WhiteRook12, WhiteQueen12, WhiteKing12 },
@@ -110,7 +109,6 @@ constexpr std::pair<u8, u8> P12Flag[3] = {
 
 // methods
 
-void piece_init();
 constexpr bool is_white(u8 piece) { return (piece & WhiteFlag256) != PieceNone256; }
 constexpr bool is_black(u8 piece) { return (piece & BlackFlag256) != PieceNone256; }
 constexpr bool is_pawn(u8 piece) { return (piece & PawnFlags256) != PieceNone256; }
@@ -128,14 +126,87 @@ constexpr u8 make_flag(side_t side) { return side + 1; }
 constexpr int flip_side(side_t side) { return side ^ 1; }
 
 constexpr bool side_is_ok(side_t side) { return side == White || side == Black; }
-constexpr bool piece_is_ok(int ptype) { return ptype >= Pawn && ptype <= King; }
-constexpr bool piece12_is_ok(int piece) { return piece >= WhitePawn12 && piece <= BlackKing12; }
-constexpr side_t piece12_to_side(int piece) { return piece & 1; }
+constexpr bool piece_is_ok(int p6) { return p6 >= Pawn && p6 <= King; }
+constexpr bool piece12_is_ok(int p12) { return p12 >= WhitePawn12 && p12 <= BlackKing12; }
+constexpr side_t piece12_to_side(int p12) { return p12 & 1; }
 
 bool piece256_is_ok(u8 piece);
 char piece256_to_char(u8 piece);
 u8 char_to_piece256(char c);
-u8 to_piece256(side_t side, int piece);
-int to_piece12(side_t side, int piece);
+u8 to_piece256(side_t side, int p6);
+int to_piece12(side_t side, int p6);
+
+constexpr auto P256ToP6
+{
+    []() constexpr
+    {
+        std::array<int, 256> result;
+
+        result.fill(PieceCount6);
+    
+        result[WP256] = Pawn;
+        result[WN256] = Knight;
+        result[WB256] = Bishop;
+        result[WR256] = Rook;
+        result[WQ256] = Queen;
+        result[WK256] = King;
+        result[BP256] = Pawn;
+        result[BN256] = Knight;
+        result[BB256] = Bishop;
+        result[BR256] = Rook;
+        result[BQ256] = Queen;
+        result[BK256] = King;
+        
+        return result;
+    }()
+};
+
+constexpr auto P256ToP12
+{
+    []() constexpr
+    {
+        std::array<int, 256> result;
+
+        result.fill(PieceCount12);
+
+        result[WP256] = WP12;
+        result[WN256] = WN12;
+        result[WB256] = WB12;
+        result[WR256] = WR12;
+        result[WQ256] = WQ12;
+        result[WK256] = WK12;
+        result[BP256] = BP12;
+        result[BN256] = BN12;
+        result[BB256] = BB12;
+        result[BR256] = BR12;
+        result[BQ256] = BQ12;
+        result[BK256] = BK12;
+        
+        return result;
+    }()
+};
+
+constexpr auto P12ToP256
+{
+    []() constexpr
+    {
+        std::array<u8, 12> result{};
+
+        result[WP12] = WP256;
+        result[WN12] = WN256;
+        result[WB12] = WB256;
+        result[WR12] = WR256;
+        result[WQ12] = WQ256;
+        result[WK12] = WK256;
+        result[BP12] = BP256;
+        result[BN12] = BN256;
+        result[BB12] = BB256;
+        result[BR12] = BR256;
+        result[BQ12] = BQ256;
+        result[BK12] = BK256;
+        
+        return result;
+    }()
+};
 
 #endif

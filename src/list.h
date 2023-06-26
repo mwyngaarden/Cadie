@@ -19,6 +19,13 @@ public:
 
     void clear() { size_ = 0; }
 
+    void swap(std::size_t i, std::size_t j)
+    {
+        assert(i != j && i < size_ && j < size_);
+
+        std::swap(data_[i], data_[j]);
+    }
+
     void add(T& value)
     {
         assert(size_ < N);
@@ -42,13 +49,13 @@ public:
     
     void insert(std::size_t pos, T value)
     {
-        assert(size_ + 1 < N);
+        assert(size_ < N);
 
         ++size_;
-        
+
         assert(pos <= size_);
 
-        for (size_t i = size_; i > pos; i--)
+        for (std::size_t i = size_; i > pos; i--)
             data_[i] = data_[i - 1];
 
         data_[pos] = value;
@@ -67,7 +74,7 @@ public:
     
     void remove(T value)
     {
-        size_t pos = find(value);
+        std::size_t pos = find(value);
 
         assert(pos != npos);
 
@@ -148,24 +155,6 @@ public:
         assert(i < size_);
 
         return data_[i];
-    }
-
-    bool is_ascending() const
-    {
-        for (std::size_t i = 0; size_ > 1 && i < size_ - 1; i++)
-            if (data_[i] > data_[i + 1])
-                return false;
-
-        return true;
-    }
-
-    bool is_descending() const
-    {
-        for (std::size_t i = 0; size_ > 1 && i < size_ - 1; i++)
-            if (data_[i] < data_[i + 1])
-                return false;
-
-        return true;
     }
 
 private:

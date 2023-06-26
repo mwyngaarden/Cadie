@@ -8,6 +8,7 @@
 #endif
 
 #include <chrono>
+#include <locale>
 #include <sstream>
 #include <stack>
 #include <string>
@@ -36,19 +37,24 @@ public:
 
     static std::string to_string(i64 n, std::vector<std::string> v)
     {
-        std::string str;
+        std::ostringstream oss;
 
         for (auto s : v) {
-            str = std::to_string(n) + ' ' + s;
+            oss = std::ostringstream();
+            oss.imbue(std::locale(""));
+            oss << n << ' ' << s;
             if ((n /= 1000) < 10) break;
         }
 
-        return str;
+        return oss.str();
     }
 
     template <class R = int64_t, class T = Milli>
     static R now()
     {
+#ifdef _MSC_VER
+        return Clock::now();
+#else
         struct timespec ts;
 
         clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -56,6 +62,7 @@ public:
         auto d = Seconds{ts.tv_sec} + Nano{ts.tv_nsec};
 
         return std::chrono::duration_cast<T>(d).count();
+#endif
     }
 
     template <class R = int64_t>
@@ -73,6 +80,10 @@ public:
     {
         if (!b) return;
 
+#if PROFILE >= PROFILE_SOME
+        if (status_ == Status::Started) return;
+#endif
+        
         assert(status_ != Status::Started);
 
         tp1_ = now_tp();

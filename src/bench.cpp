@@ -3,14 +3,19 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <locale>
 #include <random>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 #include "bench.h"
+#include "misc.h"
+#include "search.h"
 #include "string.h"
-#include "types.h"
+#include "timer.h"
 #include "tt.h"
+#include "uci.h"
 using namespace std;
 
 static void benchmark_input (Bench& bench);
@@ -28,14 +33,21 @@ void benchmark(int argc, char* argv[])
         string k = args.get(0);
         string v = args.get(1, "");
 
-        if (k == "depth") {
+        if (k == "barenodes") {
+            assert(args.size() == 1);
+            bench.barenodes = true;
+        }
+        else if (k == "baretime") {
+            assert(args.size() == 1);
+            bench.baretime = true;
+        }
+        else if (k == "depth") {
             assert(args.size() == 2);
-            bench.limit = Bench::Depth;
             size_t n = stoull(v);
             assert(n > 0 && n <= DepthMax);
             bench.depth = n;
         }
-        else if (k == "filename") {
+        else if (k == "file") {
             assert(args.size() == 2);
             filesystem::path p { v };
             assert(filesystem::exists(p));
@@ -44,12 +56,15 @@ void benchmark(int argc, char* argv[])
         else if (k == "hash") {
             assert(args.size() == 2);
             size_t n = stoull(v);
-            assert(n >= 1 && n <= 1024);
+            assert(n >= 1 && n <= 128 * 1024);
             bench.hash = n;
+        }
+        else if (k == "mates") {
+            assert(args.size() == 1);
+            bench.exc = false;
         }
         else if (k == "nodes") {
             assert(args.size() == 2);
-            bench.limit = Bench::Nodes;
             size_t n = stoull(v);
             assert(n > 0);
             bench.nodes = n;
@@ -60,32 +75,36 @@ void benchmark(int argc, char* argv[])
             assert(n >= 1);
             bench.num = n;
         }
-        else if (k == "rand") {
+        else if (k.starts_with("option.")) {
+            assert(args.size() == 2);
+            bench.opts[k.substr(7)] = v;
+        }
+        else if (k == "random") {
             assert(args.size() == 1);
             bench.rand = true;
         }
         else if (k == "time") {
             assert(args.size() == 2);
-            bench.limit = Bench::Time;
             size_t n = stoull(v);
             assert(n < 3600 * 1000);
             bench.time = n;
         }
-        else if (k == "inc")
-            bench.exc = false;
-        else
-            assert(false);
+        else {
+            cerr << "Unknown option: " << k << endl;
+            return;
+        }
     }
 
     benchmark_input(bench);
     benchmark_go(bench);
 }
 
-template <class T = string>
+template <typename T>
 string ralign(T v, size_t n)
 {
     ostringstream oss;
-    oss << setfill(' ') << setw(n + 2) << right << v;
+    oss.imbue(locale(""));
+    oss << setfill(' ') << setw(n + 2) << setprecision(2) << fixed << right << v;
     return oss.str();
 }
 
@@ -93,37 +112,48 @@ void benchmark_go(Bench &bench)
 {
     if (bench.rand) {
         random_device rd;
-        mt19937 g(rd());
+        mt19937 gen(rd());
 
-        shuffle(bench.positions.begin(), bench.positions.end(), g);
+        shuffle(bench.positions.begin(), bench.positions.end(), gen);
     }
 
-    thtable = TransTable(bench.hash);
-    thtable.init();
+    ttable = TT(bench.hash);
+    ttable.init();
+
+    for (auto kv : bench.opts) {
+        string s = "setoption name " + kv.first + " value " + kv.second;
+        uci_setoption(s);
+    }
 
     Timer& timer = gstats.stimer;
 
-    gstats.benchmarking = true;
-    gstats.exc          = bench.exc;
+    gstats.exc = bench.exc;
+
+    bool quiet = bench.barenodes || bench.baretime;
 
     for (const auto& pos : bench.positions) {
+
+        if (!quiet)
+            cerr << "Position " << setw(4) << right << (gstats.num + 1) << " - " << pos.to_fen() << endl;
+
+        search_reset();
+
         sinfo = SearchInfo(pos);
 
-        move_stack.clear();
-        move_stack.add(MoveNone);
-        move_stack.add(MoveNone);
+        mstack.clear();
+        mstack.add(MoveNone);
+        mstack.add(MoveNone);
 
-        key_stack.clear();
-        key_stack.add(pos.key());
+        kstack.clear();
+        kstack.add(pos.key());
             
-        slimits = SearchLimits(true);
+        slimits = SearchLimits();
 
-        if (bench.limit == Bench::Depth)
-            slimits.depth = bench.depth;
-        else if (bench.limit == Bench::Nodes)
-            slimits.nodes = bench.nodes;
-        else if (bench.limit == Bench::Time)
-            slimits.movetime = bench.time;
+        slimits.depth = bench.depth;
+        slimits.nodes = bench.nodes;
+        slimits.movetime = bench.time;
+
+        sinfo.timer.start();
 
         search_start();
         
@@ -133,53 +163,108 @@ void benchmark_go(Bench &bench)
     i64 ttime_ns    = timer.accrued_time<Timer::Nano>().count();
     double ttime_s  = ttime_ns / 1E+9;
 
-    i64 tcycles     = timer.accrued_cycles();
-    i64 ttime       = timer.accrued_time().count();
-    i64 hz          = tcycles / ttime_s;
-    i64 tmoves      = gstats.moves_count;
-    i64 snodes      = gstats.nodes_search;
-    i64 qnodes      = gstats.nodes_qsearch;
-    i64 tnodes      = snodes + qnodes;
-    i64 num         = gstats.num;
-    i64 iotime      = gstats.iotimer.accrued_time().count();
-    i64 etime       = gstats.time_eval_ns;
-    i64 gtime       = gstats.time_gen_ns;
+    i64 tcycles         = timer.accrued_cycles();
+    i64 ttime           = timer.accrued_time().count();
+    i64 hz              = tcycles / ttime_s;
+    i64 tmoves          = gstats.moves_count;
+    i64 tevals          = gstats.evals_count;
+    i64 snodes          = gstats.nodes_search;
+    i64 qnodes          = gstats.nodes_qsearch;
+    i64 tnodes          = snodes + qnodes;
+    double qnodesp      = 100.0 * qnodes / tnodes;
+    double snodesp      = 100.0 * snodes / tnodes;
+    i64 num             = gstats.num;
+    i64 etime           = gstats.time_eval_ns;
+    i64 gtime           = gstats.time_gen_ns;
 
+    i64 bmups           = gstats.bm_updates;
+    i64 bmstable        = gstats.bm_stable;
+    
+    i64 gcycpseudo      = gstats.cycles_gen[size_t(GenMode::Pseudo)];
+    i64 gcyclegal       = gstats.cycles_gen[size_t(GenMode::Legal)];
+    i64 gcyctactical    = gstats.cycles_gen[size_t(GenMode::Tactical)];
+    i64 gcycles         = gcycpseudo + gcyclegal + gcyctactical;
+    
+    i64 gcpseudo        = gstats.calls_gen[size_t(GenMode::Pseudo)];
+    i64 gclegal         = gstats.calls_gen[size_t(GenMode::Legal)];
+    i64 gctactical      = gstats.calls_gen[size_t(GenMode::Tactical)];
+    i64 gcalls          = gcpseudo + gclegal + gctactical;
+    
     vector<string> units_time { "ns", "us", "ms", "s " };
     vector<string> units_speed { "nps ", "knps", "mnps" };
+    vector<string> units_hertz { "Hz ", "kHz", "MHz", "GHz" };
+    
+    if (bench.barenodes) {
+        cerr << tnodes << endl;
+        return;
+    }
+    if (bench.baretime) {
+        cerr << (ttime_ns / 1000 / 1000) << endl;
+        return;
+    }
 
-    cerr << "moves      = " << ralign<i64>(tmoves, 11) << endl
-         << "nodes      = " << ralign<i64>(tnodes, 11) << endl
-         << "time       = " << ralign(Timer::to_string(ttime_ns, units_time), 14) << endl
-         << "cycles     = " << ralign<i64>(tcycles, 11) << endl
-         << "cpu        = " << ralign(Timer::to_string(hz, {"Hz ", "kHz", "MHz", "GHz"}), 15) << endl
+    if (!gcycles && !gcalls) gcpseudo = gclegal = gctactical = gcalls = gcycpseudo = gcyclegal = gcyctactical = gcycles = 1;
+
+    cerr << "Positions"       << endl
+         << " depth min   = " << ralign<i64>(gstats.depth_min,             11) << endl
+         << " depth mean  = " << ralign<i64>(1.0 * gstats.depth_sum / num, 11) << endl
+         << " depth max   = " << ralign<i64>(gstats.depth_max,             11) << endl
+         << " depth sum   = " << ralign<i64>(gstats.depth_sum,             11) << endl 
          << endl
-         << "Positions" << endl
-         << " depth min  = " << ralign<i64>(gstats.depth_min, 10) << endl
-         << " depth mean = " << ralign<i64>((double)gstats.depth_sum / num, 10) << endl
-         << " depth max  = " << ralign<i64>(gstats.depth_max, 10) << endl
+         << " sdepth min  = " << ralign<i64>(gstats.seldepth_min,             10) << endl
+         << " sdepth mean = " << ralign<i64>(1.0 * gstats.seldepth_sum / num, 10) << endl
+         << " sdepth max  = " << ralign<i64>(gstats.seldepth_max,             10) << endl
+         << " sdepth sum  = " << ralign<i64>(gstats.seldepth_sum,             10) << endl 
          << endl
-         << " nodes min  = " << ralign<i64>(gstats.nodes_min, 10) << endl
-         << " nodes mean = " << ralign<i64>(tnodes / num, 10) << endl
-         << " nodes max  = " << ralign<i64>(gstats.nodes_max, 10) << endl
+         << " lmoves min  = " << ralign<i64>(gstats.lmoves_min,             10) << endl
+         << " lmoves mean = " << ralign<i64>(1.0 * gstats.lmoves_sum / num, 10) << endl
+         << " lmoves max  = " << ralign<i64>(gstats.lmoves_max,             10) << endl
+         << " lmoves sum  = " << ralign<i64>(gstats.lmoves_sum,             10) << endl 
          << endl
-         << " time min   = " << ralign(Timer::to_string(gstats.time_min, units_time), 13) << endl
-         << " time mean  = " << ralign(Timer::to_string(ttime / num, units_time), 13) << endl
-         << " time max   = " << ralign(Timer::to_string(gstats.time_max, units_time), 13) << endl
+         << " amoves max  = " << ralign<i64>(gstats.amoves_max,             10) << endl
          << endl
-         << "Overall" << endl
-         << " nodes min  = " << ralign(Timer::to_string(gstats.nps_min, units_speed), 15) << endl
-         << " nodes mean = " << ralign(Timer::to_string(tnodes / ttime_s, units_speed), 15) << endl
-         << " nodes max  = " << ralign(Timer::to_string(gstats.nps_max, units_speed), 15) << endl
+         << " bm updates  = " << ralign<i64>(bmups,                   11) << endl
+         << " bm u/n      = " << ralign<double>(1.0 * bmups / num,    11) << endl
+         << " bm stable   = " << ralign<i64>(bmstable,                11) << endl
+         << " bm s/n      = " << ralign<double>(1.0 * bmstable / num, 11) << endl
          << endl
-         << "unfinished = " << ralign<i64>(gstats.unfinished, 11) << endl
-         << "stalemate  = " << ralign<i64>(gstats.stalemate, 11) << endl
-         << "checkmate  = " << ralign<i64>(gstats.checkmate, 11) << endl
-         << "total      = " << ralign<i64>(gstats.num, 11) << endl
+         << " nodes min   = " << ralign<i64>(gstats.nodes_min, 11) << endl
+         << " nodes mean  = " << ralign<i64>(tnodes / num,     11) << endl
+         << " nodes max   = " << ralign<i64>(gstats.nodes_max, 11) << endl
          << endl
-         << "time io    = " << ralign(Timer::to_string(iotime, units_time), 14) << endl
-         << "time eval  = " << ralign(Timer::to_string(etime, units_time), 14) << endl
-         << "time gen   = " << ralign(Timer::to_string(gtime, units_time), 14) << endl;
+         << " time min    = " << ralign(Timer::to_string(gstats.time_min, units_time), 14) << endl
+         << " time mean   = " << ralign(Timer::to_string(ttime / num, units_time),     14) << endl
+         << " time max    = " << ralign(Timer::to_string(gstats.time_max, units_time), 14) << endl
+         << endl
+         << "Move Gen"        << endl
+         << " pseudos     = " << ralign(gcycpseudo,   11) << " cycles" << ralign(gcpseudo,   12) << " calls" << ralign(100 * gcycpseudo / gcycles,   4) << " %" << ralign(gcycpseudo / gcpseudo,     9) << " cycles/call" << endl
+         << " legal       = " << ralign(gcyclegal,    11) << " cycles" << ralign(gclegal,    12) << " calls" << ralign(100 * gcyclegal / gcycles,    4) << " %" << ralign(gcyclegal / gclegal,       9) << " cycles/call" << endl
+         << " tactical    = " << ralign(gcyctactical, 11) << " cycles" << ralign(gctactical, 12) << " calls" << ralign(100 * gcyctactical / gcycles, 4) << " %" << ralign(gcyctactical / gctactical, 9) << " cycles/call" << endl
+         << " total       = " << ralign(gcycles,      11) << " cycles" << ralign(gcalls,     12) << " calls" << ralign(100, 4)                          << " %" << ralign(gcycles / gcalls,          9) << " cycles/call" << endl
+         << endl
+         << "Overall"         << endl
+         << " nodes min   = " << ralign(Timer::to_string(gstats.nps_min, units_speed),   16) << endl
+         << " nodes mean  = " << ralign(Timer::to_string(tnodes / ttime_s, units_speed), 16) << endl
+         << " nodes max   = " << ralign(Timer::to_string(gstats.nps_max, units_speed),   16) << endl
+         << endl
+         << "normal       = " << ralign<i64>(gstats.normal,     11) << endl
+         << "stalemate    = " << ralign<i64>(gstats.stalemate,  11) << endl
+         << "checkmate    = " << ralign<i64>(gstats.checkmate,  11) << endl
+         << "total        = " << ralign<i64>(gstats.num,        11) << endl
+         << endl
+         << "time eval    = " << ralign(Timer::to_string(etime, units_time), 14) << endl
+         << "time gen     = " << ralign(Timer::to_string(gtime, units_time), 14) << endl
+         << endl
+         << "tests check  = " << ralign<i64>(gstats.ctests, 11) << endl
+         << "tests see    = " << ralign<i64>(gstats.stests, 11) << endl
+         << endl
+         << "moves        = " << ralign<i64>(tmoves, 11) << endl
+         << "evals        = " << ralign<i64>(tevals, 11) << endl
+         << "snodes       = " << ralign<i64>(snodes, 11) << ralign(snodesp, 6) << " %" << endl
+         << "qnodes       = " << ralign<i64>(qnodes, 11) << ralign(qnodesp, 6) << " %" << endl
+         << "nodes        = " << ralign<i64>(tnodes, 11) << endl
+         << "time         = " << ralign(Timer::to_string(ttime_ns, units_time), 14) << endl
+         << "cpu          = " << ralign(Timer::to_string(hz, units_hertz),      15) << endl;
 }
 
 void benchmark_input(Bench& bench)

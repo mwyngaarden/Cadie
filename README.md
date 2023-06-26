@@ -1,6 +1,6 @@
 ## Overview
 
-Cadie is a stand-alone UCI chess engine written in platform independent C++. Building requires a compiler supporting at least C++17. Being a stand-alone engine, Cadie requires a UCI compatible GUI to run. Compatible GUIs include Arena, ChessBase, and SCID, to name only a few.
+Cadie is a stand-alone UCI chess engine written in platform independent C++. It is also the successor to my first UCI chess engine, Keele. Building requires a compiler supporting at least C++20. Being a stand-alone engine, Cadie requires a UCI compatible GUI to run. Compatible GUIs include Arena, ChessBase, and SCID, to name only a few.
 
 ## Specifications and features
 - 16x12 Mailbox Board Representation

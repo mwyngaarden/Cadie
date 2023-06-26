@@ -11,11 +11,12 @@
 #include "pos.h"
 #include "eval.h"
 #include "gen.h"
+#include "misc.h"
 #include "move.h"
 #include "piece.h"
 #include "search.h"
+#include "see.h"
 #include "string.h"
-#include "types.h"
 
 using namespace std;
 
@@ -112,7 +113,9 @@ Position::Position(const string fen, double outcome)
 
     key_ ^= zobrist_castle(flags_);
     key_ ^= zobrist_ep(ep_sq_);
-    key_ ^= zobrist_side(side_);
+
+    if (side_ == White)
+        key_ ^= zobrist_side();
 
     outcome_ = outcome;
 }
@@ -170,202 +173,223 @@ string Position::to_fen() const
 
 Move Position::note_move(const string& s) const
 {
-    // from_string handles promotion
+    // from_string handles promotion only
 
-    Move move = Move::from_string(s);
+    Move m = Move::from_string(s);
 
-    int orig = move.orig();
-    int dest = move.dest();
-
-    int delta = orig - dest;
+    int orig = m.orig();
+    int dest = m.dest();
 
     u8 mpiece = square(orig);
     u8 opiece = square(dest);
 
-    // do this before if pawn, so ep capture will overwrite,
-    // and not the other way around
-
-    move.set_capture(opiece);
+    m.set_capture(opiece);
 
     if (is_pawn(mpiece)) {
-        if (abs(delta) == 32)
-            move.set_double();
-        else if (dest == ep_sq_) {
-            move.set_ep();
-            move.set_capture(square(ep_dual(ep_sq_)));
+        if (abs(orig - dest) == 32) {
+            assert(opiece == PieceNone256);
+            m.set_flag(Move::DoubleFlag);
         }
-    } 
-    else if (is_king(mpiece) && abs(delta) == 2)
-        move.set_castle();
 
-    return move;
+        else if (dest == ep_sq_) {
+            assert(opiece == PieceNone256);
+            m.set_flag(Move::EPFlag);
+            m.set_capture(make_pawn(!side_));
+        }
+    }
+
+    else if (is_king(mpiece)) {
+        if (abs(orig - dest) == 2) {
+            assert(opiece == PieceNone256);
+            m.set_flag(Move::CastleFlag);
+        }
+    }
+
+    return m;
 }
 
-void Position::make_move(const Move& move, MoveUndo& undo)
+void Position::make_move(const Move& m, UndoMove& undo)
 {
+    assert(m.dest() != king(!side_));
+    assert(m.is_valid());
+    assert(!is_king(m.capture_piece()));
+    assert(mstack.empty() || m != mstack.back());
+    assert(key() == calc_key());
+
     undo.flags          = flags_;
     undo.ep_sq          = ep_sq_;
-    undo.cap_sq         = cap_sq_;
     undo.half_moves     = half_moves_;
     undo.full_moves     = full_moves_;
     undo.key            = key_;
     undo.pawn_key       = pawn_key_;
     undo.checkers_sq[0] = checkers_sq_[0];
     undo.checkers_sq[1] = checkers_sq_[1];
-    undo.checkers_count = checkers_count_;
+    undo.checkers       = checkers_;
+    undo.pm             = pm_;
 
     key_ ^= zobrist_castle(flags_);
     key_ ^= zobrist_ep(ep_sq_);
-    key_ ^= zobrist_side(White);
+    key_ ^= zobrist_side();
 
-    cap_sq_ = SquareNone;
-
-    int orig  = move.orig();
-    int dest  = move.dest();
+    int orig  = m.orig();
+    int dest  = m.dest();
     int piece = square(orig);
     int pincr = pawn_incr(side_);
 
-    if (move.is_castle()) {
+    ep_sq_ = SquareNone;
+
+    if (m.is_castle()) {
         int rorig = dest > orig ? orig + 3 : orig - 4;
         int rdest = dest > orig ? orig + 1 : orig - 1;
 
         mov_piece<true>(orig, dest);
         mov_piece<true>(rorig, rdest);
     }
-    else if (move.is_ep()) {
+    else if (m.is_ep()) {
         assert(dest == ep_sq_);
 
         rem_piece<true>(dest - pincr);
         mov_piece<true>(orig, dest);
-            
-        cap_sq_ = dest;
+    }
+    else if (m.is_double()) {
+        mov_piece<true>(orig, dest);
+
+        if (ep_is_valid(ep_dual(dest)))
+            ep_sq_ = ep_dual(dest);
     }
     else {
-        if (move.is_capture()) {
+        if (m.is_capture())
             rem_piece<true>(dest);
 
-            cap_sq_ = dest;
-        }
-
-        if (move.is_promo()) {
+        if (m.is_promo()) {
             rem_piece<true>(orig);
-            add_piece<true>(dest, to_piece256(side_, move.promo_piece()));
+            add_piece<true>(dest, to_piece256(side_, m.promo_piece6()));
         } 
         else
             mov_piece<true>(orig, dest);
     }
 
-    flags_      &= CastleLUT[orig] & CastleLUT[dest];
-    ep_sq_       = move.is_double() && ep_is_valid(ep_dual(dest)) ? ep_dual(dest) : SquareNone;
-    half_moves_  = is_pawn(piece) || move.is_capture() ? 0 : half_moves_ + 1;
+    flags_      &= CastleMasks[orig] & CastleMasks[dest];
+    half_moves_  = is_pawn(piece) || m.is_capture() ? 0 : half_moves_ + 1;
     full_moves_ += side_;
-    side_        = flip_side(side_);
+    side_       ^= 1;
 
     // update checkers
 
-    checkers_count_ = 0;
+    checkers_ = 0;
 
-    set_checkers_fast(move);
+    set_checkers_fast(m);
+
+    pm_ = m;
 
     key_ ^= zobrist_castle(flags_);
     key_ ^= zobrist_ep(ep_sq_);
     
-    assert(!side_attacks(side_, king_sq(flip_side(side_))));
+    assert(!side_attacks(side_, king(!side_)));
 
-    key_stack.add(key_);
-    move_stack.add(move);
+    kstack.add(key_);
+    mstack.add(m);
 
-    if (Profile >= ProfileLevel::Low) gstats.moves_count++;
+#if PROFILE >= PROFILE_SOME
+    gstats.moves_count++;
+#endif
 }
 
-void Position::unmake_move(const Move& move, const MoveUndo& undo)
+void Position::unmake_move(const Move& m, const UndoMove& undo)
 {
+    assert(m == mstack.back());
+    assert(key() == calc_key());
+
     flags_          = undo.flags;
     ep_sq_          = undo.ep_sq;
-    cap_sq_         = undo.cap_sq;
     half_moves_     = undo.half_moves;
     full_moves_     = undo.full_moves;
     key_            = undo.key;
     pawn_key_       = undo.pawn_key;
     checkers_sq_[0] = undo.checkers_sq[0];
     checkers_sq_[1] = undo.checkers_sq[1];
-    checkers_count_ = undo.checkers_count;
+    checkers_       = undo.checkers;
+    pm_             = undo.pm;
 
-    int orig = move.orig();
-    int dest = move.dest();
+    int orig = m.orig();
+    int dest = m.dest();
 
-    if (move.is_castle()) {
+    if (m.is_castle()) {
         int rorig = dest > orig ? orig + 3 : orig - 4;
         int rdest = dest > orig ? orig + 1 : orig - 1;
 
         mov_piece<false>(dest, orig);
         mov_piece<false>(rdest, rorig);
     } 
-    else if (move.is_ep()) {
+    else if (m.is_ep()) {
         mov_piece<false>(dest, orig);
         add_piece<false>(ep_dual(dest), make_pawn(side_));
     } 
     else {
-        if (move.is_promo()) {
+        if (m.is_promo()) {
             rem_piece<false>(dest);
-            add_piece<false>(orig, make_pawn(flip_side(side_)));
+            add_piece<false>(orig, make_pawn(!side_));
         } 
         else
             mov_piece<false>(dest, orig);
 
-        if (move.is_capture())
-            add_piece<false>(dest, move.capture_piece());
+        if (m.is_capture())
+            add_piece<false>(dest, m.capture_piece());
     }
 
-    side_ = flip_side(side_);
+    side_ ^= 1;
     
-    key_stack.pop_back();
-    move_stack.pop_back();
+    kstack.pop_back();
+    mstack.pop_back();
+    
+    assert(key() == calc_key());
 }
 
-void Position::make_null(NullUndo& undo)
+void Position::make_null(UndoNull& undo)
 {
     undo.key            = key_;
     undo.ep_sq          = ep_sq_;
-    undo.cap_sq         = cap_sq_;
     undo.checkers_sq[0] = checkers_sq_[0];
     undo.checkers_sq[1] = checkers_sq_[1];
-    undo.checkers_count = checkers_count_;
+    undo.checkers       = checkers_;
+    undo.pm             = pm_;
 
-    key_    ^= zobrist_side(White);
+    key_    ^= zobrist_side();
     key_    ^= zobrist_ep(ep_sq_);
-    side_    = flip_side(side_);
+    side_   ^= 1;
 
     ep_sq_  = SquareNone;
-    cap_sq_ = SquareNone;
 
     checkers_sq_[0] = SquareNone;
     checkers_sq_[1] = SquareNone;
-    checkers_count_ = 0;
+    checkers_       = 0;
+    pm_             = MoveNull;
 
     assert(key() == calc_key());
 
-    key_stack.add(key_);
-    move_stack.add(MoveNull);
+    kstack.add(key_);
+    mstack.add(MoveNull);
 
-    if (Profile >= ProfileLevel::Low) gstats.moves_count++;
+#if PROFILE >= PROFILE_SOME
+    gstats.moves_count++;
+#endif
 }
 
-void Position::unmake_null(const NullUndo& undo)
+void Position::unmake_null(const UndoNull& undo)
 {
     key_            = undo.key;
     ep_sq_          = undo.ep_sq;
-    cap_sq_         = undo.cap_sq;
     checkers_sq_[0] = undo.checkers_sq[0];
     checkers_sq_[1] = undo.checkers_sq[1];
-    checkers_count_ = undo.checkers_count;
+    checkers_       = undo.checkers;
+    pm_             = undo.pm;
 
-    side_    = flip_side(side_);
+    side_ ^= 1;
 
     assert(key() == calc_key());
 
-    move_stack.pop_back();
-    key_stack.pop_back();
+    mstack.pop_back();
+    kstack.pop_back();
 }
 
 template <bool UpdateKey>
@@ -428,7 +452,7 @@ void Position::mov_piece(int orig, int dest)
 
     assert(piece256_is_ok(piece));
 
-    int p12   = P256ToP12[piece];
+    int p12 = P256ToP12[piece];
 
     plist_[p12].remove(orig);
 
@@ -454,36 +478,25 @@ bool Position::side_attacks(side_t side, int dest) const
     assert(side_is_ok(side));
     assert(sq88_is_ok(dest));
 
-    if (pseudo_attack(king_sq(side), dest, KingFlag256))
-        return true;
+    // pawns
+    
+    u8 pawn = make_pawn(side);
+    int incr = pawn_incr(side);
 
-    {
-        u8 pawn256 = make_pawn(side);
-        int orig = dest - pawn_incr(side);
+    if (int orig = dest - incr - 1; square(orig) == pawn) return true;
+    if (int orig = dest - incr + 1; square(orig) == pawn) return true;
 
-        if (square(orig - 1) == pawn256 || square(orig + 1) == pawn256)
-            return true;
-    }
+    // knights and sliders
 
-    for (int orig : plist(WN12 + side))
-        if (pseudo_attack(orig, dest, KnightFlag256))
-            return true;
-
-    for (const auto& p : P12Flag) {
-        for (auto orig : plist_[p.first + side]) {
-            if (!pseudo_attack(orig, dest, p.second))
-                continue;
-
-            int incr = delta_incr(dest, orig);
-            int sq = dest + incr;
-
-            while (square(sq) == PieceNone256)
-                sq += incr;
-
-            if (sq == orig)
+    for (auto p12 : { WN12, WB12, WR12, WQ12 })
+        for (auto orig : plist(p12 + side))
+            if (piece_attacks(orig, dest))
                 return true;
-        }
-    }
+
+    // king
+
+    if (int ksq = king(side); pseudo_attack(ksq, dest, KingFlag256))
+        return true;
 
     return false;
 }
@@ -504,7 +517,8 @@ bool Position::piece_attacks(int orig, int dest) const
     return !is_slider(piece) || ray_is_empty(orig, dest);
 }
 
-string Position::dump() const
+// a la Crafty
+string Position::pretty() const
 {
     ostringstream oss;
 
@@ -567,7 +581,9 @@ u64 Position::calc_key() const
 
     key ^= zobrist_castle(flags_);
     key ^= zobrist_ep(ep_sq_);
-    key ^= zobrist_side(side_);
+
+    if (side_ == White)
+        key ^= zobrist_side();
 
     return key;
 }
@@ -590,19 +606,17 @@ void Position::mark_pins(bitset<128>& pins) const
 {
     assert(pins.none());
 
-    int ksq   = king_sq();
-    side_t mside = side_;
-    side_t oside = flip_side(side_);
-    u8 mflag  = make_flag(mside);
-    u8 piece;
-
-    for (const auto &p : P12Flag) {
-        for (auto orig : plist_[p.first + oside]) {
-            if (!pseudo_attack(orig, ksq, p.second))
+    u8 mflag = make_flag(side_);
+    int ksq = king();
+    
+    for (auto p12 : { WB12, WR12, WQ12 }) {
+        for (auto orig : plist_[p12 + !side_]) {
+            if (!pseudo_attack(orig, ksq, square(orig)))
                 continue;
 
             int incr = delta_incr(ksq, orig);
             int sq1 = ksq + incr;
+            u8 piece;
 
             while ((piece = square(sq1)) == PieceNone256)
                 sq1 += incr;
@@ -623,43 +637,32 @@ void Position::mark_pins(bitset<128>& pins) const
 
 void Position::set_checkers_slow()
 {
-    assert(checkers_count_ == 0);
+    assert(checkers_ == 0);
 
-    int ksq   = king_sq();
-    side_t oside = flip_side(side_);
-    side_t opawn  = make_pawn(oside);
-    int pincr = pawn_incr(oside);
+    int ksq = king();
+    side_t opawn = make_pawn(!side_);
+    int pincr = pawn_incr(!side_);
 
-    if (int orig = ksq - pincr - 1; square(orig) == opawn)
-        checkers_sq_[checkers_count_++] = orig;
-    if (int orig = ksq - pincr + 1; square(orig) == opawn)
-        checkers_sq_[checkers_count_++] = orig;
+    if (int orig = ksq - pincr - 1; square(orig) == opawn) checkers_sq_[checkers_++] = orig;
+    if (int orig = ksq - pincr + 1; square(orig) == opawn) checkers_sq_[checkers_++] = orig;
 
-    for (int p12 = WN12 + oside; p12 <= BQ12; p12 += 2) {
-        for (int orig : plist_[p12]) {
-            if (piece_attacks(orig, ksq)) {
-                assert(checkers_count_ < 2);
-                checkers_sq_[checkers_count_++] = orig;
-            }
-        }
-    }
+    for (auto p12 : { WN12, WB12, WR12, WQ12 })
+        for (int orig : plist_[p12 + !side_])
+            if (piece_attacks(orig, ksq))
+                checkers_sq_[checkers_++] = orig;
 }
 
-void Position::set_checkers_fast(const Move& move)
+void Position::set_checkers_fast(const Move& m)
 {
-    assert(checkers_count_ == 0);
+    assert(checkers_ == 0);
 
-    int ksq  = king_sq();
-    int orig = move.orig();
-    int dest = move.dest();
-
-    side_t oside = flip_side(side_);
-
-    u8 oflag = make_flag(oside);
+    int ksq  = king();
+    int orig = m.orig();
+    int dest = m.dest();
 
     int sq;
 
-    if (move.is_castle()) {
+    if (m.is_castle()) {
         int rook = dest > orig ? orig + 1 : orig - 1;
 
         if (pseudo_attack(ksq, rook, RookFlag256)) {
@@ -671,13 +674,13 @@ void Position::set_checkers_fast(const Move& move)
                 sq += incr;
 
             if (sq == rook)
-                checkers_sq_[checkers_count_++] = rook;
+                checkers_sq_[checkers_++] = rook;
         }
 
         return;
     }
 
-    if (move.is_ep()) {
+    if (m.is_ep()) {
         set_checkers_slow();
 
         return;
@@ -685,6 +688,7 @@ void Position::set_checkers_fast(const Move& move)
 
     int oincr = delta_incr(ksq, orig);
     int dincr = delta_incr(ksq, dest);
+    
     u8 piece;
 
     // revealed check?
@@ -696,8 +700,10 @@ void Position::set_checkers_fast(const Move& move)
             while ((piece = square(sq)) == PieceNone256)
                 sq += oincr;
 
+            u8 oflag = make_flag(!side_);
+
             if ((piece & oflag) && pseudo_attack(sq, ksq, piece))
-                checkers_sq_[checkers_count_++] = sq;
+                checkers_sq_[checkers_++] = sq;
         }
     }
 
@@ -716,7 +722,7 @@ void Position::set_checkers_fast(const Move& move)
                 return;
         }
 
-        checkers_sq_[checkers_count_++] = dest;
+        checkers_sq_[checkers_++] = dest;
     }
 }
 
@@ -737,126 +743,135 @@ bool Position::ray_is_empty(int orig, int dest) const
     return false;
 }
 
-bool Position::move_is_check(const Move& move) const
+bool Position::move_is_check(const Move& m) const
 {
-    side_t mside =           side_;
-    side_t oside = flip_side(side_);
+    u8 mflag = make_flag(side_);
 
-    u8 mflag  = make_flag(mside);
-
-    int oksq  = king_sq(oside);
-
-    int orig  = move.orig();
-    int dest  = move.dest();
+    int oksq = king(!side_);
+    int orig = m.orig();
+    int dest = m.dest();
             
+    u8 mpiece = square(orig);
     u8 piece;
 
     int sq;
+    int incr;
 
-    // promotion
-    // ep
+#if PROFILE >= PROFILE_SOME
+    gstats.ctests++;
+#endif
 
-    if (move.is_castle()) {
-        int rdest = dest > orig ? orig + 1 : orig - 1;
+    // En passant moves are rare and a tedious to determine if they give check
+    // or not so maintain your sanity and just copy the board and make the
+    // move. This will look for direct and discovered checks.
+    
+    if (m.is_ep()) {
+        Position p = *this;
+        UndoMove undo;
 
-        if (!pseudo_attack(rdest, oksq, RookFlag256))
-            return false;
+        p.make_move(m, undo);
+        bool move_checks = p.checkers();
+        p.unmake_move(m, undo);
 
-        int inc = delta_incr(rdest, oksq);
-
-        sq = rdest;
-
-        do { sq += inc; } while (square(sq) == PieceNone256);
-
-        return sq == oksq;
+        return move_checks;
     }
 
-    // TODO rewrite without copy of board
-    u8 board[16 * 12];
-    memcpy(board, square_, sizeof(square_));
+    else if (is_pawn(mpiece)) {
+        if (pseudo_attack(dest, oksq, mpiece))
+            return true;
 
-    if (move.is_ep()) {
-        int epdual = ep_dual(dest);
+        if (m.is_promo()) {
+            u8 promo = to_piece256(side_, m.promo_piece6());
 
-        board[36 + orig  ] = PieceNone256;
-        board[36 + dest  ] = square(orig);
-        board[36 + epdual] = PieceNone256;
+            if (pseudo_attack(dest, oksq, promo)) {
+                if (is_knight(promo))
+                    return true;
 
-        if (pseudo_attack(oksq, epdual, QueenFlags256)) {
-            int inc = delta_incr(oksq, epdual);
+                assert(is_slider(promo));
+                
+                incr = delta_incr(oksq, dest);
+                sq = oksq;
 
+                do {
+                    sq += incr;
+
+                    if (sq == dest) return true;
+                } while (sq == orig || square(sq) == PieceNone256);
+            }
+        }
+
+        // Discovered checks not possible?
+        if (!m.is_capture() && sq88_file(orig) == sq88_file(oksq))
+            return false;
+    }
+
+    else if (is_king(mpiece)) {
+        if (m.is_castle()) {
+            int rdest = dest > orig ? orig + 1 : orig - 1;
+
+            if (!pseudo_attack(rdest, oksq, RookFlag256))
+                return false;
+
+            incr = delta_incr(rdest, oksq);
+            sq = rdest;
+
+            do { sq += incr; } while (square(sq) == PieceNone256);
+
+            return sq == oksq;
+        }
+
+        // Discovered checks not possible?
+        if (delta_incr(oksq, orig) == delta_incr(oksq, dest))
+            return false;
+    }
+
+    else if (is_knight(mpiece)) {
+        if (pseudo_attack(oksq, dest, KnightFlag256))
+            return true;
+    }
+
+    else if (is_slider(mpiece)) {
+        if (pseudo_attack(dest, oksq, mpiece)) {
+            incr = delta_incr(oksq, dest);
             sq = oksq;
 
-            do { sq += inc; } while ((piece = board[36 + sq]) == PieceNone256);
+            do { sq += incr; } while (sq != dest && square(sq) == PieceNone256);
 
-            if ((piece & mflag) && pseudo_attack(sq, oksq, piece))
+            if (sq == dest)
                 return true;
         }
     }
 
-    else if (move.is_promo()) {
-        u8 promo = to_piece256(mside, move.promo_piece());
-        
-        if (is_knight(promo) && pseudo_attack(dest, oksq, KnightFlag256))
-            return true;
+    // Is there a discovered check?
 
-        board[36 + orig] = PieceNone256;
-        board[36 + dest] = promo;
-    }
+    if (!pseudo_attack(orig, oksq, QueenFlags256))
+        return false;
 
-    else {
-        board[36 + dest] = square(orig);
-        board[36 + orig] = PieceNone256;
-    }
+    incr = delta_incr(oksq, orig);
+    sq = oksq;
 
-    if (is_knight(board[36 + dest]) && pseudo_attack(dest, oksq, KnightFlag256))
-        return true;
+    do { sq += incr; } while (sq == orig || (piece = square(sq)) == PieceNone256);
 
-    if (pseudo_attack(oksq, orig, QueenFlags256)) {
-        int inc = delta_incr(oksq, orig);
-
-        sq = oksq;
-
-        do { sq += inc; } while ((piece = board[36 + sq]) == PieceNone256);
-
-        if ((piece & mflag) && pseudo_attack(sq, oksq, piece))
-            return true;
-    }
-
-    if (pseudo_attack(oksq, dest, QueenFlags256)) {
-        int inc = delta_incr(oksq, dest);
-
-        sq = oksq;
-
-        do { sq += inc; } while ((piece = board[36 + sq]) == PieceNone256);
-        
-        if ((piece & mflag) && pseudo_attack(sq, oksq, piece))
-            return true;
-    }
-
-    return false;
+    return (piece & mflag) && pseudo_attack(sq, oksq, piece);
 }
 
-bool Position::move_is_legal(const Move& move) const
+bool Position::move_is_legal(const Move& m) const
 {
     // The move generator only generates legal evasions when in check
-    
-    if (checkers_count_ > 0)
-        return true;
 
-    int ksq  = king_sq();
-    int orig = move.orig();
-    int dest = move.dest();
+    if (checkers_ > 0) return true;
 
-    side_t oside = flip_side(side_);
-  
+    int ksq  = king();
+    int orig = m.orig();
+    int dest = m.dest();
+
     // At move generation we validated that we are not castling over check, but
     // not if we were castling into check. See note in move generation.
     if (orig == ksq)
-        return !side_attacks(oside, dest);
+        return !side_attacks(!side_, dest);
     
-    if (move.is_ep())
-        return move_is_legal_ep(move);
+    if (m.is_ep())
+        return move_is_legal_ep(m);
 
     if (!pseudo_attack(orig, ksq, QueenFlags256))
         return true;
@@ -870,7 +885,7 @@ bool Position::move_is_legal(const Move& move) const
     if (abs(mincr) == abs(kincr))
         return true;
 
-    u8 oflag = make_flag(oside);
+    u8 oflag = make_flag(!side_);
     u8 piece;
 
     do { orig += kincr; } while ((piece = square(orig)) == PieceNone256);
@@ -878,20 +893,18 @@ bool Position::move_is_legal(const Move& move) const
     return (piece & oflag) == 0 || !pseudo_attack(ksq, orig, piece);
 }
 
-// TODO refactor
-bool Position::move_is_legal_ep(const Move& move) const
+bool Position::move_is_legal_ep(const Move& m) const
 {
-    assert(move.is_ep());
-    assert(checkers_count_ == 0);
+    assert(m.is_ep());
+    assert(checkers_ == 0);
 
-    int ksq = king_sq();
+    int ksq = king();
 
-    int orig = move.orig();
-    int dest = move.dest();
-    side_t mside = side_;
-    int pincr = pawn_incr(mside);
+    int orig = m.orig();
+    int dest = m.dest();
+    int pincr = pawn_incr(side_);
     int cap = dest - pincr;
-    u8 oflag = make_flag(flip_side(mside));
+    u8 oflag = make_flag(!side_);
     int krank = sq88_rank(ksq);
     int orank = sq88_rank(orig);
     int oincr = delta_incr(ksq, orig);
@@ -994,8 +1007,8 @@ int Position::phase() const
 
 void Position::swap_sides()
 {
-    key_ ^= zobrist_side(White);
-    side_ = flip_side(side_);
+    key_  ^= zobrist_side();
+    side_ ^= 1;
 }
 
 bool Position::draw_mat_insuf(side_t side) const
@@ -1030,74 +1043,39 @@ bool Position::non_pawn_mat() const
     return non_pawn_mat(White) || non_pawn_mat(Black);
 }
 
-bool operator==(const Position& lhs, const Position& rhs)
+int Position::see_max(const Move& m) const
 {
-    for (size_t i = 0; i < 16 * 12; i++)
-        if (lhs.square_[i] != rhs.square_[i])
-            return false;
+    int see = 0;
 
-    if (lhs.side_ != rhs.side_) return false;
+    if (m.is_capture()) {
+        int p6 = P256ToP6[m.capture_piece()];
 
-    if (lhs.flags_ != rhs.flags_) return false;
+        assert(piece_is_ok(p6));
 
-    if (lhs.ep_sq_ != rhs.ep_sq_) return false;
-    if (lhs.cap_sq_ != rhs.cap_sq_) return false;
-
-    if (lhs.half_moves_ != rhs.half_moves_) return false;
-    if (lhs.full_moves_ != rhs.full_moves_) return false;
-
-    if (lhs.checkers_count_ != rhs.checkers_count_) return false;
-    if (lhs.checkers_sq_[0] != rhs.checkers_sq_[0]) return false;
-    if (lhs.checkers_sq_[1] != rhs.checkers_sq_[1]) return false;
-
-    if (lhs.key_ != rhs.key_) return false;
-    if (lhs.pawn_key_ != rhs.pawn_key_) return false;
-
-    for (size_t i = 0; i < 12; i++) {
-        if (lhs.plist_[i].size() != rhs.plist_[i].size())
-            return false;
-
-        for (size_t j = 0; j < lhs.plist_[i].size(); j++)
-            if (lhs.plist_[i][j] != rhs.plist_[i][j])
-                return false;
+        see += ValuePiece[p6][PhaseMg];
     }
 
-    return true;
-}
+    if (m.is_promo()) {
+        int p6 = m.promo_piece6();
+        
+        assert(piece_is_ok(p6));
 
-int Position::see_est(const Move& move) const
-{
-    assert(move.is_capture());
-
-    int see = ValuePiece[P256ToP6[square(move.capture_piece())]][PhaseMg];
-
-    if (move.is_promo())
-        see -= ValuePiece[move.promo_piece()][PhaseMg] - ValuePiece[Pawn][PhaseMg];
-    else
-        see -= ValuePiece[P256ToP6[square(move.orig())]][PhaseMg];
+        see += ValuePiece[p6][PhaseMg] - ValuePawn[PhaseMg];
+    }
 
     return see;
 }
 
-int Position::see_max(const Move& move) const
+int Position::mvv_lva(const Move& m) const
 {
-    int score = 0;
+    assert(m.is_tactical());
 
-    if (move.is_capture()) {
-        int ptype = P256ToP6[move.capture_piece()];
+    int mval = 5 - square<6>(m.orig());
+    int oval = m.is_capture() ? P256ToP6[m.capture_piece()] + 2 : 0;
 
-        assert(piece_is_ok(ptype));
+    int score = oval * 8 + mval;
 
-        score += ValuePiece[ptype][PhaseMg];
-    }
-
-    if (move.is_promo()) {
-        int ptype = move.promo_piece();
-        
-        assert(piece_is_ok(ptype));
-
-        score += ValuePiece[ptype][PhaseMg] - ValuePawn[PhaseMg];
-    }
+    if (m.is_promo()) score += 8;
 
     return score;
 }
@@ -1106,7 +1084,7 @@ void Position::king_zone(bitset<192>& bs, side_t side) const
 {
     assert(bs.none());
     
-    int ksq = king_sq(side);
+    int ksq = king(side);
 
          if (ksq == A1) ksq = B2;
     else if (ksq == H1) ksq = G2;
@@ -1117,7 +1095,6 @@ void Position::king_zone(bitset<192>& bs, side_t side) const
     bs.set(36 + ksq - 16);
     bs.set(36 + ksq - 15);
     bs.set(36 + ksq -  1);
-    bs.set(36 + ksq     ); // ?
     bs.set(36 + ksq +  1);
     bs.set(36 + ksq + 15);
     bs.set(36 + ksq + 16);
@@ -1148,18 +1125,6 @@ int Position::dsbishops(side_t side) const
     return count;
 }
 
-bool Position::has_bishop_on(side_t side, int color) const
-{
-    assert(side_is_ok(side));
-    assert(side_is_ok(color));
-
-    for (int sq : plist(WB12 + side))
-        if (sq88_color(sq) == color)
-            return true;
-
-    return false;
-}
-
 string Position::to_egtb() const
 {
     ostringstream oss;
@@ -1183,7 +1148,35 @@ string Position::to_egtb() const
     return oss.str();
 }
 
-bool Position::move_is_recap(const Move& move) const
+bool Position::move_is_recap(const Move& m) const
 {
-    return move.dest() == cap_sq_;
+    return pm_.is_capture() && pm_.dest() == m.dest();
+}
+
+bool Position::move_is_safe(const Move& m, int& see) const
+{
+    if (m.is_under()) return false;
+
+    u8 mpiece = square(m.orig());
+
+    if (is_king(mpiece)) return true;
+
+    if (m.is_capture()) {
+        u8 opiece = m.capture_piece();
+    
+        int mp6 = P256ToP6[mpiece];
+        int op6 = P256ToP6[opiece];
+
+        if (op6 >= mp6) return true;
+    }
+
+    if (see == ScoreNone)
+        see = see_move(*this, m);
+
+    return see >= 0;
+}
+
+bool Position::move_is_dangerous(const Move& m, bool checks) const
+{
+    return checkers() || checks || m.is_tactical();
 }

@@ -13,6 +13,7 @@
 #include <cstring>
 #include "eval.h"
 #include "gen.h"
+#include "misc.h"
 #include "move.h"
 #include "perft.h"
 #include "pos.h"
@@ -20,7 +21,6 @@
 #include "string.h"
 #include "timer.h"
 #include "tt.h"
-#include "types.h"
 #include "uci.h"
 using namespace std;
 
@@ -50,7 +50,7 @@ struct PerftInfo {
     size_t micros   =   0;
     size_t cycles   =   0;
 
-    filesystem::path path { "bench.epd" };
+    filesystem::path path { "perft.epd" };
 
     vector<FenInfo> finfos;
 };
@@ -68,7 +68,7 @@ static i64 perft(Position& pos, size_t depth, size_t height, size_t& illegals)
     gen_moves(moves, pos, GenMode::Legal);
 
     for (const auto& m : moves) {
-        MoveUndo undo;
+        UndoMove undo;
 
         pos.make_move(m, undo);
         leaves += perft(pos, depth - 1, height + 1, illegals);
@@ -79,7 +79,7 @@ static i64 perft(Position& pos, size_t depth, size_t height, size_t& illegals)
 
     for (const auto& m : moves) {
         if (pos.move_is_legal(m)) {
-            MoveUndo undo;
+            UndoMove undo;
 
             pos.make_move(m, undo);
             leaves += perft(pos, depth - 1, height + 1, illegals);
@@ -134,7 +134,7 @@ static void perft_go(PerftInfo &pinfo)
 
         invalid += leaves_diff != 0;
 
-        double cum_klps = 1000 * pinfo.leaves / pinfo.micros;
+        double cklps = 1000 * pinfo.leaves / pinfo.micros;
         
         if ((i + 1) % pinfo.report == 0) {
             stringstream ss;
@@ -144,7 +144,7 @@ static void perft_go(PerftInfo &pinfo)
                << "d = " << setw(1) << pinfo.depth << ' '
                << "dl = " << setw(1) << leaves_diff << ' '
                << "inv = " << setw(1) << invalid << ' '
-               << "cmlps = " << setw(7) << size_t(cum_klps) << ' '
+               << "cklps = " << setw(7) << size_t(cklps) << ' '
                << (leaves_diff == 0 ? "PASS" : "FAIL");
 
             cout << ss.str() << endl;
@@ -186,6 +186,10 @@ void perft(int argc, char* argv[])
             size_t n = stoull(v);
             assert(n > 0);
             pinfo.report = n;
+        }
+        else {
+            cerr << "Unknown option: " << k << endl;
+            return;
         }
     }
 

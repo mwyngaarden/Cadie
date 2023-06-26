@@ -6,8 +6,6 @@
 #include <cstdint>
 #include "piece.h"
 
-extern int Distance[128][128];
-
 enum {
     A1 =   0, B1, C1, D1, E1, F1, G1, H1,
     A2 =  16, B2, C2, D2, E2, F2, G2, H2,
@@ -17,13 +15,11 @@ enum {
     A6 =  80, B6, C6, D6, E6, F6, G6, H6,
     A7 =  96, B7, C7, D7, E7, F7, G7, H7,
     A8 = 112, B8, C8, D8, E8, F8, G8, H8,
-    SquareNone = 255
+    SquareCount = 128, SquareNone = 255
 };
 
-enum { FileA, FileB, FileC, FileD, FileE, FileF, FileG, FileH };
-enum { Rank1, Rank2, Rank3, Rank4, Rank5, Rank6, Rank7, Rank8 };
-
-void square_init();
+enum : int { FileA, FileB, FileC, FileD, FileE, FileF, FileG, FileH };
+enum : int { Rank1, Rank2, Rank3, Rank4, Rank5, Rank6, Rank7, Rank8 };
 
 int san_to_sq88(std::string s);
 
@@ -70,7 +66,7 @@ constexpr int sq88_file(int sq)
 
 constexpr int sq88_color(int sq)
 {
-    return ((sq >> 4) ^ sq) & 1 ? White : Black;
+    return (((sq >> 4) ^ sq) & 1) ^ 1;
 }
 
 constexpr int to_sq64(int sq)

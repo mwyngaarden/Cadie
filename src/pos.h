@@ -7,10 +7,10 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include "misc.h"
 #include "move.h"
 #include "piece.h"
 #include "square.h"
-#include "types.h"
 #include "zobrist.h"
 
 class Position {
@@ -25,18 +25,17 @@ public:
     static constexpr int BlackCastleFlags = BlackCastleQFlag | BlackCastleKFlag;
     static constexpr int CastleFlags = BlackCastleQFlag | WhiteCastleQFlag | BlackCastleKFlag | WhiteCastleKFlag;
 
-    //Position() { }
     Position() = default;
     Position(const std::string fen, double outcome = 1);
     Position(const char fen[]) : Position(std::string(fen)) { }
 
     Move note_move(const std::string& s) const;
 
-    void   make_move(const Move& move,       MoveUndo& undo);
-    void unmake_move(const Move& move, const MoveUndo& undo);
+    void   make_move(const Move& m,       UndoMove& undo);
+    void unmake_move(const Move& m, const UndoMove& undo);
    
-    void   make_null(      NullUndo& undo);
-    void unmake_null(const NullUndo& undo);
+    void   make_null(      UndoNull& undo);
+    void unmake_null(const UndoNull& undo);
     
     std::string to_fen() const;
 
@@ -51,31 +50,19 @@ public:
 
     void mark_pins(std::bitset<128>& pins) const;
 
-    bool move_is_check       (const Move& move) const;
-    bool move_is_legal       (const Move& move) const;
-    bool move_is_legal_ep    (const Move& move) const;
-    bool move_is_recap       (const Move& move) const;
+    bool move_is_check      (const Move& m) const;
+    bool move_is_legal      (const Move& m) const;
+    bool move_is_legal_ep   (const Move& m) const;
+    bool move_is_recap      (const Move& m) const;
+    bool move_is_safe       (const Move& m, int& see) const;
+    bool move_is_dangerous  (const Move& m, bool checks) const;
 
-    bool ep_is_valid    (int sq)             const;
+    int see_max             (const Move& m) const;
+    int mvv_lva             (const Move& m) const;
+
+    bool ep_is_valid    (int sq) const;
     bool side_attacks   (side_t side, int dest) const;
     bool piece_attacks  (int orig, int dest) const;
-
-    int see_est(const Move& move) const;
-    int see_max(const Move& move) const;
-
-    u8 at(int sq) const
-    {
-        assert(sq >= -36 && sq < 156);
-
-        return square_[36 + sq];
-    }
-
-    const u8& operator[](int sq) const
-    {
-        assert(sq >= -36 && sq < 156);
-
-        return square(sq);
-    }
 
     const u8& square(int sq) const
     {
@@ -84,6 +71,21 @@ public:
         return square_[36 + sq];
     }
 
+    const u8& operator[](int sq) const
+    {
+        return square(sq);
+    }
+   
+    template <int I>
+    int square(int sq) const
+    {
+        static_assert(I == 6 || I == 12);
+
+        u8 piece = square(sq);
+
+        return I == 6 ? P256ToP6[piece] : P256ToP12[piece];
+    }
+  
     bool empty(int sq) const
     {
         assert(sq88_is_ok(sq));
@@ -112,7 +114,7 @@ public:
         assert(sq88_is_ok(sq));
         assert(piece_is_ok(piece));
 
-        return P256ToP6[square(sq)] == piece;
+        return square<6>(sq) == piece;
     }
 
     const PieceList& plist(int p12) const
@@ -122,35 +124,27 @@ public:
         return plist_[p12];
     }
 
-    bool has_bishop_on(side_t side, int color) const;
-
-    int king_sq(side_t side) const
+    int king(side_t side) const
     {
         assert(side_is_ok(side));
 
         return plist_[WK12 + side][0];
     }
 
-    int king_sq() const { return king_sq(side_); }
+    int king() const { return king(side_); }
 
     void king_zone(std::bitset<192>& bs, side_t side) const;
 
-    side_t side()   const { return side_; }
-    u8 cap_sq()     const { return cap_sq_; }
-    u8 ep_sq()      const { return ep_sq_; }
-    u8 ep_sq(u8 sq)       { return ep_sq_ = sq; }
+    side_t side() const { return side_; }
 
-    u8  half_moves()  const { return half_moves_; }
-    u16 full_moves()  const { return full_moves_; }
+    bool can_castle_k() const { return (flags_ & (WhiteCastleKFlag << side_)) != 0; }
+    bool can_castle_q() const { return (flags_ & (WhiteCastleQFlag << side_)) != 0; }
 
-    bool can_castle_k(side_t side) const { return (flags_ & (WhiteCastleKFlag << side)) != 0; }
-    bool can_castle_q(side_t side) const { return (flags_ & (WhiteCastleQFlag << side)) != 0; }
-    bool can_castle  (side_t side) const { return (flags_ & (WhiteCastleFlags << side)) != 0; }
-    bool can_castle_k(           ) const { return can_castle_k(side_); }
-    bool can_castle_q(           ) const { return can_castle_q(side_); }
-    bool can_castle  (           ) const { return can_castle(side_); }
+    u8 ep_sq() const { return ep_sq_; }
+    u8 ep_sq(u8 sq) { return ep_sq_ = sq; }
 
-    // draw by insufficient material
+    u8  half_moves() const { return half_moves_; }
+    u16 full_moves() const { return full_moves_; }
 
     bool draw_mat_insuf(           ) const;
     bool draw_mat_insuf(side_t side) const;
@@ -193,62 +187,45 @@ public:
 
     std::string to_egtb() const;
 
-    std::string dump() const;
+    std::string pretty() const;
 
     u8 checkers() const
     {
-        return checkers_count_;
+        return checkers_;
     }
 
     u8 checkers(int i) const
     {
-        assert(i >= 0 && i < checkers_count_);
+        assert(i >= 0 && i < checkers_);
 
         return checkers_sq_[i];
     }
 
-    bool in_check() const { return checkers() > 0; }
-
     int phase() const;
     
-    int pawns  (side_t side)   const { return plist(WP12 + side).size(); }
-    int knights(side_t side)   const { return plist(WN12 + side).size(); }
-    int bishops(side_t side)   const { return plist(WB12 + side).size(); }
-    int rooks  (side_t side)   const { return plist(WR12 + side).size(); }
-    int queens (side_t side)   const { return plist(WQ12 + side).size(); }
-    int minors (side_t side)   const { return knights(side) + bishops(side); }
-    int majors (side_t side)   const { return rooks(side) + queens(side); }
-    int pieces (side_t side)   const { return knights(side) + bishops(side) + rooks(side); }
+    int pawns  (side_t side) const { return plist(WP12 + side).size(); }
+    int knights(side_t side) const { return plist(WN12 + side).size(); }
+    int bishops(side_t side) const { return plist(WB12 + side).size(); }
+    int rooks  (side_t side) const { return plist(WR12 + side).size(); }
+    int queens (side_t side) const { return plist(WQ12 + side).size(); }
 
-    int pawns()             const { return pawns(White) + pawns(Black); }
-    int knights()           const { return knights(White) + knights(Black); }
-    int bishops()           const { return bishops(White) + bishops(Black); }
-    int rooks()             const { return rooks(White) + rooks(Black); }
-    int queens()            const { return queens(White) + queens(Black); }
-    int minors()            const { return minors(White) + minors(Black); }
-    int majors()            const { return majors(White) + majors(Black); }
-    int pieces()            const { return pieces(White) + pieces(Black); }
+    int minors (side_t side) const { return knights(side) + bishops(side); }
+    int majors (side_t side) const { return rooks  (side) + queens (side); }
+    int pieces (side_t side) const { return knights(side) + bishops(side) + rooks(side); }
+
+    int pawns  () const { return pawns  (White) + pawns  (Black); }
+    int knights() const { return knights(White) + knights(Black); }
+    int bishops() const { return bishops(White) + bishops(Black); }
+    int rooks  () const { return rooks  (White) + rooks  (Black); }
+    int queens () const { return queens (White) + queens (Black); }
+    int minors () const { return minors (White) + minors (Black); }
+    int majors () const { return majors (White) + majors (Black); }
+    int pieces () const { return pieces (White) + pieces (Black); }
     
     int dsbishops(side_t side) const;
     int lsbishops(side_t side) const;
 
     void swap_sides();
-
-    u8 captured_piece(const Move& m) const
-    {
-        assert(m.is_capture());
-        assert(is_op(m.dest()));
-
-        return square(m.dest());
-    }
-
-    u8 capturing_piece(const Move& m) const
-    {
-        assert(m.is_capture());
-        assert(is_me(m.orig()));
-
-        return square(m.orig());
-    }
 
     template <side_t Side>
     bool bishop_pair() const
@@ -261,11 +238,9 @@ public:
         return flags == 3;
     }
 
-    friend bool operator==(const Position& lhs, const Position& rhs);
-
-    size_t plists() const { return sizeof(plist_); }
-
     double outcome() const { return outcome_; }
+
+    Move pm() const { return pm_; }
 
 private:
     template <bool UpdateKey> void add_piece(int sq, u8 piece);
@@ -273,7 +248,7 @@ private:
     template <bool UpdateKey> void mov_piece(int orig, int dest);
 
     void set_checkers_slow();
-    void set_checkers_fast(const Move& move);
+    void set_checkers_fast(const Move& m);
 
     u8& square(int sq)
     {
@@ -293,12 +268,13 @@ private:
 
     side_t side_        = SideCount;
     u8 ep_sq_           = SquareNone;
-    u8 cap_sq_          = SquareNone;
     u8 half_moves_      = 0;
     u16 full_moves_     = 1;
 
-    u8 checkers_count_  = 0;
+    u8 checkers_        = 0;
     u8 checkers_sq_[2];
+
+    Move pm_            = MoveNone;
 
     double outcome_ = 0;
 };

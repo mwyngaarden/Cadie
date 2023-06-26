@@ -3,8 +3,12 @@
 
 #include <cstdint>
 
-void * my_alloc(size_t size);
-void my_free(void * p);
-void my_prefetch(void * p);
+namespace mem {
+
+    void * alloc(size_t size);
+    void free(void * p);
+    void prefetch(void * p);
+
+}
 
 #endif

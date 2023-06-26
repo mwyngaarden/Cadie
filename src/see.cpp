@@ -1,20 +1,22 @@
 #include <array>
 #include <iomanip>
+#include <limits>
 #include "eval.h"
 #include "gen.h"
 #include "list.h"
 #include "piece.h"
 #include "see.h"
+#include "uci.h"
 
 using namespace std;
 
-const int SEEValue[PieceCount] = {
+const int SEEValue[PieceCount6] = {
     ValuePiece[Pawn][PhaseMg],
     ValuePiece[Knight][PhaseMg],
     ValuePiece[Bishop][PhaseMg],
     ValuePiece[Rook][PhaseMg],
     ValuePiece[Queen][PhaseMg],
-    ValuePiece[King][PhaseMg]
+    numeric_limits<int>::max()
 };
 
 struct SeeInfo {
@@ -22,8 +24,6 @@ struct SeeInfo {
     std::string move;
     int value;
 };
-
-
 
 using AttList = List<int, 16>;
 
@@ -36,6 +36,12 @@ static void see_add     (AttList& alist, const Position& pos, int sq);
 
 int see_move(const Position& pos, const Move& m)
 {
+    assert(m.is_valid());
+
+#if PROFILE >= PROFILE_SOME
+    gstats.stests++;
+#endif
+
     CmbList clist;
 
     int orig = m.orig();
@@ -44,10 +50,10 @@ int see_move(const Position& pos, const Move& m)
     u8 piece = pos[orig];
 
     side_t aside = is_black(piece);
-    side_t dside = flip_side(aside);
+    side_t dside = !aside;
 
     if (m.is_promo())
-        piece = to_piece256(aside, m.promo_piece());
+        piece = to_piece256(aside, m.promo_piece6());
 
     int avalue = SEEValue[P256ToP6[piece]];
 
@@ -97,37 +103,32 @@ int see_move(const Position& pos, const Move& m)
 
 int see_recurse(CmbList& clist, const Position& pos, side_t side, int dest, int avalue)
 {
-    int orig;
-    int dvalue;
-    u8 piece;
-
     if (clist.alist[side].empty())
         return 0;
 
-    orig = clist.alist[side].back();
+    int orig = clist.alist[side].back();
+
     clist.alist[side].pop_back();
 
-    if (orig == SquareNone) {
-        assert(false);
-        return 0;
-    }
-
+    if (avalue == SEEValue[King])
+        return avalue;
+    
     see_hidden(clist, pos, orig, dest);
+    
+    int dvalue = avalue;
 
-    dvalue = avalue;
+    avalue = SEEValue[pos.square<6>(orig)];
 
-    if (dvalue == ValueKing[PhaseMg])
-        return dvalue;
+    if (avalue == SEEValue[Pawn]) {
+        int rank = sq88_rank(dest);
 
-    piece = pos[orig];
-    avalue = SEEValue[P256ToP6[piece]];
-
-    if (avalue == SEEValue[Pawn] && (sq88_rank(dest) == Rank1 || sq88_rank(dest) == Rank8)) {
-        avalue  = SEEValue[Queen];
-        dvalue += SEEValue[Queen] - SEEValue[Pawn];
+        if (rank == Rank1 || rank == Rank8) {
+            avalue  = SEEValue[Queen];
+            dvalue += SEEValue[Queen] - SEEValue[Pawn];
+        }
     }
 
-    dvalue -= see_recurse(clist, pos, flip_side(side), dest, avalue);
+    dvalue -= see_recurse(clist, pos, !side, dest, avalue);
 
     return max(dvalue, 0);
 }
@@ -136,47 +137,26 @@ void see_attacks(AttList& alist, const Position& pos, side_t side, int dest)
 {
     assert(sq88_is_ok(dest));
     assert(side_is_ok(side));
-
-    // knights
-
-    for (auto orig : pos.plist(WN12 + side))
-        if (pseudo_attack(orig, dest, KnightFlag256))
-            see_add(alist, pos, orig);
-
-    // sliders
-
-    for (const auto& p : P12Flag) {
-        for (auto orig : pos.plist(p.first + side)) {
-            if (pseudo_attack(orig, dest, p.second)) {
-                int incr = delta_incr(orig, dest);
-
-                int sq = orig;
-
-                do {
-                    sq += incr;
-
-                    if (sq == dest) {
-                        see_add(alist, pos, orig);
-                        break;
-                    }
-                } while (pos[sq] == PieceNone256);
-            }
-        }
-    }
-
+    
     // pawns
 
-    int pincr = pawn_incr(side);
     u8 pawn = make_pawn(side);
+    int incr = pawn_incr(side);
 
-    if (int orig = dest - pincr - 1; pos[orig] == pawn) see_add(alist, pos, orig);
-    if (int orig = dest - pincr + 1; pos[orig] == pawn) see_add(alist, pos, orig);
+    if (int orig = dest - incr - 1; pos[orig] == pawn) see_add(alist, pos, orig);
+    if (int orig = dest - incr + 1; pos[orig] == pawn) see_add(alist, pos, orig);
 
+    // knights and sliders
+    
+    for (auto p12 : { WN12, WB12, WR12, WQ12 })
+        for (auto orig : pos.plist(p12 + side))
+            if (pos.piece_attacks(orig, dest))
+                see_add(alist, pos, orig);
+   
     // king
 
-    int king = pos.king_sq(side);
-
-    if (pseudo_attack(king, dest, KingFlag256)) see_add(alist, pos, king);
+    if (int ksq = pos.king(side); pseudo_attack(ksq, dest, KingFlag256))
+        see_add(alist, pos, ksq);
 }
 
 void see_hidden(CmbList& clist, const Position& pos, int orig, int dest)
@@ -186,17 +166,18 @@ void see_hidden(CmbList& clist, const Position& pos, int orig, int dest)
 
     int incr = delta_incr(orig, dest);
 
-    if (incr == 0)
-        return;
+    if (incr == 0) return;
 
-    int sq = orig;
+    for (int sq = orig - incr; sq88_is_ok(sq); sq -= incr) {
+        u8 piece = pos[sq];
 
-    u8 piece;
+        if (piece == PieceNone256) continue;
 
-    do { sq -= incr; } while ((piece = pos[sq]) == PieceNone256);
+        if (is_slider(piece) && pseudo_attack(orig, dest, piece))
+            see_add(clist.alist[is_black(piece)], pos, sq);
 
-    if (piece != PieceInvalid256 && is_slider(piece) && pseudo_attack(orig, dest, piece))
-        see_add(clist.alist[is_black(piece)], pos, sq);
+        break;
+    }
 }
 
 void see_add(AttList& alist, const Position& pos, int sq)
@@ -204,13 +185,11 @@ void see_add(AttList& alist, const Position& pos, int sq)
     assert(sq88_is_ok(sq));
 
     u8 piece = pos[sq];
+    int p6 = P256ToP6[piece];
+    int index = alist.size();
 
-    int ptype = P256ToP6[piece];
-
-    int index;
-
-    for (index = alist.size(); index > 0 && ptype > P256ToP6[pos[alist[index - 1]]]; index--)
-        ;
+    while (index > 0 && p6 > pos.square<6>(alist[index - 1]))
+        --index;
 
     alist.insert(index, sq);
 }
@@ -242,7 +221,7 @@ void see_validate()
         { "8/4kp2/2npp3/1Nn5/1p2PQP1/7q/1PP1B3/4KR1r b - -", "h1f1", 0 },
         { "8/4kp2/2npp3/1Nn5/1p2P1P1/7q/1PP1B3/4KR1r b - -", "h1f1", 0 },
         { "2r2r1k/6bp/p7/2q2p1Q/3PpP2/1B6/P5PP/2RR3K b - -", "c5c1", 2 * r - q },
-        { "r2qk1nr/pp2ppbp/2b3p1/2p1p3/8/2N2N2/PPPP1PPP/R1BQR1K1 w kq -", "f3e5", n - n + p },
+        { "r2qk1nr/pp2ppbp/2b3p1/2p1p3/8/2N2N2/PPPP1PPP/R1BQR1K1 w kq -", "f3e5", p },
         { "6r1/4kq2/b2p1p2/p1pPb3/p1P2B1Q/2P4P/2B1R1P1/6K1 w - -", "f4e5", 0 },
         { "3q2nk/pb1r1p2/np6/3P2Pp/2p1P3/2R4B/PQ3P1P/3R2K1 w - h6", "g5h6", 0 },
         { "3q2nk/pb1r1p2/np6/3P2Pp/2p1P3/2R1B2B/PQ3P1P/3R2K1 w - h6", "g5h6", p },
@@ -267,12 +246,9 @@ void see_validate()
 
         int see = see_move(pos, m);
         
-        bool pass = see == si.value;
-
-        failed += !pass;
+        failed += see != si.value;
 
         cout << "i " << setw(3) << right << index
-             << " p " << right << pass
              << " w " << setw(5) << right << si.value
              << " h " << setw(5) << right << see
              << " pos " << si.fen << endl;

@@ -1,93 +1,33 @@
 #include <iomanip>
 #include <iostream>
 #include "gen.h"
+#include "misc.h"
 #include "move.h"
 #include "piece.h"
 #include "pos.h"
 #include "search.h"
 #include "square.h"
-#include "types.h"
 
 using namespace std;
 
-constexpr int DeltaCount  = 240;
-constexpr int DeltaOffset = 120;
 
-static i8 DeltaIncr[DeltaCount];
-static u8 DeltaType[DeltaCount];
+template <GenMode> static size_t gen_moves  (MoveList&, const Position&);
+template <GenMode> static void gen_pawn     (MoveList&, const Position&, int o);
+template <GenMode> static void gen_knight   (MoveList&, const Position&, int o);
+template <GenMode> static void gen_slider   (MoveList&, const Position&, int o, const int (&Incrs)[4]);
+template <GenMode> static void gen_king     (MoveList&, const Position&);
 
-u8 CastleLUT[128];
-
-template <GenMode mode>
-static size_t gen_moves(MoveList& moves, const Position& pos);
-
-static size_t gen_evasions(MoveList& moves, const Position& pos);
-
-template <GenMode mode>
-static void gen_pawn(MoveList& moves, const Position& pos, const int orig);
-
-template <GenMode mode>
-static void gen_knight(MoveList& moves, const Position& pos, const int orig);
-
-template <GenMode mode>
-static void gen_moves_slider(MoveList& moves, const Position& pos, const int orig, const int (&Incrs)[4]);
-
-template <GenMode mode>
-static void gen_king(MoveList& moves, const Position& pos);
-
-static void gen_piece   (MoveList& moves, const Position& pos, const int dest, const bitset<128>& pins);
-static void gen_pawn    (MoveList& moves, const Position& pos, const int dest, const bitset<128>& pins);
-static void gen_pinned  (MoveList& moves, const Position& pos, bitset<128>& pins);
-static void gen_pinned  (MoveList& moves, const Position& pos, int attacker, int pinned, int incr);
-
-void gen_init()
-{
-    DeltaType[DeltaOffset + 16 - 1] |= WhitePawnFlag256;
-    DeltaType[DeltaOffset + 16 + 1] |= WhitePawnFlag256;
-    DeltaType[DeltaOffset - 16 - 1] |= BlackPawnFlag256;
-    DeltaType[DeltaOffset - 16 + 1] |= BlackPawnFlag256;
-
-    for (auto incr : KnightIncrs) {
-        DeltaIncr[DeltaOffset + incr] = incr;
-        DeltaType[DeltaOffset + incr] |= KnightFlag256;
-    }
-
-    for (auto incr : BishopIncrs) {
-        for (int i = 1; i <= 7; i++) {
-            DeltaIncr[DeltaOffset + incr * i] = incr;
-            DeltaType[DeltaOffset + incr * i] |= BishopFlag256;
-        }
-    }
-
-    for (auto incr : RookIncrs) {
-        for (int i = 1; i <= 7; i++) {
-            DeltaIncr[DeltaOffset + incr * i] = incr;
-            DeltaType[DeltaOffset + incr * i] |= RookFlag256;
-        }
-    }
-
-    for (auto incr : QueenIncrs)
-        DeltaType[DeltaOffset + incr] |= KingFlag256;
-
-    for (int i = 0; i < 128; i++)
-        CastleLUT[i] = ~0;
-
-    CastleLUT[A1] = ~Position::WhiteCastleQFlag;
-    CastleLUT[E1] = ~(Position::WhiteCastleQFlag | Position::WhiteCastleKFlag);
-    CastleLUT[H1] = ~Position::WhiteCastleKFlag;
-    CastleLUT[A8] = ~Position::BlackCastleQFlag;
-    CastleLUT[E8] = ~(Position::BlackCastleQFlag | Position::BlackCastleKFlag);
-    CastleLUT[H8] = ~Position::BlackCastleKFlag;
-}
+static void gen_piece   (MoveList&, const Position&, int d, bitset<128>& pins);
+static void gen_pawn    (MoveList&, const Position&, int d, bitset<128>& pins);
+static void gen_pinned  (MoveList&, const Position&, bitset<128>& pins);
+static void gen_pinned  (MoveList&, const Position&, int attacker, int pinned, int incr);
 
 template <GenMode mode>
 size_t gen_moves(MoveList& moves, const Position& pos)
 {
     constexpr bool legal = mode == GenMode::Legal;
     
-    assert(legal || !pos.in_check());
-
-    gen_king<mode>(moves, pos);
+    assert(legal || !pos.checkers());
 
     bitset<128> pins;
 
@@ -125,7 +65,10 @@ size_t gen_moves(MoveList& moves, const Position& pos)
 
         gen_slider<mode>(moves, pos, orig, BishopIncrs);
         gen_slider<mode>(moves, pos, orig, RookIncrs);
+
     }
+
+    gen_king<mode>(moves, pos);
 
     return moves.size();
 }
@@ -134,37 +77,54 @@ size_t gen_moves(MoveList& moves, const Position& pos, GenMode mode)
 {
     assert(moves.empty());
 
-    Timer timer(Profile >= ProfileLevel::Medium);
+#if PROFILE >= PROFILE_ALL
+    Timer timer(true);
+#endif
 
     size_t count;
 
-    if (pos.in_check())
-        count = gen_evasions(moves, pos);
-    else if (mode == GenMode::Tactical)
+    if (mode == GenMode::Tactical) {
+        assert(!pos.checkers());
         count = gen_moves<GenMode::Tactical>(moves, pos);
+    }
+
+    else if (pos.checkers())
+        count = gen_evas(moves, pos);
+
     else if (mode == GenMode::Pseudo)
         count = gen_moves<GenMode::Pseudo>(moves, pos);
-    else 
-        count = gen_moves<GenMode::Legal>(moves, pos);
 
-    if (timer.stop()) {
-        gstats.time_gen_ns += timer.elapsed_time<Timer::Nano>();
-        gstats.cycles_gen += timer.elapsed_cycles();
+    else {
+        assert(mode == GenMode::Legal);
+        count = gen_moves<GenMode::Legal>(moves, pos);
     }
+
+#if PROFILE >= PROFILE_ALL
+    timer.stop();
+
+    if (pos.checkers()) mode = GenMode::Legal;
+
+    gstats.calls_gen[size_t(mode)]++;
+    gstats.cycles_gen[size_t(mode)] += timer.elapsed_cycles();
+    gstats.time_gen_ns += timer.elapsed_time<Timer::Nano>();
+
+    gstats.amoves_max = max(gstats.amoves_max, int(count));
+#endif
 
     return count;
 }
 
 template <GenMode mode>
-void gen_pawn(MoveList& moves, const Position& pos, const int orig)
+void gen_pawn(MoveList& moves, const Position& pos, int orig)
 {
     assert(sq88_is_ok(orig));
     assert(pos.is_me(orig));
     assert(pos.is_piece(orig, Pawn));
 
     constexpr bool tactical = mode == GenMode::Tactical;
+    constexpr bool legal    = mode == GenMode::Legal;
 
-    u8 oflag = make_flag(flip_side(pos.side()));
+    u8 oflag = make_flag(!pos.side());
     int pincr = pawn_incr(pos.side());
     int rank = sq88_rank(orig, pos.side());
 
@@ -213,7 +173,7 @@ void gen_pawn(MoveList& moves, const Position& pos, const int orig)
             Move m(orig, dest, pos[dest]);
 
             moves.add(m | Move::PromoQFlag);
-
+            
             if (!tactical) {
                 moves.add(m | Move::PromoRFlag);
                 moves.add(m | Move::PromoBFlag);
@@ -230,7 +190,7 @@ void gen_pawn(MoveList& moves, const Position& pos, const int orig)
             if (orig == epdual - 1 || orig == epdual + 1) {
                 Move m = Move(orig, ep_sq, pos[epdual]) | Move::EPFlag;
 
-                if (mode != GenMode::Legal || pos.move_is_legal_ep(m))
+                if (!legal || pos.move_is_legal_ep(m))
                     moves.add(m);
             }
         }
@@ -260,13 +220,13 @@ void gen_pawn(MoveList& moves, const Position& pos, const int orig)
 }
 
 template <GenMode mode>
-void gen_knight(MoveList& moves, const Position& pos, const int orig)
+void gen_knight(MoveList& moves, const Position& pos, int orig)
 {
     assert(sq88_is_ok(orig));
     assert(pos.is_me(orig));
     assert(pos.is_piece(orig, Knight));
-
-    u8 oflag = make_flag(flip_side(pos.side()));
+    
+    u8 oflag = make_flag(!pos.side());
 
     for (auto incr : KnightIncrs) {
         int dest = orig + incr;
@@ -282,12 +242,12 @@ void gen_knight(MoveList& moves, const Position& pos, const int orig)
 }
 
 template <GenMode mode>
-void gen_slider(MoveList& moves, const Position& pos, const int orig, const int (&Incrs)[4])
+void gen_slider(MoveList& moves, const Position& pos, int orig, const int (&Incrs)[4])
 {
     assert(sq88_is_ok(orig));
     assert(pos.is_me(orig));
-
-    u8 oflag = make_flag(flip_side(pos.side()));
+    
+    u8 oflag = make_flag(!pos.side());
 
     for (auto incr : Incrs) {
         u8 piece;
@@ -300,6 +260,7 @@ void gen_slider(MoveList& moves, const Position& pos, const int orig, const int 
             else {
                 if (piece & oflag)
                     moves.add(Move(orig, dest, piece));
+
                 break;
             }
         }
@@ -309,28 +270,28 @@ void gen_slider(MoveList& moves, const Position& pos, const int orig, const int 
 template <GenMode mode>
 void gen_king(MoveList& moves, const Position& pos)
 {
-    int king = pos.king_sq();
+    int ksq = pos.king();
 
-    assert(pos.is_me(king));
-    assert(pos.is_piece(king, King));
+    assert(pos.is_me(ksq));
+    assert(pos.is_piece(ksq, King));
 
     constexpr bool tactical = mode == GenMode::Tactical;
     constexpr bool legal    = mode == GenMode::Legal;
 
-    side_t oside = flip_side(pos.side());
+    side_t oside = !pos.side();
     u8 oflag = make_flag(oside);
 
     for (auto incr : QueenIncrs) {
-        int dest = king + incr;
+        int dest = ksq + incr;
         u8 piece = pos[dest];
 
         if (tactical) {
-            if ((piece & oflag) && !pos.side_attacks(oside, dest))
-                moves.add(Move(king, dest, piece));
+            if (piece & oflag)
+                moves.add(Move(ksq, dest, piece));
         }
         else if (piece == PieceNone256 || (piece & oflag)) {
             if (!legal || !pos.side_attacks(oside, dest))
-                moves.add(Move(king, dest, piece));
+                moves.add(Move(ksq, dest, piece));
         }
     }
 
@@ -342,60 +303,62 @@ void gen_king(MoveList& moves, const Position& pos)
         // reason, so for now it's left in place.
 
         if (pos.can_castle_k()) {
-            int king1 = king + 1;
-            int king2 = king + 2;
+            int king1 = ksq + 1;
+            int king2 = ksq + 2;
 
             if (pos.empty(king1) && pos.empty(king2)) {
-                bool ok = !pos.side_attacks(oside, king1)
-                    && (!legal || !pos.side_attacks(oside, king2));
-
-                if (ok) moves.add(Move(king, king2) | Move::CastleFlag);
+                if (!pos.side_attacks(oside, king1)) {
+                    if (!legal || !pos.side_attacks(oside, king2))
+                        moves.add(Move(ksq, king2) | Move::CastleFlag);
+                }
             }
         }
 
         if (pos.can_castle_q()) {
-            int king1 = king - 1;
-            int king2 = king - 2;
-            int king3 = king - 3;
+            int king1 = ksq - 1;
+            int king2 = ksq - 2;
+            int king3 = ksq - 3;
 
             if (pos.empty(king1) && pos.empty(king2) && pos.empty(king3)) {
-                bool ok = !pos.side_attacks(oside, king1)
-                    && (!legal || !pos.side_attacks(oside, king2));
-
-                if (ok) moves.add(Move(king, king2) | Move::CastleFlag);
+                if (!pos.side_attacks(oside, king1)) {
+                    if (!legal || !pos.side_attacks(oside, king2))
+                        moves.add(Move(ksq, king2) | Move::CastleFlag);
+                }
             }
         }
     }
 }
 
-size_t gen_evasions(MoveList& moves, const Position& pos)
+size_t gen_evas(MoveList& moves, const Position& pos)
 {
-    int king = pos.king_sq();
+    assert(pos.checkers());
 
-    assert(pos.in_check());
+    int ksq = pos.king();
 
     int checker1 = pos.checkers(0);
     // HACK: silence compiler warning
     int checker2 = pos.checkers() > 1 ? (int)pos.checkers(1) : (int)SquareNone;
 
-    int incr1 = is_slider(pos[checker1]) ? delta_incr(king, checker1) : 0;
-    int incr2 = checker2 != SquareNone && is_slider(pos[checker2]) ? delta_incr(king, checker2) : 0;
+    int incr1 = is_slider(pos[checker1]) ? delta_incr(ksq, checker1) : 0;
+    int incr2 = checker2 != SquareNone && is_slider(pos[checker2]) ? delta_incr(ksq, checker2) : 0;
 
     side_t mside = pos.side();
-    side_t oside = flip_side(pos.side());
+    side_t oside = !pos.side();
 
     u8 oflag = make_flag(oside);
 
+    // king moves
     for (auto incr : QueenIncrs) {
         if (incr == -incr1 || incr == -incr2)
             continue;
 
-        int dest = king + incr;
+        int dest = ksq + incr;
         u8 piece = pos[dest];
 
-        if (piece == PieceNone256 || (piece & oflag))
+        if (piece == PieceNone256 || (piece & oflag)) {
             if (!pos.side_attacks(oside, dest))
-                moves.add(Move(king, dest, piece));
+                moves.add(Move(ksq, dest, piece));
+        }
     }
 
     if (pos.checkers() == 2)
@@ -410,7 +373,7 @@ size_t gen_evasions(MoveList& moves, const Position& pos)
     int rank = sq88_rank(checker1, mside);
     int pincr = pawn_incr(mside);
 
-    // pawn captures checking piece
+    // pawn captures checking piece by ep
 
     if (checker1 == ep_dual(pos.ep_sq())) {
         if (int orig = checker1 - 1; pos[orig] == mpawn && !pins.test(orig))
@@ -419,7 +382,13 @@ size_t gen_evasions(MoveList& moves, const Position& pos)
             moves.add(Move(orig, pos.ep_sq(), opawn) | Move::EPFlag);
     }
 
-    if (int orig = checker1 - pincr - 1; pos[orig] == mpawn && !pins.test(orig)) {
+    // pawn captures checking piece
+
+    for (auto offset : { -1, 1 }) {
+        int orig = checker1 - pincr + offset;
+
+        if (pos[orig] != mpawn || pins.test(orig)) continue;
+        
         Move m(orig, checker1, pos[checker1]);
 
         if (rank == Rank8) {
@@ -431,47 +400,15 @@ size_t gen_evasions(MoveList& moves, const Position& pos)
         else
             moves.add(m);
     }
-
-    if (int orig = checker1 - pincr + 1; pos[orig] == mpawn && !pins.test(orig)) {
-        Move m(orig, checker1, pos[checker1]);
-
-        if (rank == Rank8) {
-            moves.add(m | Move::PromoQFlag);
-            moves.add(m | Move::PromoRFlag);
-            moves.add(m | Move::PromoBFlag);
-            moves.add(m | Move::PromoNFlag);
-        } 
-        else
-            moves.add(m);
-    }
-
+    
     // piece captures checking piece
 
-    for (auto orig : pos.plist(WN12 + mside)) {
-        if (pins.test(orig))
-            continue;
-
-        if (pseudo_attack(orig, checker1, KnightFlag256))
-            moves.add(Move(orig, checker1, pos[checker1]));
-    }
-
-    for (const auto &p : P12Flag) {
-        for (int orig : pos.plist(p.first + mside)) {
-            if (pins.test(orig))
-                continue;
-
-            if (!pseudo_attack(orig, checker1, p.second))
-                continue;
-
-            if (pos.ray_is_empty(orig, checker1))
-                moves.add(Move(orig, checker1, pos[checker1]));
-        }
-    }
+    gen_piece(moves, pos, checker1, pins);
 
     // blockers if slider
 
     if (is_slider(pos[checker1])) {
-        for (int sq = king + incr1; sq != checker1; sq += incr1) {
+        for (int sq = ksq + incr1; sq != checker1; sq += incr1) {
             gen_pawn(moves, pos, sq, pins);
             gen_piece(moves, pos, sq, pins);
         }
@@ -480,33 +417,17 @@ size_t gen_evasions(MoveList& moves, const Position& pos)
     return moves.size();
 }
 
-void gen_piece(MoveList& moves, const Position& pos, const int dest, const bitset<128>& pins)
+void gen_piece(MoveList& moves, const Position& pos, int dest, bitset<128>& pins)
 {
     side_t mside = pos.side();
 
-    for (int orig : pos.plist(WN12 + mside)) {
-        if (pins.test(orig))
-            continue;
-
-        if (pseudo_attack(orig, dest, KnightFlag256))
-            moves.add(Move(orig, dest, pos[dest]));
-    }
-
-    for (const auto &p : P12Flag) {
-        for (int orig : pos.plist(p.first + mside)) {
-            if (pins.test(orig))
-                continue;
-
-            if (!pseudo_attack(orig, dest, p.second))
-                continue;
-
-            if (pos.ray_is_empty(orig, dest))
+    for (auto p12 : { WN12, WB12, WR12, WQ12 })
+        for (auto orig : pos.plist(p12 + mside))
+            if (!pins.test(orig) && pos.piece_attacks(orig, dest))
                 moves.add(Move(orig, dest, pos[dest]));
-        }
-    }
 }
 
-void gen_pawn(MoveList& moves, const Position& pos, const int dest, const bitset<128>& pins)
+void gen_pawn(MoveList& moves, const Position& pos, int dest, bitset<128>& pins)
 {
     side_t mside = pos.side();
     int pincr = pawn_incr(mside);
@@ -520,9 +441,10 @@ void gen_pawn(MoveList& moves, const Position& pos, const int dest, const bitset
     if (rank == Rank4) {
         orig = dest - pincr - pincr;
 
-        if (pos[orig] == mpawn && !pins.test(orig))
+        if (pos[orig] == mpawn && !pins.test(orig)) {
             if (pos[orig + pincr] == PieceNone256)
                 moves.add(Move(orig, dest) | Move::DoubleFlag);
+        }
     }
 
     // single push
@@ -545,15 +467,15 @@ void gen_pawn(MoveList& moves, const Position& pos, const int dest, const bitset
 
 void gen_pinned(MoveList& moves, const Position& pos, int attacker, int pinned, int incr)
 {
-    int king = pos.king_sq();
+    int ksq = pos.king();
 
     assert(sq88_is_ok(attacker));
     assert(sq88_is_ok(pinned));
-    assert(sq88_is_ok(king));
+    assert(sq88_is_ok(ksq));
     assert(incr != 0);
     assert(pos.is_op(attacker));
     assert(pos.is_me(pinned));
-    assert(pos.king_sq() == king);
+    assert(pos.king() == ksq);
     assert(is_slider(pos[attacker]));
 
     u8 mpiece = pos[pinned];
@@ -589,6 +511,7 @@ void gen_pinned(MoveList& moves, const Position& pos, int attacker, int pinned, 
                     moves.add(Move(pinned, sq) | Move::DoubleFlag);
             }
         } 
+
         else if (sq - 1 == attacker || sq + 1 == attacker) {
             Move m(pinned, attacker, opiece);
 
@@ -602,10 +525,11 @@ void gen_pinned(MoveList& moves, const Position& pos, int attacker, int pinned, 
                 moves.add(m);
         }
     }
+
     else if (pseudo_attack(pinned, attacker, mpiece)) {
         assert(is_slider(mpiece));
-
-        for (sq = king - incr; pos.empty(sq); sq -= incr)
+            
+        for (sq = ksq - incr; pos.empty(sq); sq -= incr)
             moves.add(Move(pinned, sq));
         for (sq = pinned - incr; pos.empty(sq); sq -= incr)
             moves.add(Move(pinned, sq));
@@ -618,16 +542,16 @@ void gen_pinned(MoveList& moves, const Position& pos, bitset<128>& pins)
 {
     assert(pins.none());
 
-    int king = pos.king_sq();
-    side_t oside = flip_side(pos.side());
+    int ksq = pos.king();
+    side_t oside = !pos.side();
     u8 mflag = make_flag(pos.side());
 
     for (const auto &p : P12Flag) {
         for (auto attacker : pos.plist(p.first + oside)) {
-            if (!pseudo_attack(attacker, king, p.second))
+            if (!pseudo_attack(attacker, ksq, p.second))
                 continue;
 
-            int incr = delta_incr(attacker, king);
+            int incr = delta_incr(attacker, ksq);
             int sq = attacker + incr;
 
             while (pos[sq] == PieceNone256)
@@ -638,7 +562,7 @@ void gen_pinned(MoveList& moves, const Position& pos, bitset<128>& pins)
 
             int pinned = sq;
 
-            sq = king - incr;
+            sq = ksq - incr;
 
             while (pos[sq] == PieceNone256)
                 sq -= incr;
@@ -657,14 +581,20 @@ GenState gen_state(const Position& pos)
 {
     MoveList moves;
 
-    size_t count = gen_moves(moves, pos, GenMode::Legal);
+    size_t count = pos.checkers()
+                 ? gen_evas(moves, pos)
+                 : gen_moves<GenMode::Legal>(moves, pos);
 
-    if (count > 0)
-        return GenState::Normal;
-    else if (pos.in_check())
-        return GenState::Checkmate;
+    GenState state;
+
+    if (count)
+        state = GenState::Normal;
+    else if (pos.checkers())
+        state = GenState::Checkmate;
     else
-        return GenState::Stalemate;
+        state = GenState::Stalemate;
+
+    return state;
 }
 
 int delta_incr(int orig, int dest)
