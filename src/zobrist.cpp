@@ -7,12 +7,14 @@
 #include "zobrist.h"
 using namespace std;
 
+namespace zob {
+
 struct ZobristInfo {
-    const char* fen;
+    const char * fen;
     u64 key;
 };
 
-void zobrist_validate()
+void validate()
 {
     vector<ZobristInfo> fens {
         { "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 0x463b96181691fc9cull },
@@ -259,7 +261,7 @@ static constexpr int ZobristSideIndex   = 780;
 
 static u64 ZobristCastleFast[16];
 
-void zobrist_init()
+void init()
 {
     for (int flags = 0; flags < 16; flags++) {
         u64 zobrist = 0;
@@ -275,42 +277,40 @@ void zobrist_init()
     }
 }
 
-u64 zobrist_piece(int piece, int sq)
+u64 piece(int piece, int sq)
 {
     assert(piece12_is_ok(piece));
-    assert(sq88_is_ok(sq));
-
-    int sq64 = to_sq64(sq);
-
-    assert(sq64_is_ok(sq64));
+    assert(sq64_is_ok(sq));
 
     // modified to match polyglot
 
-    int index = 64 * (piece ^ 1) + sq64;
+    int index = 64 * (piece ^ 1) + sq;
 
     return keys[ZobristPieceIndex + index];
 }
 
-u64 zobrist_castle(u8 flags)
+u64 castle(u8 flags)
 {
     assert(flags < 16);
 
     return ZobristCastleFast[flags];
 }
 
-u64 zobrist_ep(int sq)
+u64 ep(int sq)
 {
     // HACK
     if (sq == SquareNone) return 0;
 
-    int file = sq88_file(sq);
+    int file = square::file(sq);
 
     assert(file_is_ok(file));
 
     return keys[ZobristEpIndex + file];
 }
 
-u64 zobrist_side()
+u64 side()
 {
     return keys[ZobristSideIndex];
+}
+
 }

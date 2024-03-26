@@ -1,8 +1,11 @@
 bin/
 build/
+include/
 cadie*
+lib*
 *.book
 *.obj
 *.out
 *.pgn
 *.sh
+*.txt

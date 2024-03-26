@@ -30,6 +30,8 @@ Cadie can be compiled at the command line using the make command.  There are cur
 
 ## Thanks
 
+Graham Banks, a co-founder and tester at CCRL https://en.wikipedia.org/wiki/Computer_chess#Computer_chess_rating_lists   
+Thomas Jahn for his sliding-move-generation bitboard scheme (https://github.com/lithander/Leorik)   
 The fine people at https://www.TalkChess.com for their advice and https://www.ChessProgramming.org for their documentation.   
 Andrew Grant (https://github.com/AndyGrant/Ethereal) for transposition table features, evaluation features and ideas, and his positional suite for evaluation tuning.   
 Fabien Letouzey (https://www.fruitchess.com) for search and evaluation features.   

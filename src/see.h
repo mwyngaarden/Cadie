@@ -1,12 +1,19 @@
 #ifndef SEE_H
 #define SEE_H
 
+#include <limits>
 #include <string>
 #include "move.h"
+#include "piece.h"
 #include "pos.h"
 
-int see_move(const Position& pos, const Move& m);
+namespace see {
 
-void see_validate();
+constexpr int value[6] = { 100, 325, 325, 500, 1000, 0 };
+
+int max(const Move& m);
+int calc(const Position& pos, const Move& m, int threshold = 0);
+
+}
 
 #endif

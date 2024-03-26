@@ -4,12 +4,16 @@
 #include <cstdint>
 #include "misc.h"
 
-void zobrist_init();
-void zobrist_validate();
+namespace zob {
 
-u64 zobrist_piece(int piece, int sq);
-u64 zobrist_castle(u8 flags);
-u64 zobrist_ep(int sq);
-u64 zobrist_side();
+void init();
+void validate();
+
+u64 piece(int piece, int sq);
+u64 castle(u8 flags);
+u64 ep(int sq);
+u64 side();
+
+}
 
 #endif

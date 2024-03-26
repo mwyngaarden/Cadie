@@ -40,35 +40,30 @@ static void uci_log         (const string& s);
 
 // UCI options with default values
 
-bool NMPruning            =  true;
-int  NMPruningDepthMin    =     2;
+bool NMPruning          =  true;
+int  NMPruningDepthMin  =     2;
 
-bool SingularExt          =  true;
-int  SEMovesMax           =     5;
-int  SEDepthMin           =     6;
-int  SEDepthOffset        =     4;
+bool SingularExt        =  true;
+int  SEDepthMin         =     6;
+int  SEDepthOffset      =     3;
 
-bool StaticNMP            =  true;
-int  StaticNMPDepthMax    =     7;
-int  StaticNMPFactor      =   100;
+bool StaticNMP          =  true;
+int  StaticNMPDepthMax  =     7;
+int  StaticNMPFactor    =   100;
 
-bool DeltaPruning         =  true;
-int DPMargin              =   200;
+bool Razoring           =  true;
+int  RazoringFactor     =   200;
 
-bool Razoring             =  true;
-int  RazoringFactor       =   200;
+int  AspMargin          =    10;
 
-int  AspMargin            =    10;
-int  TempoBonus           =    15;
+int  MoveOverhead       =    15;
+bool UciLog             = false;
 
-int  MoveOverhead         =    15;
-bool UciLog               = false;
+int  FutilityFactor     =    60;
 
-int  FutilityFactor       =    50;
-
-bool EasyMove             =  true;
-int  EMMargin             =   250;
-int  EMShare              =    25;
+bool EasyMove           =  true;
+int  EMMargin           =   500;
+int  EMShare            =    25;
 
 UCIOptionList opt_list;
 
@@ -87,7 +82,6 @@ void uci_init()
     opt_list.add(UCIOption("NMPruningDepthMin", 1, NMPruningDepthMin, 4));
 
     opt_list.add(UCIOption("SingularExt", SingularExt));
-    opt_list.add(UCIOption("SEMovesMax", 3, SEMovesMax, 7));
     opt_list.add(UCIOption("SEDepthMin", 3, SEDepthMin, 7));
     opt_list.add(UCIOption("SEDepthOffset", 2, SEDepthOffset, 6));
     
@@ -95,11 +89,7 @@ void uci_init()
     opt_list.add(UCIOption("StaticNMPDepthMax", 1, StaticNMPDepthMax, 10));
     opt_list.add(UCIOption("StaticNMPFactor", 1, StaticNMPFactor, 500));
     
-    opt_list.add(UCIOption("DeltaPruning", DeltaPruning));
-    opt_list.add(UCIOption("DPMargin", 50, DPMargin, 500));
-
     opt_list.add(UCIOption("AspMargin", 5, AspMargin, 30));
-    opt_list.add(UCIOption("TempoBonus", 0, TempoBonus, 50));
     
     opt_list.add(UCIOption("MoveOverhead", 1, MoveOverhead, 2000));
     opt_list.add(UCIOption("UciLog", UciLog));
@@ -194,8 +184,8 @@ void uci_go(const string& s)
 
     slimits = SearchLimits();
 
-    i64 time[SideCount] = { };
-    i64 inc[SideCount] = { };
+    i64 time[2] = { };
+    i64 inc[2] = { };
 
     for (size_t i = 1; i < fields.size(); i++) {
         const string token = fields[i];
@@ -226,24 +216,28 @@ void uci_go(const string& s)
     slimits.inc = inc[sinfo.pos.side()];
 
     if (slimits.movetime)
-        slimits.movetime = max(slimits.movetime - MoveOverhead, (i64)1);
+        slimits.movetime = max(slimits.movetime - MoveOverhead, 1l);
     
     else if (slimits.time) {
-        i64 bound = max(slimits.time - MoveOverhead, (i64)1);
+        double mtg = slimits.movestogo ? min(double(slimits.movestogo), 50.0) : 50.0;
+        double rem = slimits.time + (mtg - 1) * slimits.inc - (mtg + 2) * MoveOverhead;
+        double tpm = max(rem / mtg, 1.0);
 
-        i64 mtg = slimits.movestogo ? slimits.movestogo : 50;
-        i64 rem = slimits.time + (mtg - 1) * slimits.inc;
-        i64 tpm = rem / mtg;
+        double x1 = max(double(slimits.time - MoveOverhead), 1.0);
+        double x2 = max(rem * 0.9, 1.0);
+        double bound = min(x1, x2);
 
-        i64 ntime = clamp((i64)(tpm * 0.40 + 0.5),    (i64)0, bound);
-        i64 xtime = clamp((i64)(tpm * 2.39 + 0.5), ntime + 1, bound);
-        i64 ptime = clamp((i64)(tpm * 5.00 + 0.5), xtime + 0, bound);
+        double ntime = clamp(tpm * 0.6, 0.0, bound);
+        double xtime = clamp(tpm * 2.5, 1.0, bound);
+        double ptime = clamp(tpm * 5.0, 1.0, bound);
 
         assert(ntime <= xtime && xtime <= ptime);
 
-        slimits.time_min   = ntime;
-        slimits.time_max   = xtime;
-        slimits.time_panic = ptime;
+        slimits.time_min   = i64(ntime + 0.5);
+        slimits.time_max   = i64(xtime + 0.5);
+        slimits.time_panic = i64(ptime + 0.5);
+
+        // uci_send("info string ntime %i xtime %i ptime %i bound %i rem %i tpm %i", ntime, xtime, ptime, bound, rem, tpm);
     }
 
     sinfo.timer.start();

@@ -88,18 +88,6 @@ public:
         }
     }
 
-    int clamp(int value) const
-    {
-        assert(type_ == Spin);
-
-        if (value < spin_min_) 
-            return spin_min_;
-        else if (value > spin_max_) 
-            return spin_max_;
-        else
-            return value;
-    }
-
     std::string to_option() const
     {
         std::ostringstream oss;
@@ -151,7 +139,7 @@ public:
             check_value_ = value == "true";
             break;
         case Spin:
-            spin_value_ = clamp(std::stoi(value));
+            spin_value_ = std::clamp(std::stoi(value), spin_min_, spin_max_);
             break;
         case Combo:
             combo_value_ = value;

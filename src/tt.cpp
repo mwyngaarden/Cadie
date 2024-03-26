@@ -83,12 +83,12 @@ void TT::set(Entry& src, u64 key)
     src.lock = Entry::calc_lock(key);
     src.gen = gen_;
 
-    bool write = dst->lock == 0
+    bool overwrite = dst->lock == 0
         || (src.bound == BoundExact)
         || (dst->gen != src.gen)
         || (dst->bound != BoundExact && src.depth >= dst->depth)
-        || (dst->lock == src.lock && src.depth + 1 >= dst->depth);
+        || (dst->lock == src.lock && src.depth + 2 >= dst->depth);
     
-    if (write) *dst = src;
+    if (overwrite) *dst = src;
 }
 

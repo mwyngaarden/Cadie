@@ -3,109 +3,59 @@
 
 #include <iostream>
 #include <limits>
+#include <cassert>
+#include "history.h"
 #include "move.h"
 #include "search.h"
-#include "see.h"
+
+
+struct OMove {
+
+    static constexpr int Offset = 100000;
+
+    static u64 make(Move m, int see, int score)
+    {
+        assert(see >= 0 && see <= 2);
+
+        score = std::clamp(score + Offset, 0, 2 * Offset);
+
+        u64 ret =  u64(m)
+                | (u64(see)   << 32)
+                | (u64(score) << 34);
+
+        return ret;
+    }
+
+    static Move move (u64 data) { return u32(data); }
+    static int  see  (u64 data) { return int(data >> 32) & 0x3; }
+    static int  score(u64 data) { return int(data >> 34) - Offset; }
+
+};
 
 struct Order {
-    static constexpr int ScoreTT        =  1 << 20;
-    static constexpr int ScoreTactical  =  1 << 19;
-    static constexpr int ScoreSpecial   =  1 << 18;
+    static constexpr int ScoreTT        =  1 << 16;
+    static constexpr int ScoreTactical  =  1 << 15;
+    static constexpr int ScoreSpecial   =  1 << 14;
 
-    Order(const Node& node)
-    {
-        bool tactical = node.depth < 0 && !node.pos.checkers();
+    Order(const Node& node, History& history);
 
-        GenMode mode = tactical ? GenMode::Tactical : GenMode::Pseudo;
+    Move next();
 
-        MoveList moves;
+    bool singular() const;
+    int& see(const Position& pos, bool calc);
+    int score() const;
 
-        gen_moves(moves, node.pos, mode);
-
-        for (std::size_t i = 0; i < moves.size(); i++) {
-            Move m = moves[i];
-
-            int see = ScoreNone;
-            int score;
-
-            if (m == node.entry.move)
-                score = ScoreTT - 1;
-
-            else if (m.is_tactical()) {
-                score = ScoreTactical;
-                score += node.pos.mvv_lva(m);
-                
-                if (!node.pos.move_is_safe(m, see))
-                    score -= ScoreTT;
-            }
-
-            else if (int index = history.is_special(node.pos, node.ply, m); index)
-                score = ScoreSpecial + index;
-
-            else
-                score = history.score(node.pos, m);
-
-            smoves_.add(m, score, see);
-        }
-    }
-
-    Move next()
-    {
-        if (index_ >= smoves_.size())
-            return MoveNone;
-
-        auto score_max = -ScoreTT - 1;
-        auto index_max = index_;
-
-        for (std::size_t i = index_; i < smoves_.size(); i++) {
-            if (smoves_[i].score > score_max) {
-                score_max = smoves_[i].score;
-                index_max = i;
-            }
-        }
-
-        if (index_max != index_)
-            smoves_.swap(index_max, index_);
-
-        score_ = smoves_[index_].score;
-        see_ = smoves_[index_].see;
-        move_ = smoves_[index_].move;
-
-        index_++;
-
-        return move_;
-    }
-
-    bool is_singular() const
-    {
-        return smoves_.size() == 1;
-    }
-
-    static bool is_special(int score)
-    {
-        return score >= ScoreSpecial && score < ScoreTactical;
-    }
-
-    int score() const
-    {
-        return score_;
-    }
-
-    int& see(const Position& pos, bool calc)
-    {
-        if (calc && see_ == ScoreNone)
-            see_ = see_move(pos, move_);
-
-        return see_;
-    }
+    static bool special(int score);
 
 private:
     std::size_t index_ = 0;
-    MoveExtList smoves_;
 
     Move move_;
     int see_;
     int score_;
+
+    std::size_t count_ = 0;
+    u64 omoves_[128];
 };
 
 #endif

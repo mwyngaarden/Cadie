@@ -41,11 +41,11 @@ struct Node {
     bool futile = false;
     bool improving;
 
-    int mlegal = 0;
+    int legals = 0;
 
     i16 eval = -ScoreMate;
 
-    Entry entry;
+    Entry entry = Entry::init();
 
     const u64 key;
     bool hit = false;
@@ -54,6 +54,7 @@ struct Node {
     Move sm;
 
     i16 bs = -ScoreMate;
+    i16 fs = -ScoreMate;
 
     Node(const Position& pos_, int alfa_, int beta_, int ply_, int depth_, Move sm_ = MoveNone) :
         pos(pos_), 
@@ -65,9 +66,6 @@ struct Node {
         key(pos.key() ^ sm_),
         sm(sm_)
     {
-        entry.clear();
-
-        pv[0] = MoveNone;
     }
 };
 
@@ -92,13 +90,15 @@ struct SearchLimits {
 struct SearchInfo {
     bool initialized    = false;
 
+    bool singular       = false;
+
     bool fail_low       = false;
     int fail_highs      = 0;
 
     i64 cnodes          = 0;
     i64 tnodes          = 0;
 
-    i64 rtime           = 0;
+    i64 time_rep        = 0;
 
     int bm_stable       = 0;
     int bm_updates      = 0;
@@ -111,14 +111,12 @@ struct SearchInfo {
     int depth_max       = 0;
     int depth_sel       = 0;
 
-    int moves_max       = 0;
-    
     Move bm             = MoveNone; // best move
     Move cm             = MoveNone; // curr move
     Move em             = MoveNone; // easy move
 
-    MoveExtList smoves;
     Position pos;
+
     Timer timer;
 
     SearchInfo() = default;

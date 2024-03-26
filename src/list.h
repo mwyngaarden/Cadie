@@ -77,20 +77,20 @@ public:
         std::size_t pos = find(value);
 
         assert(pos != npos);
-
+        
         for (std::size_t i = pos; i < size_; i++)
             data_[i] = data_[i + 1];
 
         --size_;
     }
-
-    std::size_t lower_bound(T value) const
+    
+    void remove_at(std::size_t pos)
     {
-        for (std::size_t i = 0; i < size_; i++)
-            if (value < data_[i])
-                return i;
+        assert(pos < size_);
 
-        return size_;
+        data_[pos] = data_[size_ - 1];
+
+        --size_;
     }
 
     void replace(T old_value, T new_value)

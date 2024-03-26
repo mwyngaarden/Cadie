@@ -161,20 +161,17 @@ void benchmark_go(Bench &bench)
     }
 
     i64 ttime_ns    = timer.accrued_time<Timer::Nano>().count();
-    double ttime_s  = ttime_ns / 1E+9;
+    double ttime_s  = ttime_ns / 1e+9;
+    
+    i64 tevals          = gstats.evals_count;
+    double etime        = gstats.time_eval_ns;
+    i64 eps             = etime == 0 ? 0 : 1e+9 * tevals / etime;
 
     i64 tcycles         = timer.accrued_cycles();
     i64 ttime           = timer.accrued_time().count();
     i64 hz              = tcycles / ttime_s;
-    i64 tmoves          = gstats.moves_count;
-    i64 tevals          = gstats.evals_count;
-    i64 snodes          = gstats.nodes_search;
-    i64 qnodes          = gstats.nodes_qsearch;
-    i64 tnodes          = snodes + qnodes;
-    double qnodesp      = 100.0 * qnodes / tnodes;
-    double snodesp      = 100.0 * snodes / tnodes;
+    i64 tnodes          = gstats.nodes_sum;
     i64 num             = gstats.num;
-    i64 etime           = gstats.time_eval_ns;
     i64 gtime           = gstats.time_gen_ns;
 
     i64 bmups           = gstats.bm_updates;
@@ -211,17 +208,12 @@ void benchmark_go(Bench &bench)
          << " depth max   = " << ralign<i64>(gstats.depth_max,             11) << endl
          << " depth sum   = " << ralign<i64>(gstats.depth_sum,             11) << endl 
          << endl
-         << " sdepth min  = " << ralign<i64>(gstats.seldepth_min,             10) << endl
-         << " sdepth mean = " << ralign<i64>(1.0 * gstats.seldepth_sum / num, 10) << endl
-         << " sdepth max  = " << ralign<i64>(gstats.seldepth_max,             10) << endl
-         << " sdepth sum  = " << ralign<i64>(gstats.seldepth_sum,             10) << endl 
+         << " sdepth min  = " << ralign<i64>(gstats.seldepth_min,             11) << endl
+         << " sdepth mean = " << ralign<i64>(1.0 * gstats.seldepth_sum / num, 11) << endl
+         << " sdepth max  = " << ralign<i64>(gstats.seldepth_max,             11) << endl
+         << " sdepth sum  = " << ralign<i64>(gstats.seldepth_sum,             11) << endl 
          << endl
-         << " lmoves min  = " << ralign<i64>(gstats.lmoves_min,             10) << endl
-         << " lmoves mean = " << ralign<i64>(1.0 * gstats.lmoves_sum / num, 10) << endl
-         << " lmoves max  = " << ralign<i64>(gstats.lmoves_max,             10) << endl
-         << " lmoves sum  = " << ralign<i64>(gstats.lmoves_sum,             10) << endl 
-         << endl
-         << " amoves max  = " << ralign<i64>(gstats.amoves_max,             10) << endl
+         << " moves max   = " << ralign<i64>(gstats.moves_max, 11) << endl
          << endl
          << " bm updates  = " << ralign<i64>(bmups,                   11) << endl
          << " bm u/n      = " << ralign<double>(1.0 * bmups / num,    11) << endl
@@ -252,18 +244,17 @@ void benchmark_go(Bench &bench)
          << "checkmate    = " << ralign<i64>(gstats.checkmate,  11) << endl
          << "total        = " << ralign<i64>(gstats.num,        11) << endl
          << endl
-         << "time eval    = " << ralign(Timer::to_string(etime, units_time), 14) << endl
+         << "time eval    = " << ralign(Timer::to_string(i64(etime), units_time), 14) << endl
          << "time gen     = " << ralign(Timer::to_string(gtime, units_time), 14) << endl
          << endl
          << "tests check  = " << ralign<i64>(gstats.ctests, 11) << endl
          << "tests see    = " << ralign<i64>(gstats.stests, 11) << endl
          << endl
-         << "moves        = " << ralign<i64>(tmoves, 11) << endl
          << "evals        = " << ralign<i64>(tevals, 11) << endl
-         << "snodes       = " << ralign<i64>(snodes, 11) << ralign(snodesp, 6) << " %" << endl
-         << "qnodes       = " << ralign<i64>(qnodes, 11) << ralign(qnodesp, 6) << " %" << endl
+         << "eps          = " << ralign<i64>(eps, 11) << endl
          << "nodes        = " << ralign<i64>(tnodes, 11) << endl
-         << "time         = " << ralign(Timer::to_string(ttime_ns, units_time), 14) << endl
+         << "nps          = " << ralign<i64>(tnodes / ttime_s, 11) << endl
+         << "time         = " << ralign(Timer::to_string(ttime_ns, { "ns", "us", "ms" }), 14) << endl
          << "cpu          = " << ralign(Timer::to_string(hz, units_hertz),      15) << endl;
 }
 

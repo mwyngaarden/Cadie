@@ -56,7 +56,7 @@ struct PerftInfo {
 };
 
 
-static i64 perft(Position& pos, size_t depth, size_t height, size_t& illegals)
+static i64 perft(Position& pos, size_t depth, size_t height)
 {
     if (depth == 0) return 1;
 
@@ -71,7 +71,7 @@ static i64 perft(Position& pos, size_t depth, size_t height, size_t& illegals)
         UndoMove undo;
 
         pos.make_move(m, undo);
-        leaves += perft(pos, depth - 1, height + 1, illegals);
+        leaves += perft(pos, depth - 1, height + 1);
         pos.unmake_move(m, undo);
     }
 #else
@@ -82,7 +82,7 @@ static i64 perft(Position& pos, size_t depth, size_t height, size_t& illegals)
             UndoMove undo;
 
             pos.make_move(m, undo);
-            leaves += perft(pos, depth - 1, height + 1, illegals);
+            leaves += perft(pos, depth - 1, height + 1);
             pos.unmake_move(m, undo);
         }
     }
@@ -120,7 +120,7 @@ static void perft_go(PerftInfo &pinfo)
         const i64 leaves_req = fi.leaves[pinfo.depth - 1];
 
         Timer timer(true);
-        i64 leaves = perft(pos, pinfo.depth, 0, pinfo.illegals);
+        i64 leaves = perft(pos, pinfo.depth, 0);
         timer.stop();
 
         const i64 micros = timer.elapsed_time<Timer::Micro>();
@@ -134,6 +134,8 @@ static void perft_go(PerftInfo &pinfo)
 
         invalid += leaves_diff != 0;
 
+        pinfo.illegals += leaves_diff != 0;
+
         double cklps = 1000 * pinfo.leaves / pinfo.micros;
         
         if ((i + 1) % pinfo.report == 0) {
@@ -145,7 +147,7 @@ static void perft_go(PerftInfo &pinfo)
                << "dl = " << setw(1) << leaves_diff << ' '
                << "inv = " << setw(1) << invalid << ' '
                << "cklps = " << setw(7) << size_t(cklps) << ' '
-               << (leaves_diff == 0 ? "PASS" : "FAIL");
+               << (leaves_diff == 0 ? "PASS" : "FAIL !!!");
 
             cout << ss.str() << endl;
         }
@@ -200,5 +202,5 @@ void perft(int argc, char* argv[])
          << "millis:   " << pinfo.micros / 1000 << endl
          << "klps:     " << 1000 * pinfo.leaves / pinfo.micros << endl
          << "cpl:      " << pinfo.cycles / pinfo.leaves << endl
-         << "illegals: " << pinfo.illegals << " (" << 100.0 * pinfo.illegals / pinfo.leaves << " %)" << endl;
+         << "illegals: " << pinfo.illegals << endl;
 }

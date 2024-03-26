@@ -23,8 +23,11 @@ RCOMPILE_FLAGS = -O3 -flto=auto -march=native -DNDEBUG -fno-rtti
 # Additional debug-specific flags
 DCOMPILE_FLAGS = -g -ggdb3
 
-# General linker settings
-LINK_FLAGS = -pthread -fopenmp
+# General linker settings when tuning
+#LINK_FLAGS = -pthread -fopenmp -lnlopt_cxx -lm
+# General linker settings when not tuning
+LINK_FLAGS = -pthread
+
 # Additional release-specific linker settings
 RLINK_FLAGS =
 # Additional debug-specific linker settings

@@ -57,15 +57,11 @@ struct Entry {
         return true;
     }
 
-    void clear()
+    static constexpr Entry init()
     {
-        lock    = 0;
-        move    = MoveNone;
-        score   = -ScoreMate;
-        eval    = -ScoreMate;
-        depth   = 0;
-        gen     = 0;
-        bound   = BoundNone;
+        // TODO test with invalid depth and/or invalid gen and/or invalid bound
+        
+        return Entry { 0, MoveNone, -ScoreMate, -ScoreMate, 0, 0, BoundNone, 0 };
     }
 };
 
@@ -120,7 +116,7 @@ public:
     std::size_t size() const { return size_; }
     std::size_t size_mb() const { return size_ / 1024 / 1024; }
 
-    std::size_t hp() const { return gets_ ? 100 * hits_ / gets_ : 0; }
+    std::size_t hitrate() const { return gets_ ? 100 * hits_ / gets_ : 0; }
 
 private:
     std::vector<Entry> entries_;

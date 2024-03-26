@@ -8,13 +8,12 @@
 #include <cstdlib>
 #include "pos.h"
 
-
 struct Bench {
-    std::size_t num     =   60;
+    std::size_t num     =  120;
     std::size_t time    =    0;
-    std::size_t depth   =   10;
+    std::size_t depth   =   11;
     std::size_t nodes   =    0;
-    std::size_t hash    =    1;
+    std::size_t hash    =    8;
 
     bool exc        =  true;
     bool rand       = false;
@@ -23,7 +22,7 @@ struct Bench {
 
     std::map<std::string, std::string> opts;
 
-    std::filesystem::path path { "perft.epd" };
+    std::filesystem::path path { "bench.epd" };
 
     std::vector<Position> positions;
 };

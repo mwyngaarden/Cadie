@@ -1,5 +1,5 @@
-#ifndef HTABLE_H
-#define HTABLE_H
+#ifndef HT_H
+#define HT_H
 
 #include <bit>
 #include <vector>
@@ -9,7 +9,7 @@
 #include "mem.h"
 
 template <std::size_t K, class T>
-class HT {
+class HashTable {
 public:
     static constexpr std::size_t Bytes = K * 1024;
     static constexpr std::size_t Count = Bytes / sizeof(T);
@@ -18,7 +18,7 @@ public:
     static_assert(std::has_single_bit(Bytes));
     static_assert(std::has_single_bit(Count));
 
-    HT()
+    HashTable()
     {
         entries_.resize(Count);
     }
@@ -73,7 +73,7 @@ public:
         mem::prefetch(&entries_[key & Mask]);
     }
 
-    std::size_t hp() const { return gets_ ? 100 * hits_ / gets_ : 0; }
+    std::size_t hitrate() const { return gets_ ? 100 * hits_ / gets_ : 0; }
 
 private:
     std::vector<T> entries_;

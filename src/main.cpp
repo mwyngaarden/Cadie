@@ -3,6 +3,8 @@
 #include <thread>
 #include <cstdlib>
 #include <cstring>
+#include "attack.h"
+#include "bb.h"
 #include "bench.h"
 #include "gen.h"
 #include "misc.h"
@@ -26,7 +28,9 @@ static void help(char* exe)
          << "Options:" << endl
          << "  bench [depth=N] [file=path] [num=N] [hash=MB] [nodes=N] [random] [time=ms] [mates] [option.K=V]" << endl
          << "  perft [depth=N] [file=path] [num=N] [report=N]" << endl
+#ifdef TUNE
          << "  tune <path> [full]" << endl
+#endif
          << "  validate" << endl
          << "  help" << endl;
 }
@@ -37,23 +41,25 @@ int main(int argc, char* argv[])
 
     // Maintain order!
     search_init();
-    eval_init();
-    zobrist_init();
+    zob::init();
     uci_init();
+    attack_init();
+    eval_init();
+    bb::init();
 
     if (argc >= 2) {
         if (strcmp(argv[1], "bench") == 0)
             benchmark(argc - 2, argv + 2);
         else if (strcmp(argv[1], "perft") == 0)
             perft(argc - 2, argv + 2);
+#ifdef TUNE
         else if (strcmp(argv[1], "tune") == 0)
             eval_tune(argc - 2, argv + 2);
+#endif
         else if (strcmp(argv[1], "help") == 0)
             help(argv[0]);
-        else if (strcmp(argv[1], "validate") == 0) {
-            zobrist_validate();
-            see_validate();
-        }
+        else if (strcmp(argv[1], "validate") == 0)
+            zob::validate();
 
         return EXIT_SUCCESS;
     }

@@ -16,7 +16,7 @@ public:
             tokens_.push_back(token);
     }
     
-    Tokenizer(int argc, char* argv[])
+    Tokenizer(int argc, char * argv[])
     {
         for (int i = 0; i < argc; i++)
             tokens_.push_back(argv[i]);

@@ -8,13 +8,10 @@
 
 enum class PieceAttr : int { Color2, Type6, Type12 };
 
-using PieceList = List<u8, 9>;
-
 typedef u8 side_t;
 
 constexpr side_t White          =  0;
 constexpr side_t Black          =  1;
-constexpr side_t SideCount      =  2;
 
 constexpr int Pawn              =  0;
 constexpr int Knight            =  1;
@@ -22,7 +19,6 @@ constexpr int Bishop            =  2;
 constexpr int Rook              =  3;
 constexpr int Queen             =  4;
 constexpr int King              =  5;
-constexpr int PieceCount6       =  6;
 
 constexpr int WhitePawn12       =  0;
 constexpr int BlackPawn12       =  1;
@@ -36,12 +32,6 @@ constexpr int WhiteQueen12      =  8;
 constexpr int BlackQueen12      =  9;
 constexpr int WhiteKing12       = 10;
 constexpr int BlackKing12       = 11;
-constexpr int PieceCount12      = 12;
-
-constexpr int PieceList12[2][6] = {
-    { WhitePawn12, WhiteKnight12, WhiteBishop12, WhiteRook12, WhiteQueen12, WhiteKing12 },
-    { BlackPawn12, BlackKnight12, BlackBishop12, BlackRook12, BlackQueen12, BlackKing12 }
-};
 
 constexpr u8 PieceNone256       = 0;
 constexpr u8 WhiteFlag256       = 1 << 0;
@@ -74,7 +64,6 @@ constexpr u8 BlackQueen256      = BlackFlag256 | QueenFlags256;
 constexpr u8 BlackKing256       = BlackFlag256 | KingFlag256;
 constexpr u8 PieceInvalid256    = ~(ColorFlags256 | PawnFlags256);
 
-// aliases
 constexpr u8 WP256 = WhitePawn256;
 constexpr u8 WN256 = WhiteKnight256;
 constexpr u8 WB256 = WhiteBishop256;
@@ -101,14 +90,6 @@ constexpr u8 BR12 = BlackRook12;
 constexpr u8 BQ12 = BlackQueen12;
 constexpr u8 BK12 = BlackKing12;
 
-constexpr std::pair<u8, u8> P12Flag[3] = {
-    { WB12, BishopFlag256 },
-    { WR12, RookFlag256 },
-    { WQ12, QueenFlags256 }
-};
-
-// methods
-
 constexpr bool is_white(u8 piece) { return (piece & WhiteFlag256) != PieceNone256; }
 constexpr bool is_black(u8 piece) { return (piece & BlackFlag256) != PieceNone256; }
 constexpr bool is_pawn(u8 piece) { return (piece & PawnFlags256) != PieceNone256; }
@@ -120,21 +101,18 @@ constexpr bool is_king(u8 piece) { return (piece & KingFlag256) != PieceNone256;
 constexpr bool is_slider(u8 piece) { return (piece & QueenFlags256) != PieceNone256; }
 
 constexpr u8 flip_pawn(u8 piece) { return piece ^ (ColorFlags256 | PawnFlags256); }
-constexpr u8 flip_flag(u8 piece) { return piece ^ ColorFlags256; }
 constexpr u8 make_pawn(side_t side) { return WhitePawn256 << side; }
 constexpr u8 make_flag(side_t side) { return side + 1; }
-constexpr int flip_side(side_t side) { return side ^ 1; }
 
 constexpr bool side_is_ok(side_t side) { return side == White || side == Black; }
-constexpr bool piece_is_ok(int p6) { return p6 >= Pawn && p6 <= King; }
+constexpr bool piece_is_ok(int type) { return type >= Pawn && type <= King; }
 constexpr bool piece12_is_ok(int p12) { return p12 >= WhitePawn12 && p12 <= BlackKing12; }
-constexpr side_t piece12_to_side(int p12) { return p12 & 1; }
 
 bool piece256_is_ok(u8 piece);
 char piece256_to_char(u8 piece);
 u8 char_to_piece256(char c);
-u8 to_piece256(side_t side, int p6);
-int to_piece12(side_t side, int p6);
+u8 to_piece256(side_t side, int type);
+int to_piece12(side_t side, int type);
 
 constexpr auto P256ToP6
 {
@@ -142,7 +120,7 @@ constexpr auto P256ToP6
     {
         std::array<int, 256> result;
 
-        result.fill(PieceCount6);
+        result.fill(6);
     
         result[WP256] = Pawn;
         result[WN256] = Knight;
@@ -167,7 +145,7 @@ constexpr auto P256ToP12
     {
         std::array<int, 256> result;
 
-        result.fill(PieceCount12);
+        result.fill(12);
 
         result[WP256] = WP12;
         result[WN256] = WN12;

@@ -34,7 +34,7 @@ public:
 
     static_assert((EPFlag & PromoFlags) == 0);
 
-    Move() = default;
+    constexpr Move() : data_(0) { }
 
     constexpr Move(u32 data) : data_(data) { }
 
@@ -54,6 +54,9 @@ public:
 
     int orig()              const { return  data_        & 0x7f; }
     int dest()              const { return (data_ >>  7) & 0x7f; }
+
+    int orig64()            const { return to_sq64(orig()); }
+    int dest64()            const { return to_sq64(dest()); }
 
     u8 capture_piece()      const { return (data_ >> 14) & 0xff; }
     int promo_piece6()      const { return (data_ >> 22) & 0x07; }
@@ -79,8 +82,8 @@ public:
     {
         std::ostringstream oss;
 
-        oss << sq88_to_san(orig());
-        oss << sq88_to_san(dest());
+        oss << square::sq_to_san(orig64());
+        oss << square::sq_to_san(dest64());
 
              if (promo_piece6() == Knight) oss << 'n';
         else if (promo_piece6() == Bishop) oss << 'b';
@@ -90,7 +93,7 @@ public:
         return oss.str();
     }
 
-    // only sets orig, dest, and promotion piece!
+    // Only sets orig, dest, and promotion piece!
 
     static Move from_string(std::string s)
     {
@@ -196,7 +199,7 @@ struct UndoMove {
     u8 half_moves;
     u8 checkers_sq[2];
     u8 checkers;
-    Move pm;
+    Move move_prev;
 };
 
 struct UndoNull {
@@ -205,7 +208,7 @@ struct UndoNull {
     u8 ep_sq;
     u8 checkers_sq[2];
     u8 checkers;
-    Move pm;
+    Move move_prev;
 };
 
 using MoveList  = List<Move, MovesMax>;

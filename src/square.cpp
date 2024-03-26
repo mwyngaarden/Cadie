@@ -5,118 +5,61 @@
 #include "square.h"
 using namespace std;
 
-int san_to_sq88(string s)
-{
-    assert(s.size() == 2);
 
-    int file = s[0] - 'a';
-    int rank = s[1] - '1';
+namespace square {
 
-    assert(file_is_ok(file));
-    assert(rank_is_ok(rank));
+    int san_to_sq(string s)
+    {
+        assert(s.size() == 2);
 
-    int sq = to_sq88(file, rank);
+        int file = s[0] - 'a';
+        int rank = s[1] - '1';
 
-    assert(sq88_is_ok(sq));
+        assert(file_is_ok(file));
+        assert(rank_is_ok(rank));
 
-    return sq;
-}
+        int sq = to_sq64(file, rank);
 
-string sq88_to_san(int sq)
-{
-    assert(sq88_is_ok(sq));
+        assert(sq64_is_ok(sq));
 
-    int file = sq88_file(sq);
-    int rank = sq88_rank(sq);
-
-    assert(file_is_ok(file));
-    assert(rank_is_ok(rank));
-
-    ostringstream oss;
-    oss << static_cast<char>('a' + file);
-    oss << static_cast<char>('1' + rank);
-
-    return oss.str();
-}
-
-int sq88_rank(int sq)
-{
-    return sq >> 4;
-}
-
-int sq88_rank(int sq, side_t side)
-{
-    int rank = sq88_rank(sq);
-
-    return rank ^ (7 * side);
-}
-
-bool sq88_edge(int sq)
-{
-    int file = sq88_file(sq);
-
-    return file == FileA || file == FileH;
-}
-
-int sq88_dist_edge(int sq)
-{
-    constexpr int rdist[8] = { 0, 1, 2, 3, 3, 2, 1, 0 };
-    constexpr int fdist[8] = { 0, 1, 2, 3, 3, 2, 1, 0 };
-
-    int r = sq88_rank(sq);
-    int f = sq88_file(sq);
-
-    return std::min(rdist[r], fdist[f]);
-}
-
-int sq88_quadrant(int sq)
-{
-    int r = sq88_rank(sq);
-    int f = sq88_file(sq);
-    
-    if (r >= Rank5 && f <= FileD)
-        return 0;
-    else if (r >= Rank5 && f >= FileE)
-        return 1;
-    else if (r <= Rank4 && f <= FileD)
-        return 2;
-    else
-        return 3;
-}
-
-int sq88_dist(int sq1, int sq2)
-{
-    int r1 = sq88_rank(sq1);
-    int f1 = sq88_file(sq1);
-    int r2 = sq88_rank(sq2);
-    int f2 = sq88_file(sq2);
-
-    int rmin = std::abs(r1 - r2);
-    int fmin = std::abs(f1 - f2);
-
-    return std::max(rmin, fmin);
-}
-
-int sq88_dist_corner(int sq)
-{
-    int q = sq88_quadrant(sq);
-
-    switch (q) {
-    case 0: return sq88_dist(sq, A8);
-    case 1: return sq88_dist(sq, H8);
-    case 2: return sq88_dist(sq, A1);
-    case 3: return sq88_dist(sq, H1);
-    default:
-        assert(false);
-        return 0;
+        return sq;
     }
-}
 
-bool sq88_center16(int sq)
-{
-    int rank = sq88_rank(sq);
-    int file = sq88_file(sq);
+    string sq_to_san(int sq)
+    {
+        assert(sq64_is_ok(sq));
 
-    return rank >= Rank3 && rank <= Rank6
-        && file >= FileC && file <= FileF;
+        int file = square::file(sq);
+        int rank = square::rank(sq);
+
+        assert(file_is_ok(file));
+        assert(rank_is_ok(rank));
+
+        ostringstream oss;
+        oss << static_cast<char>('a' + file);
+        oss << static_cast<char>('1' + rank);
+
+        return oss.str();
+    }
+
+    int dist(int sq1, int sq2)
+    {
+        int r1 = rank(sq1);
+        int f1 = file(sq1);
+        int r2 = rank(sq2);
+        int f2 = file(sq2);
+
+        int rd = std::abs(r1 - r2);
+        int fd = std::abs(f1 - f2);
+
+        return std::max(rd, fd);
+    }
+
+    int dist_edge(int sq)
+    {
+        int f = file(sq);
+
+        return f <= FileD ? f : FileH - f;
+    }
+
 }

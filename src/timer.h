@@ -52,17 +52,7 @@ public:
     template <class R = int64_t, class T = Milli>
     static R now()
     {
-#ifdef _MSC_VER
-        return Clock::now();
-#else
-        struct timespec ts;
-
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-
-        auto d = Seconds{ts.tv_sec} + Nano{ts.tv_nsec};
-
-        return std::chrono::duration_cast<T>(d).count();
-#endif
+        return std::chrono::duration_cast<T>(Clock::now().time_since_epoch()).count();
     }
 
     template <class R = int64_t>

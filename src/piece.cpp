@@ -8,23 +8,23 @@ using namespace std;
 
 bool piece256_is_ok(u8 piece)
 {
-    return P256ToP12[piece] != PieceCount12;
+    return P256ToP12[piece] != 12;
 }
 
-int to_piece12(side_t side, int p6)
+int to_piece12(side_t side, int type)
 {
     assert(side_is_ok(side));
-    assert(piece_is_ok(p6));
+    assert(piece_is_ok(type));
 
-    return (p6 << 1) | side;
+    return (type << 1) | side;
 }
 
-u8 to_piece256(side_t side, int p6)
+u8 to_piece256(side_t side, int type)
 {
     assert(side_is_ok(side));
-    assert(piece_is_ok(p6));
+    assert(piece_is_ok(type));
 
-    return P12ToP256[to_piece12(side, p6)];
+    return P12ToP256[to_piece12(side, type)];
 }
 
 u8 char_to_piece256(char c)
@@ -50,7 +50,7 @@ u8 char_to_piece256(char c)
 
 char piece256_to_char(u8 piece)
 {
-    assert(P256ToP12[piece] != PieceCount12);
+    assert(P256ToP12[piece] != 12);
 
     constexpr char ptoc[12] = { 'P', 'p', 'N', 'n', 'B', 'b', 'R', 'r', 'Q', 'q', 'K', 'k' };
 

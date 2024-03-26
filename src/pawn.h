@@ -6,17 +6,32 @@
 #include "misc.h"
 #include "pos.h"
 
-extern Value PawnDoubledPenalty;
-extern Value PawnBackwardPenalty;
-extern Value PawnBackOpenPenalty;
-extern Value PawnIsolatedPenalty;
-extern Value PawnIsoOpenPenalty;
+extern int PawnBackOpenPm;
+extern int PawnBackOpenPe;
+extern int PawnBackwardPm;
+extern int PawnBackwardPe;
+extern int PawnCandidateBaseMg;
+extern int PawnCandidateBaseEg;
+extern int PawnCandidateFactorMg;
+extern int PawnCandidateFactorEg;
+extern int PawnDoubledPm;
+extern int PawnDoubledPe;
+extern int PawnIsoOpenPm;
+extern int PawnIsoOpenPe;
+extern int PawnIsolatedPm;
+extern int PawnIsolatedPe;
 
-extern Value PawnPassedFactor1;
-extern Value PawnPassedFactor2;
-extern Value PawnPassedBase;
-extern Value PawnCandidateFactor;
-extern Value PawnCandidateBase;
+extern int PawnPassedBaseMg;
+extern int PawnPassedBaseEg;
+extern int PawnPassedFactorMg;
+extern int PawnPassedFactorEg;
+
+extern int PawnPassedFactorA;
+extern int PawnPassedFactorB;
+extern int PawnPassedFactorC;
+
+extern int PawnAttackMg;
+extern int PawnAttackEg;
 
 struct PawnEntry {
     static constexpr std::size_t LockBits = 32;
@@ -31,7 +46,7 @@ static_assert(sizeof(PawnEntry) == 16);
 
 constexpr std::size_t PHSizeMBDefault = 1;
 
-extern HT<PHSizeMBDefault * 1024, PawnEntry> ptable;
+extern HashTable<PHSizeMBDefault * 1024, PawnEntry> ptable;
 
 Value eval_passers  (const Position& pos, PawnEntry& pentry);
 Value eval_pawns    (const Position& pos, PawnEntry& pentry);
