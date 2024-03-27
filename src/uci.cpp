@@ -216,7 +216,7 @@ void uci_go(const string& s)
     slimits.inc = inc[sinfo.pos.side()];
 
     if (slimits.movetime)
-        slimits.movetime = max(slimits.movetime - MoveOverhead, 1l);
+        slimits.movetime = std::max(slimits.movetime - i64(MoveOverhead), 1ll);
     
     else if (slimits.time) {
         double mtg = slimits.movestogo ? min(double(slimits.movestogo), 50.0) : 50.0;
