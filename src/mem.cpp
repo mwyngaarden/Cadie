@@ -1,3 +1,6 @@
+#include <fstream>
+#include <iterator>
+#include <vector>
 #include <cassert>
 #include <cstdlib>
 
@@ -55,6 +58,29 @@ void prefetch(void * p)
 #else
     __builtin_prefetch(p);
 #endif
+}
+
+std::vector<uint8_t> read(std::string filename)
+{
+    std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
+
+    std::streampos bytes = ifs.tellg();
+
+    ifs.seekg(0, std::ios::beg);
+
+    std::vector<uint8_t> vec(bytes);
+
+    if (!ifs.read(reinterpret_cast<char *>(vec.data()), bytes))
+        exit(EXIT_FAILURE);
+
+    return vec;
+}
+
+void write(const void * p, size_t size, std::string filename)
+{
+    std::ofstream ofs(filename, std::ios::binary);
+
+    ofs.write(reinterpret_cast<const char *>(p), size);
 }
 
 }

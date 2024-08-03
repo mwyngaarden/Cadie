@@ -6,6 +6,7 @@
 #include <vector>
 #include <cassert>
 #include <cmath>
+#include <cstdarg>
 #include "attack.h"
 #include "bb.h"
 #include "eval.h"
@@ -14,433 +15,405 @@
 #include "pawn.h"
 #include "search.h"
 
-#ifdef TUNE
-#include <nlopt.hpp>
-#include <omp.h>
-#endif
-
 using namespace std;
 
-random_device rd;
-mt19937_64 mt;
 
-enum { FileClosed, FileSemi, FileOpen };
+enum { FileClosed, FileSemiOpen, FileOpen };
 
-HashTable<EHSizeMBDefault * 1024, EvalEntry> etable;
-HashTable<PHSizeMBDefault * 1024, PawnEntry> ptable;
+HashTable<16 * 1024 * 1024, EvalEntry> etable;
 
-constexpr int cmh_dist_alt[64] = {
-    -3, -2, -1,  0,  0, -1, -2, -3,
-    -2, -1,  0,  1,  1,  0, -1, -2,
-    -1,  0,  1,  2,  2,  1,  0, -1,
-     0,  1,  2,  3,  3,  2,  1,  0,
-     0,  1,  2,  3,  3,  2,  1,  0,
-    -1,  0,  1,  2,  2,  1,  0, -1,
-    -2, -1,  0,  1,  1,  0, -1, -2,
-    -3, -2, -1,  0,  0, -1, -2, -3
+Value PSQTv[12][64];
+
+// Relative values: 100, 322, 340, 498, 958
+constexpr int MatValue[2][6] = {
+    {  60, 246, 259, 288,  570, 0 },
+    { 125, 350, 370, 633, 1203, 0 }
 };
 
-int PSQT[2][12][64];
+constexpr int LOG[32] = {
+    0, 1, 2, 3, 3, 4, 4, 4,
+    5, 5, 5, 5, 5, 6, 6, 6,
+    6, 6, 6, 6, 6, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7
+};
 
-int ValuePawnMg                  =       95;
-int ValuePawnEg                  =      125;
-int ValueKnightMg                =      198;
-int ValueKnightEg                =      546;
-int ValueBishopMg                =      209;
-int ValueBishopEg                =      566;
-int ValueRookMg                  =      254;
-int ValueRookEg                  =      935;
-int ValueQueenMg                 =      572;
-int ValueQueenEg                 =     1939;
+int BPairBm                         =       2;
+int BPairBe                         =      73;
 
-int BishopPairBMg                =        9;
-int BishopPairBEg                =       98;
+int RBlockedPm                      =     -42;
+int RBlockedPe                      =     -33;
 
-int TempoB                       =       12;
+int NQAttBm                         =      50;
+int BQAttBm                         =      53;
+int BQAttBe                         =      89;
+int RQAttBm                         =      73;
+int NQDefBm                         =      -2;
+int NQDefBe                         =      20;
+int BQDefBm                         =       5;
+int BQDefBe                         =      12;
+int RRSameFileBm                    =      14;
+int RRSameFileBe                    =      -2;
+int RRSameRankBm                    =       3;
+int RRSameRankBe                    =       1;
+int RQSameFileBm                    =       3;
+int RQSameFileBe                    =      28;
+int RQSameRankBm                    =       5;
+int RQSameRankBe                    =       7;
 
-int NPSFactorEg                  =        7;
-int BPSFactorEg                  =        8;
-int RPSFactorEg                  =       17;
-int QPSFactorEg                  =       38;
-int KPSFactorMg                  =      -10;
-int KPSFactorEg                  =       19;
-int NRank1Pm                     =      -12;
-int BRank1Pm                     =       -6;
-int PRank5Eg                     =        6;
-int PRank6Eg                     =       55;
-int PRank7Eg                     =      123;
-int PFileAHBm                    =      -46;
-int PFileAHBe                    =       44;
-int PFileBGBm                    =      -46;
-int PFileBGBe                    =       44;
-int PFileCFBm                    =      -49;
-int PFileCFBe                    =       47;
-int PFileDEBm                    =      -45;
-int PFileDEBe                    =       34;
-int NRank4Bm                     =       10;
-int NRank4Be                     =       25;
-int NRank5Bm                     =       14;
-int NRank5Be                     =       29;
-int NRank6Bm                     =       34;
-int NRank6Be                     =       25;
-int RRank7Bm                     =       48;
-int RRank7Be                     =       19;
-int RRank8Bm                     =       42;
-int RRank8Be                     =       52;
-int QRank7Be                     =      117;
-int QRank8Be                     =      155;
-int NCornerPm                    =      -79;
-int NCornerPe                    =      -56;
-int KCornerPm                    =       -7;
-int KCornerPe                    =      -45;
-int RFileAHBm                    =       -9;
-int RFileAHBe                    =       47;
-int RFileBGBm                    =       -3;
-int RFileBGBe                    =       34;
-int RFileCFBm                    =        5;
-int RFileCFBe                    =       17;
-int RFileDEBm                    =       10;
-int RFileDEBe                    =       -8;
-int QFileAHBe                    =       44;
-int QFileBGBe                    =       13;
-int QFileCFBe                    =      -23;
-int QFileDEBe                    =      -53;
-int KCastleBm                    =        0;
-int KCastlePm                    =      -34;
+int KingSafetyA                     =       5;
+int KingSafetyB                     =      13;
+int KingSafetyC                     =      21;
+int KingSafetyD                     =      25;
 
-int NMobFactorMg                 =        5;
-int NMobFactorEg                 =        9;
-int BMobFactorMg                 =        5;
-int BMobFactorEg                 =        9;
-int RMobFactorMg                 =        3;
-int RMobFactorEg                 =        7;
-int QMobFactorMg                 =        3;
-int QMobFactorEg                 =        4;
+int NPinAbsPm                       =     -67;
+int NPinAbsPe                       =     -32;
+int BPinAbsPm                       =     -16;
+int BPinAbsPe                       =       0;
+int RPinAbsPe                       =    -440;
+int RPinRelPm                       =      11;
+int RPinRelPe                       =      12;
 
-int KingSafetyA                  =       29;
-int KingSafetyB                  =       17;
-int KingSafetyC                  =       22;
-int KingSafetyD                  =       -1;
+int MinorBehindPawnBm               =       8;
+int MinorBehindPawnBe               =       6;
+int KnightOutpostBm                 =      20;
+int KnightOutpostBe                 =      15;
+int KnightDistDivPm                 =       2;
+int KnightDistDivPe                 =       2;
+int BishopOutpostBm                 =      21;
+int BishopOutpostBe                 =      12;
+int RookClosedPm                    =      15;
+int RookClosedPe                    =      35;
+int RookOpenAdjKingBm               =      61;
+int RookOpenAdjKingBe               =      36;
+int RookOpenBm                      =      38;
+int RookOpenBe                      =      42;
+int RookOpenSameKingBm              =     157;
+int RookOpenSameKingBe              =      33;
+int RookSemiAdjKingBm               =      32;
+int RookSemiAdjKingBe               =      29;
+int RookSemiBm                      =      19;
+int RookSemiBe                      =      61;
+int RookSemiSameKingBm              =      69;
+int RookSemiSameKingBe              =       3;
+int RookSeventhRankBm               =     -20;
+int RookSeventhRankBe               =      19;
+int QueenSeventhRankBm              =     -47;
+int QueenSeventhRankBe              =      19;
 
-int KingStormP[4][8] = {
-    { 0, 0, -21,  -7,   2, 0, 0, 0 },
-    { 0, 0, -63, -19,  -4, 0, 0, 0 },
-    { 0, 0, -76, -15,   0, 0, 0, 0 },
-    { 0, 0, -98, -48,  -9, 0, 0, 0 }
+int PawnBackOpenPm                  =     -20;
+int PawnBackOpenPe                  =      -7;
+int PawnBackwardPm                  =      -3;
+int PawnBackwardPe                  =     -16;
+int PawnDoubledPm                   =      -9;
+int PawnDoubledPe                   =      -6;
+int PawnIsoOpenPm                   =     -14;
+int PawnIsoOpenPe                   =     -17;
+int PawnIsolatedPm                  =       0;
+int PawnIsolatedPe                  =     -20;
+int PawnConnectedPB                 =       2;
+int PawnPassedGaurdedBm             =      10;
+int PawnPassedGaurdedBe             =      12;
+
+int ComplexityPawnsTotal            =       5;
+int ComplexityPawnsFlanked          =      55;
+int ComplexityPawnsEndgame          =     141;
+int ComplexityAdjustment            =     -99;
+
+int ScaleOcbBishopsOnly             =      58;
+int ScaleOcbOneKnight               =     102;
+int ScaleOcbOneRook                 =     115;
+int ScaleLoneQueen                  =     109;
+int ScaleLargePawnAdv               =     146;
+int ScalePNone                      =      47;
+int ScalePOne                       =     119;
+int ScalePTwo                       =     137;
+int TempoB                          =      24;
+
+int MobB[2][4][8] = {
+    {
+        {-25,-8,-1,5,12,21,0,0},
+        {-12,-3,4,11,18,21,47,0},
+        {-9,-4,0,3,7,11,22,0},
+        {6,8,9,13,20,27,35,84}
+    },
+    {
+        {40,78,97,117,132,126,0,0},
+        {33,57,68,89,108,114,103,0},
+        {84,104,104,115,133,153,153,0},
+        {276,234,259,282,298,317,341,318}
+    }
+};
+
+int PSQTi[2][6][32] = {
+    {
+        {0,0,0,0,59,62,55,55,58,55,55,57,60,59,57,61,67,65,55,73,73,79,86,99,44,42,76,96,0,0,0,0},
+        {192,223,224,235,227,222,238,241,229,242,243,252,246,261,257,254,268,247,267,260,245,258,276,271,243,223,274,267,136,179,142,219},
+        {261,269,248,246,260,263,266,253,255,262,262,258,258,257,260,272,242,261,267,271,257,253,266,261,226,241,239,238,211,209,158,162},
+        {277,283,288,293,274,277,282,283,272,282,272,277,271,279,271,277,280,285,287,295,291,307,303,316,311,304,319,311,305,308,274,282},
+        {561,570,565,570,570,577,577,576,573,574,571,566,568,572,561,561,561,563,555,550,564,564,563,540,594,583,591,556,578,583,590,572},
+        {3,0,-14,-44,21,22,2,0,14,14,19,-1,-16,9,4,-21,-8,7,-8,-28,-2,33,3,-55,-10,104,32,83,-4,110,87,49}
+    },
+    {
+        {0,0,0,0,127,132,145,138,125,124,128,128,127,127,123,118,137,132,122,111,153,147,129,103,159,144,117,92,0,0,0,0},
+        {330,320,334,339,328,345,338,346,334,349,351,369,352,357,373,379,347,360,373,380,339,348,370,369,334,356,348,361,322,338,365,352},
+        {366,363,364,368,358,365,366,374,369,378,384,391,369,377,390,393,375,381,381,395,372,388,388,382,377,386,390,388,384,391,398,400},
+        {625,627,629,624,612,622,624,624,629,633,640,636,647,655,661,654,657,666,666,662,661,659,665,658,654,658,659,659,667,670,682,674},
+        {1182,1166,1172,1183,1178,1175,1182,1186,1195,1208,1220,1220,1218,1230,1248,1251,1230,1260,1269,1284,1224,1250,1279,1297,1234,1254,1264,1294,1239,1247,1240,1250},
+        {-39,-19,-14,-18,-15,-7,0,-3,-16,-5,1,8,-11,9,18,24,1,38,40,37,20,63,62,60,8,36,53,17,-107,-34,-18,-9}
+    }
+};
+
+int PawnCandidateB[8] = {0,-6,10,16,27,138,0,0};
+
+int PawnConnectedB[8] = {0,0,1,5,14,28,34,0};
+
+int PawnPassedB[2][3][8] = {
+    {
+        {6,0,-4,-2,26,56,149,0},
+        {0,0,0,0,0,0,0,0},
+        {7,15,12,12,38,64,142,0}
+    },
+    {
+        {17,-12,12,50,80,125,217,21},
+        {2,60,62,179,328,514,711,9},
+        {15,4,17,60,102,184,303,19}
+    }
+};
+
+int PawnAttackB[2][6] = {
+    {0,48,64,61,51,0},
+    {0,57,75,47,79,0}
 };
 
 int KingShelterP[4][8] = {
-    { 0, 0,   2,   0,  -6,  -4, -38, -19 },
-    { 0, 0, -19, -28, -34, -14, -16, -34 },
-    { 0, 0, -20, -23, -14,  -1,  72, -31 },
-    { 0, 0, -31, -32, -33, -46,  -7, -47 }
+    {0,0,0,-11,-32,-17,-21,-15},
+    {0,0,-11,-31,-40,-18,-48,-36},
+    {0,0,-20,-24,-29,-11,-5,-34},
+    {0,0,-24,-25,-32,-23,-5,-31}
 };
 
-int MinorBehindPawnBonusMg       =        3;
-int MinorBehindPawnBonusEg       =       16;
-int KnightOutpostBonusMg         =        7;
-int KnightOutpostBonusEg         =       11;
-int KnightPawnBonusMMg           =       -3;
-int KnightPawnBonusMEg           =        5;
-int KnightPawnBonusBAg           =        5;
-int KnightDistOffsetMg           =        0;
-int KnightDistOffsetEg           =       33;
-int BishopOutpostBonusMg         =       21;
-int BishopOutpostBonusEg         =        1;
-int BishopBlockedPm              =      -47;
-int BishopTrappedPm              =      -84;
-int BishopQueenBonusMg           =        4;
-int BishopQueenBonusEg           =       39;
-int BishopPawnSquareBonusMg      =       -3;
-int BishopPawnSquareBonusEg      =       -5;
-int BishopPawnBonusMMg           =        1;
-int BishopPawnBonusMEg           =      -12;
-int BishopPawnBonusBAg           =        6;
-int RookBlockedPm                =      -50;
-int RookClosedPm                 =      -18;
-int RookClosedPe                 =       23;
-int RookOpenAdjKingBonusMg       =       49;
-int RookOpenAdjKingBonusEg       =       34;
-int RookOpenBonusMg              =        4;
-int RookOpenBonusEg              =       43;
-int RookOpenSameKingBonusMg      =       91;
-int RookOpenSameKingBonusEg      =       24;
-int RookRookBonusMg              =        1;
-int RookRookBonusEg              =       30;
-int RookQueenBonusMg             =        4;
-int RookQueenBonusEg             =       53;
-int RookPawnBonusMMg             =        4;
-int RookPawnBonusMEg             =      -13;
-int RookPawnBonusBAg             =        5;
-int RookSemiAdjKingBonusMg       =       -1;
-int RookSemiAdjKingBonusEg       =       19;
-int RookSemiBonusMg              =      -15;
-int RookSemiBonusEg              =       45;
-int RookSemiSameKingBonusMg      =       28;
-int RookSemiSameKingBonusEg      =        7;
-int RookSeventhRankBonusMg       =      -38;
-int RookSeventhRankBonusEg       =       36;
-int QueenSeventhRankBonusMg      =      -47;
-int QueenSeventhRankBonusEg      =        2;
+int KingStormP[4][8] = {
+    {0,0,-26,-14,-5,0,0,0},
+    {0,0,-29,-8,-3,0,0,0},
+    {0,0,-53,-27,-1,0,0,0},
+    {0,0,-38,-30,-7,0,0,0}
+};
 
-int PawnBackOpenPm               =       -9;
-int PawnBackOpenPe               =      -18;
-int PawnBackwardPm               =       -6;
-int PawnBackwardPe               =       -3;
-int PawnCandidateBaseMg          =       -2;
-int PawnCandidateBaseEg          =       16;
-int PawnCandidateFactorMg        =       85;
-int PawnCandidateFactorEg        =      -10;
-int PawnDoubledPm                =        0;
-int PawnDoubledPe                =       -9;
-int PawnIsoOpenPm                =       -2;
-int PawnIsoOpenPe                =      -23;
-int PawnIsolatedPm               =      -16;
-int PawnIsolatedPe               =      -29;
-int PawnPassedBaseMg             =      -24;
-int PawnPassedBaseEg             =       44;
-int PawnPassedFactorMg           =      137;
-int PawnPassedFactorEg           =       57;
-int PawnPassedFactorA            =       67;
-int PawnPassedFactorB            =       36;
-int PawnPassedFactorC            =      158;
-int PawnAttackMg                 =       23;
-int PawnAttackEg                 =       15;
+int KingSafetyW[4][8] = {
+    {0,221,252,108,115,0,0,0},
+    {0,-110,357,127,65,72,70,73},
+    {0,329,329,248,109,67,9,9},
+    {0,0,910,391,169,48,-5,-50}
+};
 
-int ComplexityPawnsTotal         =        1;
-int ComplexityPawnsFlanked       =       23;
-int ComplexityPawnsEndgame       =       53;
-int ComplexityAdjustment         =      -24;
-int ScaleOcbBishopsOnly          =       44;
-int ScaleOcbOneKnight            =       99;
-int ScaleOcbOneRook              =      112;
-int ScaleLoneQueen               =       89;
-int ScaleLargePawnAdv            =      159;
-int ScaleM                       =       37;
-int ScaleB                       =       33;
+int PiecePawnOffset[2][6] = {
+    {0,1,-1,-3,0,0},
+    {0,0,-9,-7,0,0}
+};
 
 
-template <side_t Side> static int piece_on_semiopen (const Position& pos, int orig);
-template <side_t Side> static int minor_on_outpost  (const Position& pos, int orig);
+template <side_t Side> static int piece_on_file     (const Position& pos, int orig);
+template <side_t Side> static bool minor_on_outpost (const Position& pos, int orig);
 template <side_t Side> static Value eval_pieces     (const Position& pos);
 
-static int eval_shelter   (const Position& pos, side_t side, int ksq);
-static int eval_storm     (const Position& pos, side_t side, int ksq);
-static int eval_complexity(const Position& pos, int score);
-static int eval_scale     (const Position& pos, int score);
+static int eval_shelter (const Position& pos, side_t side, int ksq);
+static int eval_storm   (const Position& pos, side_t side, int ksq);
+static int eval_scale   (const Position& pos, int score);
 
-void eval_init()
+static Value eval_complexity(const Position& pos, int score);
+
+static Value reset_psqt(int piece, int sq)
 {
-    int cmhd_mul[2][6] = {
-        { 0, 0, 0, 0, 0, KPSFactorMg },
-        { 0, NPSFactorEg, BPSFactorEg, RPSFactorEg, QPSFactorEg, KPSFactorEg }
+    assert(piece12_is_ok(piece));
+    assert(sq64_is_ok(sq));
+
+    int file = sq & 7;
+    int rank = sq >> 3;
+
+    file ^= 7 * (file >= 4);
+    rank ^= 7 * (piece & 1);
+
+    sq = 4 * rank + file;
+
+    Value val {
+        PSQTi[PhaseMg][piece >> 1][sq],
+        PSQTi[PhaseEg][piece >> 1][sq]
     };
-    
-    int backrank_p_mg[6] = { 0, NRank1Pm, BRank1Pm, 0, 0, 0 };
 
-    int corner_p[2][6] = {
-        { 0, NCornerPm, 0, 0, 0, KCornerPm },
-        { 0, NCornerPe, 0, 0, 0, KCornerPe }
-    };
+    if (piece & 1) val = -val;
 
-    int pawn_rank_eg[8] = { 0, 0, 0, 0, PRank5Eg, PRank6Eg, PRank7Eg, 0 };
+    return val;
+}
 
+void psqt_recalc()
+{
     for (int phase : { PhaseMg, PhaseEg }) {
+        for (int type = Pawn; type <= King; type++) {
+
+            int val = MatValue[phase][type];
         
-        for (int p12 = WP12; p12 < 12; p12++) {
+            for (int sq = 0; sq < 32; sq++) {
+                if (type == Pawn && (sq <= 3 || sq >= 28)) continue;
 
-            int side = p12 & 1;
-            int type = p12 / 2;
-
-            for (int sq = 0; sq < 64; sq++) {
-                int rank = square::rank(sq, side);
-                int file = square::file(sq);
-
-                if (type == Pawn && (rank == Rank1 || rank == Rank8)) continue;
-                
-                int score = 0;
-
-                if (square::corner(sq)) score += corner_p[phase][type];
-
-                // Pawn
-                if (type == Pawn) {
-                    if (phase == PhaseMg) {
-                        if (file == FileA || file == FileH) score += PFileAHBm;
-                        if (file == FileB || file == FileG) score += PFileBGBm;
-                        if (file == FileC || file == FileF) score += PFileCFBm;
-                        if (file == FileD || file == FileE) score += PFileDEBm;
-                    }
-                    else {
-                        if (file == FileA || file == FileH) score += PFileAHBe;
-                        if (file == FileB || file == FileG) score += PFileBGBe;
-                        if (file == FileC || file == FileF) score += PFileCFBe;
-                        if (file == FileD || file == FileE) score += PFileDEBe;
-
-                        score += pawn_rank_eg[rank];
-                    }
-                }
-
-                // Knight
-                if (type == Knight) {
-                    if (phase == PhaseMg) {
-                        if (file >= FileB && file <= FileG) {
-                            if (rank == Rank4) score += NRank4Bm;
-                            if (rank == Rank5) score += NRank5Bm;
-                            if (rank == Rank6) score += NRank6Bm;
-                        }
-                    }
-                    else {
-                        if (file >= FileB && file <= FileG) {
-                            if (rank == Rank4) score += NRank4Be;
-                            if (rank == Rank5) score += NRank5Be;
-                            if (rank == Rank6) score += NRank6Be;
-                        }
-                    }
-                }
-               
-                // Rook
-                if (type == Rook) {
-                    if (phase == PhaseMg) {
-                        if (file == FileA || file == FileH) score += RFileAHBm;
-                        if (file == FileB || file == FileG) score += RFileBGBm;
-                        if (file == FileC || file == FileF) score += RFileCFBm;
-                        if (file == FileD || file == FileE) score += RFileDEBm;
-                        
-                        if (rank == Rank7) score += RRank7Bm;
-                        if (rank == Rank8) score += RRank8Bm;
-                    }
-                    else {
-                        if (file == FileA || file == FileH) score += RFileAHBe;
-                        if (file == FileB || file == FileG) score += RFileBGBe;
-                        if (file == FileC || file == FileF) score += RFileCFBe;
-                        if (file == FileD || file == FileE) score += RFileDEBe;
-                        
-                        if (rank == Rank7) score += RRank7Be;
-                        if (rank == Rank8) score += RRank8Be;
-                    }
-                }
-                
-                // Queen
-                if (type == Queen) {
-                    if (phase == PhaseEg) {
-                        if (file == FileA || file == FileH) score += QFileAHBe;
-                        if (file == FileB || file == FileG) score += QFileBGBe;
-                        if (file == FileC || file == FileF) score += QFileCFBe;
-                        if (file == FileD || file == FileE) score += QFileDEBe;
-
-                        if (rank == Rank7) score += QRank7Be;
-                        if (rank == Rank8) score += QRank8Be;
-                    }
-                }
-
-                // King
-                if (type == King) {
-                    if (phase == PhaseMg) {
-                        if (rank == Rank1) {
-                            if (file == FileC) score += KCastleBm;
-                            if (file == FileE) score += KCastlePm;
-                            if (file == FileG) score += KCastleBm;
-                        }
-                    }
-                }
-
-                // Back-rank penalties
-                if (rank == Rank1 && phase == PhaseMg)
-                    score += backrank_p_mg[type];
-
-                score += cmh_dist_alt[sq] * cmhd_mul[phase][type];
-
-                PSQT[phase][p12][sq] = score;
+                PSQTi[phase][type][sq] = val;
             }
         }
     }
 }
 
+void eval_init()
+{
+    for (int piece = WP12; piece <= BK12; piece++)
+        for (int sq = 0; sq < 64; sq++)
+            PSQTv[piece][sq] = reset_psqt(piece, sq);
+}
+
+template <size_t I>
+string print_1d(string name, const int (&arr)[I])
+{
+    stringstream ss;
+
+    ss << "int " << name << '[' << I << "] = {";
+
+    for (size_t i = 0; i < I; i++) {
+        if (i) ss << ',';
+
+        ss << arr[i];
+    }
+
+    ss << "};" << endl;
+
+    return ss.str();
+}
+
+template <size_t I, size_t J>
+string print_2d(string name, const int (&arr)[I][J])
+{
+    stringstream ss;
+
+    ss << "int " << name << '[' << I << "][" << J << "] = {" << endl;
+
+    for (size_t i = 0; i < I; i++) {
+        ss << "    {";
+
+        for (size_t j = 0; j < J; j++) {
+            if (j) ss << ',';
+
+            ss << arr[i][j];
+        }
+
+        ss << '}';
+        if (i != I - 1) ss << ',';
+        ss << endl;
+    }
+
+    ss << "};" << endl;
+
+    return ss.str();
+}
+
+template <size_t I, size_t J, size_t K>
+string print_3d(string name, const int (&arr)[I][J][K])
+{
+    stringstream ss;
+
+    ss << "int " << name << '[' << I << "][" << J << "][" << K << "] = {" << endl;
+
+    for (size_t i = 0; i < I; i++) {
+        ss << "    {" << endl;
+
+        for (size_t j = 0; j < J; j++) {
+            ss << "        {";
+
+            for (size_t k = 0; k < K; k++) {
+                if (k) ss << ',';
+
+                ss << arr[i][j][k];
+            }
+
+            ss << '}';
+            if (j != J - 1) ss << ',';
+            ss << endl;
+        }
+
+        ss << "    }";
+        if (i != I - 1) ss << ',';
+        ss << endl;
+    }
+
+    ss << "};" << endl;
+
+    return ss.str();
+}
+
 template <side_t Side>
-int piece_on_semiopen(const Position& pos, int orig)
+int piece_on_file(const Position& pos, int orig)
 {
     u64 mpbb = pos.bb(Side, Pawn);
     u64 opbb = pos.bb(!Side, Pawn);
 
-    u64 bb = bb::PawnSpan[Side][orig];
+    u64 fbb  = bb::Files[square::file(orig)];
 
-    int mp = popcount(mpbb & bb);
-    int op = popcount(opbb & bb);
+    if (mpbb & fbb) return FileClosed;
+    if (opbb & fbb) return FileSemiOpen;
 
-    if (mp == 0 && op == 0)
-        return FileOpen;
-    else if (mp == 0 && op > 0)
-        return FileSemi;
-    else
-        return FileClosed;
+    return FileOpen;
 }
 
 int eval_shelter(const Position& pos, side_t side, int ksq)
 {
-    u8 oflag  = make_flag(!side);
-    u8 mpawn  = make_pawn(side);
-    int pincr = side == White ? 8 : -8;
     int kfile = square::file(ksq);
+    int krank = square::rank(ksq);
 
     // Adjust king position if on edge of board
-
-    if (kfile == FileA) ksq++;
-    if (kfile == FileH) ksq--;
+   
+    kfile = clamp(kfile, int(FileB), int(FileG));
+    ksq = square::make(kfile, krank);
 
     int penalty = 0;
+
+    u64 obb = pos.bb(side_t(!side));
+    u64 pbb = pos.bb(side, Pawn);
     
-    for (int offset : { -1, 0, 1}) {
-        int orig = ksq + offset;
+    for (int orig : { ksq-1, ksq, ksq+1 }) {
         int edge = square::dist_edge(orig);
 
-        int p = KingShelterP[edge][7];
+        u64 bb = bb::PawnSpan[side][orig] & (obb | pbb);
+        
+        int rank = Rank8;
 
-        for (int sq = orig + pincr; sq >= square::A2 && sq <= square::H7; sq += pincr) {
-            u8 piece = pos.board(sq);
+        if (bb & pbb) {
+            int sq = side == White ? bb::lsb(bb) : bb::msb(bb);
 
-            if (piece & oflag)
-                break;
-            
-            else if (piece == mpawn) {
-                int rank = square::rank(sq, side);
-
-                p = KingShelterP[edge][rank];
-
-                break;
-            }
+            rank = bb::test(obb, sq) ? Rank8 : square::rank(sq, side);
         }
         
-        penalty += p;
+        penalty += KingShelterP[edge][rank];
     }
-
-    if (penalty == 0) penalty = KingSafetyD;
 
     return penalty;
 }
 
 int eval_storm(const Position& pos, side_t side, int ksq)
 {
-    u8 opawn  = make_pawn(!side);
-    int pincr = side == White ? 8 : -8;
     int kfile = square::file(ksq);
+    int krank = square::rank(ksq);
 
     // Adjust king position if on edge of board
-    
-    if (kfile == FileA) ksq++;
-    if (kfile == FileH) ksq--;
+   
+    kfile = clamp(kfile, int(FileB), int(FileG));
+    ksq = square::make(kfile, krank);
 
     int penalty = 0;
+
+    u64 pbb = pos.bb(side_t(!side), Pawn);
    
-    for (int offset : { -1, 0, 1 }) {
-        int rank = Rank1;
-        int edge = square::dist_edge(ksq + offset);
-       
-        for (int sq = ksq + pincr + offset; sq >= square::A2 && sq <= square::H7; sq += pincr) {
-            if (pos.board(sq) == opawn) {
-                rank = square::rank(sq, side);
-                break;
-            }
-        }
+    for (int orig : { ksq-1, ksq, ksq+1 }) {
+        int edge = square::dist_edge(orig);
+
+        u64 bb = bb::PawnSpan[side][orig] & pbb;
+
+        int rank = !bb ? Rank1 : square::rank(side == White ? bb::lsb(bb) : bb::msb(bb), side);
     
         penalty += KingStormP[edge][rank];
     }
@@ -448,9 +421,10 @@ int eval_storm(const Position& pos, side_t side, int ksq)
     return penalty;
 }
 
+
 int eval_king(const Position& pos, side_t side)
 {
-    int ksq = pos.king64(side);
+    int ksq = pos.king(side);
 
     int shelter = eval_shelter(pos, side, ksq) + eval_storm(pos, side, ksq);
 
@@ -472,29 +446,26 @@ int eval_king(const Position& pos, side_t side)
 }
 
 // a la Ethereal
-[[maybe_unused]]
-int eval_complexity(const Position& pos, int score)
+Value eval_complexity(const Position& pos, int score)
 {
     u64 pbb = pos.bb(Pawn);
 
     int sign    = (score > 0) - (score < 0);
     int pawns   = popcount(pbb);
-    int minors  = pos.minors();
-    int majors  = pos.majors();
-    bool flanks = (pbb & bb::Files[FileA]) && (pbb & bb::Files[FileH]);
+    bool pieces = pos.pieces();
+    bool flanks = (pbb & bb::QueenSide) && (pbb & bb::KingSide);
 
     int c = ComplexityPawnsTotal    * pawns
           + ComplexityPawnsFlanked  * flanks
-          + ComplexityPawnsEndgame  * !(minors || majors)
+          + ComplexityPawnsEndgame  * !pieces
           + ComplexityAdjustment;
 
     int v = sign * max(c, -abs(score));
 
-    return v;
+    return Value(0, v);
 }
 
 // a la Ethereal
-[[maybe_unused]]
 int eval_scale(const Position& pos, int score)
 {
     int wp, wn, wlb, wdb, wr, wq;
@@ -550,125 +521,91 @@ int eval_scale(const Position& pos, int score)
     if (wq + bq == 0 && wpieces < 2 && bpieces < 2 && hi_pawns - lo_pawns > 2)
         return ScaleLargePawnAdv;
 
-    return min(128, ScaleM * hi_pawns + ScaleB);
+    if (hi_pawns == 0) return ScalePNone;
+    if (hi_pawns == 1) return ScalePOne;
+    if (hi_pawns == 2) return ScalePTwo;
+
+    return 128;
 }
 
 template <side_t Side>
-int minor_on_outpost(const Position& pos, int orig)
+bool minor_on_outpost(const Position& pos, int orig)
 {
-    u64 mpbb = pos.bb(Side, Pawn);
-    u64 opbb = pos.bb(!Side, Pawn);
-
     int rank = square::rank(orig, Side);
     int file = square::file(orig);
 
-    int bonus = 0;
+    if (rank < Rank4 || rank > Rank6 || file < FileB || file > FileG)
+        return false;
 
-    if (file >= FileB && file <= FileG && rank >= Rank4 && rank <= Rank6)
-        bonus = cmh_dist_alt[orig];
+    if (pos.bb(!Side, Pawn) & bb::PawnSpanAdj[Side][orig])
+        return false;
 
-    if (bonus == 0) return 0;
-
-    int mp = popcount(mpbb & PawnAttacks[!Side][orig]);
-
-    if (mp == 0) return 0;
-
-    if (opbb & bb::PawnSpanAdj[Side][orig]) return 0;
-
-    return bonus * mp;
+    return pos.bb(Side, Pawn) & PawnAttacks[!Side][orig];
 }
 
 template <side_t Side>
 Value eval_pieces(const Position& pos)
 {
+    constexpr int incr = square::incr(Side);
+    
     Value val;
 
-    constexpr u8 mpawn  = make_pawn(Side);
-    constexpr int pincr = Side == White ? 8 : -8;
+    int mksq = pos.king(Side);
+    int oksq = pos.king(!Side);
 
-    int mksq = pos.king64(Side);
-    int oksq = pos.king64(!Side);
-
-    u64 occ = pos.occ();
+    int krank = square::rank(oksq, Side);
 
     u64 mpbb = pos.bb(Side, Pawn);
-    u64 mnbb = pos.bb(Side, Knight);
-    u64 mbbb = pos.bb(Side, Bishop);
-    u64 mrbb = pos.bb(Side, Rook);
-    u64 mqbb = pos.bb(Side, Queen);
-
     u64 opbb = pos.bb(!Side, Pawn);
 
     u64 rank7 = Side == White ? bb::Rank7 : bb::Rank2;
 
-    int mp = popcount(mpbb);
+    int npawns = popcount(mpbb);
 
-    u64 bb  = mnbb | mbbb | mrbb | mqbb;
-
-    while (bb) {
+    for (u64 bb = pos.pieces(Side); bb; ) {
         int orig = bb::pop(bb);
-        int type = P256ToP6[pos.board(orig)];
+        int type = pos.board<6>(orig);
 
         int file = square::file(orig);
         int rank = square::rank(orig, Side);
 
+        if (type != Queen) {
+            int m_mg = PiecePawnOffset[PhaseMg][type];
+            int m_eg = PiecePawnOffset[PhaseEg][type];
+
+            val.mg += m_mg * (npawns - 4);
+            val.eg += m_eg * (npawns - 4);
+        }
+
         if (type == Knight) {
-            int outpost = minor_on_outpost<Side>(pos, orig);
+            if (minor_on_outpost<Side>(pos, orig))
+                val += Value(KnightOutpostBm, KnightOutpostBe);
 
-            val.mg += KnightOutpostBonusMg * outpost;
-            val.eg += KnightOutpostBonusEg * outpost;
+            if (rank < Rank7 && bb::test(mpbb, orig + incr))
+                val += Value(MinorBehindPawnBm, MinorBehindPawnBe);
 
-            val.mg += KnightPawnBonusMMg * (mp - KnightPawnBonusBAg);
-            val.eg += KnightPawnBonusMEg * (mp - KnightPawnBonusBAg);
+            int dist = square::dist(orig, mksq) * square::dist(orig, oksq);
 
-            if (sq64_is_ok(orig + pincr) && pos.board(orig + pincr) == mpawn) {
-                val.mg += MinorBehindPawnBonusMg;
-                val.eg += MinorBehindPawnBonusEg;
-            }
-
-            int penalty = square::dist(orig, mksq) * square::dist(orig, oksq);
-
-            val.mg += KnightDistOffsetMg - penalty;
-            val.eg += KnightDistOffsetEg - penalty;
+            val.mg += -dist / KnightDistDivPm;
+            val.eg += -dist / KnightDistDivPe;
         }
 
         else if (type == Bishop) {
-            int outpost = minor_on_outpost<Side>(pos, orig);
-
-            val.mg += BishopOutpostBonusMg * outpost;
-            val.eg += BishopOutpostBonusEg * outpost;
+            if (minor_on_outpost<Side>(pos, orig))
+                val += Value(BishopOutpostBm, BishopOutpostBe);
             
-            val.mg += BishopPawnBonusMMg * (mp - BishopPawnBonusBAg);
-            val.eg += BishopPawnBonusMEg * (mp - BishopPawnBonusBAg);
-            
-            if (sq64_is_ok(orig + pincr) && pos.board(orig + pincr) == mpawn) {
-                val.mg += MinorBehindPawnBonusMg;
-                val.eg += MinorBehindPawnBonusEg;
-            }
-
-            u64 att = bb::Leorik::Bishop(orig, occ);
-
-            if (att & mqbb) {
-                val.mg += BishopQueenBonusMg;
-                val.eg += BishopQueenBonusEg;
-            }
-
-            u64 mask = bb::test(bb::Light, orig) ? bb::Light : bb::Dark;
-            int count = popcount(mpbb & mask);
-
-            val.mg += BishopPawnSquareBonusMg * count;
-            val.eg += BishopPawnSquareBonusEg * count;
+            if (rank < Rank7 && bb::test(mpbb, orig + incr))
+                val += Value(MinorBehindPawnBm, MinorBehindPawnBe);
         }
 
         else if (type == Rook) {
             int kfile    = square::file(oksq);
-            int krank    = square::rank(oksq, Side);
             int kfdiff   = abs(file - kfile);
-            int semiopen = piece_on_semiopen<Side>(pos, orig);
+            int semiopen = piece_on_file<Side>(pos, orig);
             
             if (rank == Rank7 && (krank == Rank8 || (opbb & rank7))) {
-                val.mg += RookSeventhRankBonusMg;
-                val.eg += RookSeventhRankBonusEg;
+                val.mg += RookSeventhRankBm;
+                val.eg += RookSeventhRankBe;
             }
 
             if (semiopen == FileClosed) {
@@ -676,40 +613,23 @@ Value eval_pieces(const Position& pos)
                 val.eg += RookClosedPe;
             }
             else if (kfdiff == 0) {
-                val.mg += semiopen == FileSemi ? RookSemiSameKingBonusMg : RookOpenSameKingBonusMg;
-                val.eg += semiopen == FileSemi ? RookSemiSameKingBonusEg : RookOpenSameKingBonusEg;
+                val.mg += semiopen == FileSemiOpen ? RookSemiSameKingBm : RookOpenSameKingBm;
+                val.eg += semiopen == FileSemiOpen ? RookSemiSameKingBe : RookOpenSameKingBe;
             }
             else if (kfdiff == 1) {
-                val.mg += semiopen == FileSemi ? RookSemiAdjKingBonusMg : RookOpenAdjKingBonusMg;
-                val.eg += semiopen == FileSemi ? RookSemiAdjKingBonusEg : RookOpenAdjKingBonusEg;
+                val.mg += semiopen == FileSemiOpen ? RookSemiAdjKingBm : RookOpenAdjKingBm;
+                val.eg += semiopen == FileSemiOpen ? RookSemiAdjKingBe : RookOpenAdjKingBe;
             }
             else {
-                val.mg += semiopen == FileSemi ? RookSemiBonusMg : RookOpenBonusMg;
-                val.eg += semiopen == FileSemi ? RookSemiBonusEg : RookOpenBonusEg;
-            }
-
-            val.mg += RookPawnBonusMMg * (mp - RookPawnBonusBAg);
-            val.eg += RookPawnBonusMEg * (mp - RookPawnBonusBAg);
-           
-            u64 att = bb::Leorik::Rook(orig, occ);
-
-            if (att & mrbb) {
-                val.mg += RookRookBonusMg;
-                val.eg += RookRookBonusEg;
-            }
-            
-            if (att & mqbb) {
-                val.mg += RookQueenBonusMg;
-                val.eg += RookQueenBonusEg;
+                val.mg += semiopen == FileSemiOpen ? RookSemiBm : RookOpenBm;
+                val.eg += semiopen == FileSemiOpen ? RookSemiBe : RookOpenBe;
             }
         }
 
         else if (type == Queen) {
-            int krank = square::rank(oksq, Side);
-
             if (rank == Rank7 && (krank == Rank8 || (opbb & rank7))) {
-                val.mg += QueenSeventhRankBonusMg;
-                val.eg += QueenSeventhRankBonusEg;
+                val.mg += QueenSeventhRankBm;
+                val.eg += QueenSeventhRankBe;
             }
         }
     }
@@ -721,87 +641,148 @@ Value eval_mob_ks(const Position& pos)
 {
     Value sval[2];
 
-    const u64 kzone[2] = {
-        KingZone[pos.king64(White)],
-        KingZone[pos.king64(Black)]
+    int ks_factors[4] = {
+        KingSafetyA,
+        KingSafetyB,
+        KingSafetyC,
+        KingSafetyD
     };
-    
-    u64 patt[2] = {
-        patt[White] = bb::PawnAttacks(pos.bb(White, Pawn), White),
-        patt[Black] = bb::PawnAttacks(pos.bb(Black, Pawn), Black)
-    };
-    
+
     u64 occ = pos.occ();
 
     for (side_t side : { White, Black }) {
-        int natt = 0;
-        int batt = 0;
-        int ratt = 0;
-        int qatt = 0;
+        u64 mrbb = pos.bb(!side, Rook);
+        u64 oqbb = pos.bb(side, Queen);
+        u64 mqbb = pos.bb(!side, Queen);
 
-        u64 targets = ~(pos.occ(!side) | patt[side]);
+        u64 targets = ~(pos.bb(side_t(!side)) | bb::PawnAttacks(pos.bb(side, Pawn), side));
+
+        int ksq = pos.king(side);
+        int ks_weight = 0;
+        int ks_attackers = 0;
+        
+        u64 kzone = KingZone[ksq];
 
         for (u64 bb = pos.bb(!side, Knight); bb; ) {
             int sq = bb::pop(bb);
 
-            u64 att = PieceAttacks[Knight][sq] & targets;
+            u64 amask = bb::Leorik::Knight(sq);
+            u64 att = amask & targets;
         
             int mob = popcount(att);
 
-            sval[!side].mg += NMobFactorMg * mob;
-            sval[!side].eg += NMobFactorEg * mob;
+            sval[!side].mg += MobB[PhaseMg][Knight-1][LOG[mob]];
+            sval[!side].eg += MobB[PhaseEg][Knight-1][LOG[mob]];
+            
+            if (amask & oqbb)
+                sval[!side].mg += NQAttBm;
+            
+            if (amask & mqbb) {
+                sval[!side].mg += NQDefBm;
+                sval[!side].eg += NQDefBe;
+            }
 
-            natt += (att & kzone[side]) != 0;
+            if (att & kzone) {
+                ks_weight += KingSafetyW[0][square::dist(ksq, sq)];
+                ++ks_attackers;
+            }
         }
     
         for (u64 bb = pos.bb(!side, Bishop); bb; ) {
             int sq = bb::pop(bb);
 
-            u64 att = bb::Leorik::Bishop(sq, occ) & targets;
+            u64 amask = bb::Leorik::Bishop(sq, occ);
+            u64 att = amask & targets;
 
             int mob = popcount(att);
 
-            sval[!side].mg += BMobFactorMg * mob;
-            sval[!side].eg += BMobFactorEg * mob;
+            sval[!side].mg += MobB[PhaseMg][Bishop-1][LOG[mob]];
+            sval[!side].eg += MobB[PhaseEg][Bishop-1][LOG[mob]];
 
-            batt += (att & kzone[side]) != 0;
+            if (amask & oqbb) {
+                sval[!side].mg += BQAttBm;
+                sval[!side].eg += BQAttBe;
+            }
+            
+            if (amask & mqbb) {
+                sval[!side].mg += BQDefBm;
+                sval[!side].eg += BQDefBe;
+            }
+            
+            if (att & kzone) {
+                ks_weight += KingSafetyW[1][square::dist(ksq, sq)];
+                ++ks_attackers;
+            }
         }
-        
-        for (u64 bb = pos.bb(!side, Rook); bb; ) {
+       
+        for (u64 bb = mrbb; bb; ) {
             int sq = bb::pop(bb);
 
-            u64 att = bb::Leorik::Rook(sq, occ) & targets;
+            u64 amask = bb::Leorik::Rook(sq, occ);
+            u64 att = amask & targets;
 
             int mob = popcount(att);
 
-            sval[!side].mg += RMobFactorMg * mob;
-            sval[!side].eg += RMobFactorEg * mob;
+            sval[!side].mg += MobB[PhaseMg][Rook-1][LOG[mob]];
+            sval[!side].eg += MobB[PhaseEg][Rook-1][LOG[mob]];
 
-            ratt += (att & kzone[side]) != 0;
+            if (amask & oqbb)
+                sval[!side].mg += RQAttBm;
+
+            u64 fmask = bb::Files[square::file(sq)];
+            u64 rmask = bb::Ranks[square::rank(sq)];
+
+            if (fmask & amask & mrbb) {
+                sval[!side].mg += RRSameFileBm;
+                sval[!side].eg += RRSameFileBe;
+            }
+            
+            if (rmask & amask & mrbb) {
+                sval[!side].mg += RRSameRankBm;
+                sval[!side].eg += RRSameRankBe;
+            }
+           
+            if (fmask & amask & mqbb) {
+                sval[!side].mg += RQSameFileBm;
+                sval[!side].eg += RQSameFileBe;
+            }
+            
+            if (rmask & amask & mqbb) {
+                sval[!side].mg += RQSameRankBm;
+                sval[!side].eg += RQSameRankBe;
+            }
+
+            if (att & kzone) {
+                ks_weight += KingSafetyW[2][square::dist(ksq, sq)];
+                ++ks_attackers;
+            }
         }
 
-        for (u64 bb = pos.bb(!side, Queen); bb; ) {
+        for (u64 bb = mqbb; bb; ) {
             int sq = bb::pop(bb);
 
             u64 att = bb::Leorik::Queen(sq, occ) & targets;
 
             int mob = popcount(att);
 
-            sval[!side].mg += QMobFactorMg * mob;
-            sval[!side].eg += QMobFactorEg * mob;
+            sval[!side].mg += MobB[PhaseMg][Queen-1][LOG[mob]];
+            sval[!side].eg += MobB[PhaseEg][Queen-1][LOG[mob]];
 
-            qatt += (att & kzone[side]) != 0;
+            if (att & kzone) {
+                ks_weight += KingSafetyW[3][square::dist(ksq, sq)];
+                ++ks_attackers;
+            }
         }
 
-        if (pos.phase_inv(!side) < 4) continue;
+        if (pos.phase(!side) >= 4) {
+            if (ks_attackers > 0) {
+                ks_attackers = min(ks_attackers - 1, 3);
 
-        double att_count = qatt + ratt + batt + natt;
-        double att_value = 4 * qatt + 2 * ratt + batt + natt;
-   
-        int e = !att_count ? 0 : KingSafetyA / (1.0 + exp(-(KingSafetyB / 10.0) * (att_count - (KingSafetyC / 10.0)))) * att_value;
-   
-        sval[side].mg += -e;
-        sval[side].mg += eval_king(pos, side);
+                sval[side].mg -= (ks_weight * ks_factors[ks_attackers] + 50) / 100;
+            }
+
+            sval[side].mg += eval_king(pos, side);
+        }
     }
 
     return sval[White] - sval[Black];
@@ -809,53 +790,103 @@ Value eval_mob_ks(const Position& pos)
 
 Value eval_pattern(const Position& pos)
 {
+    using namespace square;
+
     Value val;
 
     // White
     
-    int wksq = pos.king64(White);
-    
-    if (pos.board(square::C1) == WB256 && pos.board(square::D2) == WP256 && pos.board(square::D3) != PieceNone256)
-        val.mg += BishopBlockedPm;
-    if (pos.board(square::F1) == WB256 && pos.board(square::E2) == WP256 && pos.board(square::E3) != PieceNone256)
-        val.mg += BishopBlockedPm;
+    u64 wrbb = pos.bb(White, Rook);
+    u64 wkbb = pos.bb(White, King);
 
-    if ((pos.board(square::A7) == WB256 && pos.board(square::B6) == BP256) || (pos.board(square::B8) == WB256 && pos.board(square::C7) == BP256))
-        val.mg += BishopTrappedPm;
-    if ((pos.board(square::H7) == WB256 && pos.board(square::G6) == BP256) || (pos.board(square::G8) == WB256 && pos.board(square::F7) == BP256))
-        val.mg += BishopTrappedPm;
-    if (pos.board(square::A6) == WB256 && pos.board(square::B5) == BP256)
-        val.mg += BishopTrappedPm / 2;
-    if (pos.board(square::H6) == WB256 && pos.board(square::G5) == BP256)
-        val.mg += BishopTrappedPm / 2;
+    constexpr u64 wqs_rmask = bb::bit(A1) | bb::bit(A2) | bb::bit(B1);
+    constexpr u64 wqs_kmask = bb::bit(B1) | bb::bit(C1);
+    constexpr u64 wks_rmask = bb::bit(H1) | bb::bit(H2) | bb::bit(G1);
+    constexpr u64 wks_kmask = bb::bit(F1) | bb::bit(G1);
     
-    if ((pos.board(square::A1) == WR256 || pos.board(square::A2) == WR256 || pos.board(square::B1) == WR256) && (wksq == square::B1 || wksq == square::C1))
-        val.mg += RookBlockedPm;
-    if ((pos.board(square::H1) == WR256 || pos.board(square::H2) == WR256 || pos.board(square::G1) == WR256) && (wksq == square::F1 || wksq == square::G1))
-        val.mg += RookBlockedPm;
+    if ((wrbb & wqs_rmask) && (wqs_kmask & wkbb)) val += Value(RBlockedPm, RBlockedPe);
+    if ((wrbb & wks_rmask) && (wks_kmask & wkbb)) val += Value(RBlockedPm, RBlockedPe);
 
     // Black
     
-    int bksq = pos.king64(Black);
-
-    if (pos.board(square::C8) == BB256 && pos.board(square::D7) == BP256 && pos.board(square::D6) != PieceNone256)
-        val.mg -= BishopBlockedPm;
-    if (pos.board(square::F8) == BB256 && pos.board(square::E7) == BP256 && pos.board(square::E6) != PieceNone256)
-        val.mg -= BishopBlockedPm;
-
-    if ((pos.board(square::A2) == BB256 && pos.board(square::B3) == WP256) || (pos.board(square::B1) == BB256 && pos.board(square::C2) == WP256))
-        val.mg -= BishopTrappedPm;
-    if ((pos.board(square::H2) == BB256 && pos.board(square::G3) == WP256) || (pos.board(square::G1) == BB256 && pos.board(square::F2) == WP256))
-        val.mg -= BishopTrappedPm;
-    if (pos.board(square::A3) == BB256 && pos.board(square::B4) == WP256)
-        val.mg -= BishopTrappedPm / 2;
-    if (pos.board(square::H3) == BB256 && pos.board(square::G4) == WP256)
-        val.mg -= BishopTrappedPm / 2;
+    u64 brbb = pos.bb(Black, Rook);
+    u64 bkbb = pos.bb(Black, King);
     
-    if ((pos.board(square::A8) == BR256 || pos.board(square::A7) == BR256 || pos.board(square::B8) == BR256) && (bksq == square::B8 || bksq == square::C8))
-        val.mg -= RookBlockedPm;
-    if ((pos.board(square::H8) == BR256 || pos.board(square::H7) == BR256 || pos.board(square::G8) == BR256) && (bksq == square::F8 || bksq == square::G8))
-        val.mg -= RookBlockedPm;
+    constexpr u64 bqs_rmask = bb::bit(A7) | bb::bit(A8) | bb::bit(B8);
+    constexpr u64 bqs_kmask = bb::bit(B8) | bb::bit(C8);
+    constexpr u64 bks_rmask = bb::bit(H7) | bb::bit(H8) | bb::bit(G8);
+    constexpr u64 bks_kmask = bb::bit(F8) | bb::bit(G8);
+    
+    if ((brbb & bqs_rmask) && (bqs_kmask & bkbb)) val -= Value(RBlockedPm, RBlockedPe);
+    if ((brbb & bks_rmask) && (bks_kmask & bkbb)) val -= Value(RBlockedPm, RBlockedPe);
+
+    return val;
+}
+
+template <side_t Side>
+Value eval_pins(const Position& pos)
+{
+    Value val;
+
+    u64 occ = pos.occ();
+    u64 mbb = pos.bb(Side);
+    u64 mpbb = pos.bb(Side, Pawn);
+    u64 mnbb = pos.bb(Side, Knight);
+    u64 mbbb = pos.bb(Side, Bishop);
+    u64 mrbb = pos.bb(Side, Rook);
+
+    u64 obbb = pos.bb(!Side, Bishop);
+    u64 orbb = pos.bb(!Side, Bishop);
+    u64 oqbb = pos.bb(!Side, Bishop);
+
+    int ksq = pos.king(Side);
+
+    for (u64 bb = BishopAttacks[ksq] & (obbb | oqbb); bb; ) {
+        int sq = bb::pop(bb);
+
+        u64 between = bb::InBetween[ksq][sq] & occ;
+
+        if ((between & mbb & ~mpbb) == 0 || !bb::single(between))
+            continue;
+
+        // Absolute pins
+
+        if (between & mnbb) {
+            val.mg += NPinAbsPm;
+            val.eg += NPinAbsPe;
+        }
+
+        else if (between & mrbb)
+            val.eg += RPinAbsPe;
+    }
+    
+    for (u64 bb = RookAttacks[ksq] & (orbb | oqbb); bb; ) {
+        int sq = bb::pop(bb);
+
+        u64 between = bb::InBetween[ksq][sq] & occ;
+
+        if ((between & mbb & ~mpbb) == 0 || !bb::single(between))
+            continue;
+
+        // Absolute pins
+
+        if (between & mnbb) {
+            val.mg += NPinAbsPm;
+            val.eg += NPinAbsPe;
+        }
+
+        else if (between & mbbb) {
+            val.mg += BPinAbsPm;
+            val.eg += BPinAbsPe;
+        }
+
+        // Relative pins
+
+        else if (between & mrbb) {
+            val.mg += RPinRelPm;
+            val.eg += RPinRelPe;
+        }
+    }
 
     return val;
 }
@@ -864,83 +895,66 @@ int eval_internal(const Position& pos)
 {
     assert(!pos.checkers());
 
+#ifndef TUNE
     EvalEntry eentry;
 
     if (etable.get(pos.key(), eentry))
         return eentry.score + TempoB;
-    
-    int ValuePiece[6][2] = {
-        { ValuePawnMg,   ValuePawnEg },
-        { ValueKnightMg, ValueKnightEg },
-        { ValueBishopMg, ValueBishopEg },
-        { ValueRookMg,   ValueRookEg },
-        { ValueQueenMg,  ValueQueenEg },
-        { 0, 0 }
-    };
+#endif
 
-    Value sval[2];
+    Value val;
 
-    for (side_t side : { White, Black }) {
-        for (u64 bb = pos.occ(side); bb; bb &= (bb - 1)) {
-            int sq = countr_zero(bb);
-            int p12 = P256ToP12[pos.board(sq)];
+    // PSQT
 
-            // Material
-            
-            sval[side].mg += ValuePiece[p12 / 2][PhaseMg];
-            sval[side].eg += ValuePiece[p12 / 2][PhaseEg];
-
-            // PSQT
-            
-            sval[side].mg += PSQT[PhaseMg][p12][sq];
-            sval[side].eg += PSQT[PhaseEg][p12][sq];
-        }
-
-        if (pos.bishop_pair(side)) {
-            sval[side].mg += BishopPairBMg;
-            sval[side].eg += BishopPairBEg;
-        }
+    for (u64 bb = pos.occ(); bb; ) {
+        int sq = bb::pop(bb);
+        int p12 = pos.board<12>(sq);
+        
+        val += PSQTv[p12][sq];
     }
-    
-    Value val = sval[White] - sval[Black];
+
+    // Bishop pair
+
+    int wbp = pos.bishop_pair(White);
+    int bbp = pos.bishop_pair(Black);
+
+    val += (wbp - bbp) * Value(BPairBm, BPairBe);
 
     // Mobility and King Safety
 
     val += eval_mob_ks(pos);
 
+    // Pinned pieces
+
+    val += eval_pins<White>(pos);
+    val -= eval_pins<Black>(pos);
+
     // Patterns
 
     val += eval_pattern(pos);
 
-    // Pawn prefetch (misplaced?)
-    
-    if (pos.pawns())
-        ptable.prefetch(pos.pawn_key());
-
     // Major and minor pieces
-   
+ 
     val += eval_pieces<White>(pos);
     val -= eval_pieces<Black>(pos);
 
-    // Evaluation of pawns is done separately because all pawns share a hash entry
+    if (pos.bb(Pawn)) {
+        assert(pos.pawn_key());
 
-    if (pos.pawns()) {
-        PawnEntry pentry;
-
-        val += eval_pawns(pos, pentry);
-        val += eval_passers(pos, pentry);
+        val += eval_pawns(pos);
     }
 
-    val.eg += eval_complexity(pos, val.eg);
+    val += eval_complexity(pos, val.eg);
 
-    int factor = eval_scale(pos, val.eg);
-    int score = val.lerp(pos.phase(), factor);
+    int score = val.lerp(pos.phase(), eval_scale(pos, val.eg));
 
     if (pos.side() == Black) score = -score;
 
+#ifndef TUNE
     eentry.score = score;
 
     etable.set(pos.key(), eentry);
+#endif
     
     return score + TempoB;
 }
@@ -968,9 +982,84 @@ int eval(const Position& pos, int ply)
     return e;
 }
 
-// Begin Tuner
-
 #ifdef TUNE
+
+#include <nlopt.hpp>
+#include <omp.h>
+
+static constexpr u64 TuneComplexity = 1 <<  0;
+static constexpr u64 TuneKingSafety = 1 <<  1;
+static constexpr u64 TuneBishopPair = 1 <<  2;
+static constexpr u64 TuneMobility   = 1 <<  3;
+static constexpr u64 TunePattern    = 1 <<  4;
+static constexpr u64 TunePawns      = 1 <<  5;
+static constexpr u64 TunePieces     = 1 <<  6;
+static constexpr u64 TunePinned     = 1 <<  7;
+static constexpr u64 TunePsqt       = 1 <<  8;
+static constexpr u64 TuneScale      = 1 <<  9;
+static constexpr u64 TuneTempo      = 1 << 10;
+static constexpr u64 TuneMaterial   = 1 << 11;
+static constexpr u64 TuneAll        = ~0;
+
+static constexpr u64 TuneCurrent    = 0
+                                    //| TuneMaterial
+                                    | TuneKingSafety
+                                    | TuneBishopPair
+                                    | TuneTempo
+                                    | TuneMobility
+                                    | TunePattern
+                                    | TunePawns
+                                    | TunePieces
+                                    | TunePsqt
+                                    | TuneScale
+                                    | TuneComplexity
+                                    | TunePinned
+                                    ;
+
+static double KOptimal = 0.788745;
+
+mt19937_64 mt;
+
+struct Tuner {
+    double maxtime  = 0;
+    size_t seed     = 0;
+    size_t threads  = omp_get_max_threads();
+    double ratio    = 1;
+
+    bool bench      = false;
+    bool debug      = false;
+    bool kopt       = false;
+    bool local      = false;
+    bool opt        = false;
+    bool randinit   = false;
+
+    filesystem::path path { "tuner.bin" };
+    
+    string str() const
+    {
+        stringstream ss;
+
+        ss << "Tuner," << maxtime << ',' << seed << ',' << threads << ',' << ratio << ','
+           << bench << ',' << debug << ',' << kopt << ',' << local << ','
+           << opt << ',' << randinit;
+
+        return ss.str();
+    }
+};
+
+Tuner tuner;
+
+string format(const char format[], ...)
+{
+    va_list arg_list;
+    char buf[64];
+
+    va_start(arg_list, format);
+    vsprintf(buf, format, arg_list);
+    va_end(arg_list);
+
+    return buf;
+}
 
 struct Param {
     string name;
@@ -980,164 +1069,343 @@ struct Param {
     int max;
     int start;
     
-    Param(string n, int min_, int max_, int * p)
-        : name(n), 
-          pvalue(p),
-          min(min_),
-          max(max_),
-          start(*p)
+    Param(string n, int * p, int min_, int max_)
     {
-#if 1
-        uniform_int_distribution<int> gen(min_, max_);
-        init = gen(mt);
-#else
-        init = *p;
-#endif
+        name = n;
+        pvalue = p;
+
+        min = min_;
+        max = max_;
+
+        start = *p;
+
+        if (start < min || start > max) {
+            start = *p = clamp(start, min, max);
+
+            cerr << "Starting value for " << n << " is out of range!" << endl;
+
+            //exit(EXIT_FAILURE);
+        }
+
+        if (tuner.randinit) {
+            uniform_int_distribution<int> gen(min, max);
+            init = gen(mt);
+        }
+        else
+            init = *p;
     }
     
-    Param(string n, int * p, int delta) : Param(n, *p - delta, *p + delta, p) { }
-    Param(string n, int * p, int min_, int max_) : Param(n, min_, max_, p) { }
+    //Param(string n, int * p, int delta) : Param(n, p, *p - delta, *p + delta) { }
+
+    string str() const
+    {
+        stringstream ss;
+
+        ss << "Param," << name << ',' << min << ',' << start << ',' 
+           << max << ',' << *pvalue << ',' << init;
+
+        return ss.str();
+    }
+
+    int bound() const
+    {
+        int margin = std::max((max - min) / 20, 1);
+
+        if (*pvalue <= min + margin) return -1;
+        if (*pvalue >= max - margin) return  1;
+
+        return 0;
+    }
 };
 
 vector<Position> g_pos;
 vector<Param> g_params;
+vector<Param> g_params_orig;
 
-double K_VALUE = 2.41623;
-
-double sigmoid(const Position& pos, int eval, double K)
+double sigmoid(int e, double K)
 {
-    if (pos.side() == Black) eval = -eval;
-
-    double e = -K * eval / 400;
-
-    return 1 / (1 + exp(e));
+    return 1 / (1 + exp(-K * e / 400));
 }
 
-double eval_error(const Position& pos, double K)
+double eval_error(const Position& pos, double K, int * cp = nullptr)
 {
-    int    ev     = eval(pos);
-    double error  = pow(pos.outcome() - sigmoid(pos, ev, K), 2);
+    int e = eval(pos);
 
-    return error;
+    if (pos.side() == Black) e = -e;
+
+    if (cp) *cp = e;
+
+    return pow(sigmoid(pos.score1(), 1) - sigmoid(e, K), 2);
 }
 
 double eval_error(const vector<Position>& v, double K)
 {
     double sse = 0;
 
-    #pragma omp parallel num_threads(11)
+    omp_set_num_threads(tuner.threads);
+    
+    const size_t N = v.size() / tuner.threads;
+   
+    #pragma omp parallel
     {
-        double se   = 0;
-        size_t id   = omp_get_thread_num();
-        size_t num  = omp_get_num_threads();
+        const size_t id = omp_get_thread_num();
 
-        for (size_t i = id; i < v.size(); i += num)
+        double se = 0;
+
+        for (size_t i = id * N; i < (id + 1) * N; i++)
             se += eval_error(v[i], K);
 
         #pragma omp critical
-        {
-            sse += se;
-        }
+        sse += se;
     }
+
+    for (size_t i = tuner.threads * N; i < v.size(); i++)
+        sse += eval_error(v[i], K);
 
     return sse / v.size();
 }
 
-void eval_read(vector<Position>& v, string filename, double share)
+void eval_read_epd(vector<Position>& v)
 {
+    g_pos.reserve(size_t(5000000 * tuner.ratio));
+
     cout << "Reading tuning file... " << flush;
 
     string line;
 
-    ifstream ifs(filename);
+    ifstream ifs(tuner.path);
 
     uniform_real_distribution<> dist(0.0, 1.0);
 
+    Timer timer(true);
+
     while (getline(ifs, line)) {
-        if (dist(mt) > share) continue;
-        
         assert(!line.empty());
 
-        size_t p0 = line.find('[');
-        size_t p1 = line.find(']');
+        if (tuner.ratio < 1.0 && dist(mt) > tuner.ratio) continue;
+#if 0
+        Tokenizer tokens(line, ',');
 
-        assert(p0 != string::npos);
-        assert(p1 != string::npos);
+        const string& fen = tokens[0];
+        const string& sc1 = tokens[1];
+        const string& sc2 = tokens[2];
 
-        string fen = line.substr(0, p0);
-        string wdl = line.substr(p0 + 1, p1 - p0 - 1);
+        int score1 = atoi(sc1.c_str());
+        int score2 = atoi(sc2.c_str());
 
-        double score = stod(wdl);
+        v.emplace_back(fen, score1, score2);
+#else
+        size_t pos = line.find('[');
+        string fen = line.substr(0, pos - 1);
+        string score1 = line.substr(pos + 1, 3);
+        string score2 = line.substr(pos + 6);
 
-        v.emplace_back(fen, score);
+        int sc1 = score1 == "1.0" ? 2 : (score1 == "0.0" ? 0 : 1);
+        int sc2 = atoi(score2.c_str());
+
+        if (abs(sc2) >= 1000) continue;
+
+        Position pstn(fen, sc1, 0);
+
+        if (!pstn.checkers())
+            v.push_back(pstn);
+
+#endif
     }
 
-    cout << "OK" << endl
-         << "Parsed " << v.size() << " positions" << endl;
+    timer.stop();
+
+    double dur = timer.elapsed_time() / 1000.0;
+
+    cout << "OK"
+         << endl
+         << "Parsed " << v.size() << " positions in " 
+         << dur << " seconds, " 
+         << size_t(v.size() / dur / 1000) << " kps" 
+         << endl;
+
+#if 0
+    ofstream ofs("tuner.bin", ios::binary);
+
+    for (Position& pos : v) {
+        if (!pos.checkers()) {
+            PositionBin bin = pos.serialize();
+            ofs.write(bin.get(), sizeof(PositionBin));
+        }
+    }
+#endif
 }
 
-double myvfunc(const vector<double>& x, [[maybe_unused]] vector<double>& grad, [[maybe_unused]] void* my_func_data)
+void eval_read_bin(vector<Position>& v)
+{
+    g_pos.reserve(size_t(5000000 * tuner.ratio));
+
+    cout << "Reading tuning file... " << flush;
+
+    auto vec = mem::read(tuner.path);
+
+    uniform_real_distribution<> dist(0.0, 1.0);
+
+    PositionBin bin;
+
+    Timer timer(true);
+
+    for (size_t i = 0; i < vec.size(); i += sizeof(PositionBin)) {
+        if (tuner.ratio < 1.0 && dist(mt) > tuner.ratio) continue;
+        
+        memcpy(&bin, &vec[i], sizeof(bin));
+
+        v.emplace_back(bin);
+    }
+
+    timer.stop();
+
+    double dur = timer.elapsed_time() / 1000.0;
+
+    cout << "OK"
+         << endl
+         << "Parsed " << v.size() << " positions in " 
+         << dur << " seconds, " 
+         << size_t(v.size() / dur / 1000) << " kps" 
+         << endl;
+
+#if 0
+    int counts4[16] = { };
+
+    for (u8 byte : vec) {
+        ++counts4[(byte >> 0) & 15];
+        ++counts4[(byte >> 4) & 15];
+    }
+    
+    for (int i = 0; i < 16; i++)
+        cout << "n," << i << ",counts4," << counts4[i] << endl;
+
+    cout << endl;
+
+    int counts8[256] = { };
+
+    for (u8 byte : vec)
+        ++counts8[byte];
+    
+    for (int i = 0; i < 256; i++)
+        cout << "n," << i << ",counts8," << counts8[i] << endl;
+
+    exit(EXIT_SUCCESS);
+#endif
+}
+
+double myvfunc(const vector<double>& x, 
+               [[maybe_unused]] vector<double>& grad, 
+               [[maybe_unused]] void * my_func_data)
 {
     static int iter     = 1;
     static int btime    = time(nullptr);
-    static double minf  = 1;
+    static double minf  = numeric_limits<double>::max();
+    static double maxf  = 1;
+
+    const int dur = max(int(time(nullptr) - btime), 1);
     
     for (size_t i = 0; i < x.size(); i++) {
-        int xp = clamp(int(x[i]), g_params[i].min, g_params[i].max);
+        int n = clamp(int(x[i]), g_params[i].min, g_params[i].max);
 
-        *g_params[i].pvalue = xp;
+        *g_params[i].pvalue = n;
     }
+
+    if ((TuneCurrent & TuneMaterial) && (TuneCurrent & TunePsqt)) {
+        cerr << "Cannot tune both material and psqt tables!" << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    if (TuneCurrent & TuneMaterial) {
+        psqt_recalc();
+        eval_init();
+    }
+
+    if (TuneCurrent & TunePsqt)
+        eval_init();
    
-    // Recompute PSQT
-    //eval_init(); 
-    
-    double f = eval_error(g_pos, K_VALUE);
+    double f = eval_error(g_pos, KOptimal);
 
-    stringstream ss;
-
-    ss.precision(7);
-
-    bool better = false;
+    if (iter == 1) maxf = f;
 
     if (f < minf) {
-        better = true;
-
         minf = f;
 
-        double sum_se = 0;
+        stringstream ss;
 
-        for (auto &param : g_params) {
+        for (auto &param : g_params_orig) {
+            bool array = param.name.find('[') != string::npos;
+
             int p1 = *param.pvalue;
             int p2 = param.start;
-            int d = p1 - p2;
-            string info = p1 == param.min ? " LOWER BOUND" :
-                          p1 == param.max ? " UPPER BOUND" : "";
+            int diff = p1 - p2;
+            int bound = param.bound();
+            string info;
 
-            sum_se += pow(d, 2);
+            if (bound) info = format(" %s : %i / %i", bound < 0 ? "----" : "++++", param.min, param.max);
+
+            if (!array || bound)
+            ss << "int "
+               << setw(32) << setfill(' ') << left << param.name << '='
+               << setw(8) << setfill(' ') << right << *param.pvalue << "; diff = "
+               << setw(8) << setfill(' ') << diff << info << endl;
+        }
         
-            ss << "int " << setw(28) << setfill(' ') << left << param.name << " = " << right
-               << setw(8) << setfill(' ') << *param.pvalue << "; diff = " << d 
-               << info << endl;
+        if (TuneCurrent & TuneMobility)
+            ss << print_3d<2, 4, 8>("MobB", MobB) << endl;
+        
+        if (TuneCurrent & TunePsqt)
+            ss << print_3d<2, 6, 32>("PSQTi", PSQTi) << endl;
+        
+        if (TuneCurrent & TuneMaterial)
+            ss << print_2d<2, 6>("MatValue", MatValue) << endl;
+
+        if (TuneCurrent & TunePawns) {
+            ss << print_1d<8>("PawnCandidateB", PawnCandidateB) << endl;
+            ss << print_1d<8>("PawnConnectedB", PawnConnectedB) << endl;
+            ss << print_3d<2, 3, 8>("PawnPassedB", PawnPassedB) << endl;
+            ss << print_2d<2, 6>("PawnAttackB", PawnAttackB) << endl;
         }
 
-        double rms = sqrt(sum_se / g_params.size());
+        if (TuneCurrent & TuneKingSafety) {
+            ss << print_2d<4, 8>("KingShelterP", KingShelterP) << endl;
+            ss << print_2d<4, 8>("KingStormP", KingStormP) << endl;
+            ss << print_2d<4, 8>("KingSafetyW", KingSafetyW) << endl;
+        }
+        
+        if (TuneCurrent & TunePieces)
+            ss << print_2d<2, 6>("PiecePawnOffset", PiecePawnOffset) << endl;
 
-        ss << "minf=" << minf 
-           << ",iter=" << iter 
-           << ",time=" << (time(nullptr) - btime) 
-           << ",rms=" << int(rms) << endl;
-    }
+        char buf[32];
 
-    if (!ss.str().empty())
+        {
+            int n = dur;
+            int days = dur / 24 / 60 / 60;
+            n %= 24 * 60 * 60;
+            int hours = n / 60 / 60;
+            n %= 60 * 60;
+            int minutes = n / 60;
+            n %= 60;
+            int seconds = n;
+
+            snprintf(buf, sizeof(buf), "%i:%02i:%02i:%02i", days, hours, minutes, seconds);
+        }
+
+        ss << "mse=" << fixed << setprecision(7) << minf
+           << ",rmse=" << sqrt(minf)
+           << ",ai=" << maxf - minf
+           << ",ri=" << (maxf - minf) / maxf * 100
+           << ",i=" << iter
+           << ",t=" << dur
+           << ",d=" << buf
+           << ",is=" << setprecision(2) << double(iter) / dur
+           << ",si=" << setprecision(2) << dur / double(iter)
+           << ",p=" << x.size() << endl;
+
         cout << ss.str();
 
-    if (better) {
-        fstream ofile;
-
-        ofile.open("opt.txt", ios::out | ios::app);
-        ofile << ss.str();
-        ofile.flush();
-        ofile.close();
+        fstream fs("opt.txt", ios::out | ios::app);
+        fs << ss.str();
     }
 
     iter++;
@@ -1166,48 +1434,49 @@ vector<double> tune_init(nlopt::opt& opt)
 }
 
 // Golden-section search
-double eval_K(double a, double b, double tol, double& best)
+double eval_K(double lb, double ub, double tol, double& mse, size_t& iter)
 {
-    double invphi  = (sqrt(5) - 1) / 2;
-    double invphi2 = (3 - sqrt(5)) / 2;
+    const double invphi  = (sqrt(5) - 1) / 2;
+    const double invphi2 = (3 - sqrt(5)) / 2;
 
-    double h = b - a;
+    double h = ub - lb;
 
-    double c = a + invphi2 * h;
+    double c = lb + invphi2 * h;
     double yc = eval_error(g_pos, c);
-    double d = a + invphi  * h;
+    double d = lb + invphi  * h;
     double yd = eval_error(g_pos, d);
-    
+
     size_t n = std::ceil(log(tol / h) / log(invphi));
+    
+    iter = 2 + n;
 
     for (size_t i = 0; i < n; i++) {
-        if (yc < yd) { // yc > yd to find the maximum
-            b = d;
+        // yc > yd to find the maximum
+        if (yc < yd) {
+            ub = d;
             d = c;
             yd = yc;
             h = invphi * h;
-            c = a + invphi2 * h;
+            c = lb + invphi2 * h;
             yc = eval_error(g_pos, c);
         }
         else {
-            a = c;
+            lb = c;
             c = d;
             yc = yd;
             h = invphi * h;
-            d = a + invphi * h;
+            d = lb + invphi * h;
             yd = eval_error(g_pos, d);
         }
     }
 
-    best = (yc + yd) / 2;
+    mse = (yc + yd) / 2;
 
-    return (yc < yd ? a + d : b + c) / 2;
+    return (yc < yd ? lb + d : ub + c) / 2;
 }
 
 void eval_tune(int argc, char* argv[])
 {
-    Tuner tuner;
-    
     Tokenizer fields(argc, argv);
 
     for (size_t i = 0; i < fields.size(); i++) {
@@ -1222,333 +1491,459 @@ void eval_tune(int argc, char* argv[])
             tuner.debug = true;
         else if (k == "file")
             tuner.path = v;
-        else if (k == "ktune")
-            tuner.ktune = true;
+        else if (k == "kopt")
+            tuner.kopt = true;
+        else if (k == "local")
+            tuner.local = true;
         else if (k == "opt")
             tuner.opt = true;
+        else if (k == "randinit")
+            tuner.randinit = true;
         else if (k == "ratio")
             tuner.ratio = stoull(v) / 100.0;
         else if (k == "seed")
             tuner.seed = stoull(v);
-        else if (k == "time")
-            tuner.time = stod(v);
+        else if (k == "threads")
+            tuner.threads = stoull(v);
+        else if (k == "maxtime")
+            tuner.maxtime = stod(v);
     }
 
-    mt = tuner.seed ? mt19937_64(tuner.seed) : mt19937_64(rd());
-        
-    eval_read(g_pos, tuner.path, tuner.ratio);
+    if (tuner.seed)
+        mt = mt19937_64(tuner.seed);
+    else
+        mt = mt19937_64(random_device{}());
+            
+    if (!filesystem::exists(tuner.path)) {
+        cout << "Input file does not exist!" << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    string ext = tuner.path.extension();
+
+    if (ext == ".epd")
+        eval_read_epd(g_pos);
+    else if (ext == ".bin")
+        eval_read_bin(g_pos);
+    else {
+        cerr << "Input file not recognized!" << endl;
+        exit(EXIT_FAILURE);
+    }
+
 
     if (tuner.bench) {
-        i64 btime = Timer::now();
-        cout << eval_error(g_pos, K_VALUE) << endl;
-        i64 etime = Timer::now();
+        Timer timer(true);
+        double error = eval_error(g_pos, KOptimal);
+        cout << error << ',' << sqrt(error) << endl;
+        timer.stop();
 
-        cout << etime - btime << " ms" << endl;
-        cout << g_pos.size() / (etime - btime) << " ke/s" << endl;
+        i64 dur = timer.elapsed_time();
+
+        cout << dur << " ms" << endl;
+        cout << g_pos.size() / dur << " ke/s" << endl;
     }
-   
-    if (tuner.debug) {
-        for (auto &pos : g_pos) {
-            double error = eval_error(pos, K_VALUE);
+    
+    if (tuner.kopt) {
+        size_t iter;
+        double mse;
+        double K = eval_K(0, 5, 1e-5, mse, iter);
 
-            if (error >= 0.99) {
-                cerr << pos.outcome() << ','
-                     << eval(pos) << ','
-                     << pos.to_fen() << endl;
+        cout << "Current K = " << KOptimal
+             << ", Optimal K = " << K
+             << ", MSE = " << mse
+             << ", Iterations = " << iter << endl;
+
+        KOptimal = K;
+    }
+
+    if (!tuner.opt && !tuner.debug)
+        return;
+
+#define MP(var) MPS(var), &var
+#define MPS(var) #var
+#define GPPB g_params.push_back
+   
+#if 0
+    if (TuneCurrent & TuneMaterial) {
+        for (int phase : { PhaseMg, PhaseEg }) {
+            for (int type = Knight; type < King; type++) {
+                string name = format("MatValue[%i][%i]", phase, type);
+
+                int val = MatValue[phase][type];
+                int delta = val / 4;
+
+                int lb = val - delta;
+                int ub = val + delta;
+
+                GPPB(Param(name, &MatValue[phase][type], lb, ub));
+            }
+        }
+    }
+#endif
+
+    if (TuneCurrent & TunePsqt) {
+        for (int phase : { PhaseMg, PhaseEg }) {
+            for (int type = Pawn; type <= King; type++) {
+
+                int start = MatValue[phase][type];
+                int delta = type == King ? 200 : start / 4;
+            
+                for (int sq = 0; sq < 32; sq++) {
+                    if (type == Pawn && (sq <= 3 || sq >= 28)) continue;
+
+                    int lb = start - delta;
+                    int ub = start + delta;
+
+                    // Pawns on advanced ranks are worth much more
+                    if (type == Pawn && sq >= 16)
+                        ub += delta * 3;
+
+                    if (type != King)
+                        lb -= lb / 4;
+
+                    // Knights on corner squares are worth much less
+                    if (type == Knight && (sq == 0 || sq == 28))
+                        lb = 0;
+
+                    GPPB(Param(format("PSQTi[%i][%i][%i]", phase, type, sq), &PSQTi[phase][type][sq], lb, ub));
+                }
             }
         }
     }
     
-    if (tuner.ktune) {
-        double best;
-        double K = eval_K(0, 6, 1e-8, best);
+    if (TuneCurrent & TuneBishopPair) {
+        GPPB(Param(MP(BPairBm),  0,  50));
+        GPPB(Param(MP(BPairBe), 50, 100));
+    }
 
-        cout << "Optimal K value = " << K << ", error = " << best << endl;
+    if (TuneCurrent & TunePattern) {
+        GPPB(Param(MP(RBlockedPm), -200, 0));
+        GPPB(Param(MP(RBlockedPe), -200, 0));
+    }
+   
+    if (TuneCurrent & TuneMobility) {
+        GPPB(Param(MP(NQAttBm),        0, 150));
+        GPPB(Param(MP(BQAttBm),        0, 150));
+        GPPB(Param(MP(BQAttBe),        0, 150));
+        GPPB(Param(MP(RQAttBm),      -10, 100));
+        GPPB(Param(MP(NQDefBm),      -10, 100));
+        GPPB(Param(MP(NQDefBe),      -10, 100));
+        GPPB(Param(MP(BQDefBm),      -10, 100));
+        GPPB(Param(MP(BQDefBe),      -10, 100));
+        GPPB(Param(MP(RRSameFileBm),  -5,  50));
+        GPPB(Param(MP(RRSameFileBe),  -5,  50));
+        GPPB(Param(MP(RRSameRankBm),  -5,  50));
+        GPPB(Param(MP(RRSameRankBe),  -5,  50));
+        GPPB(Param(MP(RQSameFileBm),  -5,  50));
+        GPPB(Param(MP(RQSameFileBe),  -5,  50));
+        GPPB(Param(MP(RQSameRankBm),  -5,  50));
+        GPPB(Param(MP(RQSameRankBe),  -5,  50));
+       
+        for (int phase : { PhaseMg, PhaseEg }) {
+            for (int type = Knight; type <= Queen; type++) {
+                int log[4] = { 6, 7, 7, 8 };
 
-        K_VALUE = K;
+                for (int i = 0; i < log[type - 1]; i++) {
+                    int delta = MatValue[phase][type] / (phase == PhaseMg ? 4 : 2);
+
+                    string name = format("MobB[%i][%i][%i]", phase, type - 1, i);
+            
+                    GPPB(Param(name, &MobB[phase][type - 1][i], -delta, delta));
+                }
+            }
+        }
+    }
+  
+    // 41
+    if (TuneCurrent & TuneKingSafety) {
+        GPPB(Param(MP(KingSafetyA),  1,  97));
+        GPPB(Param(MP(KingSafetyB),  2,  98));
+        GPPB(Param(MP(KingSafetyC),  3,  99));
+        GPPB(Param(MP(KingSafetyD),  4, 100));
+
+        for (int type = Knight; type <= Queen; type++) {
+            for (int dist = 0; dist < 8; dist++) {
+                if (KingSafetyW[type - 1][dist] == 0) continue;
+
+                int ub = type == Queen && dist == 2 ? 1000 : 500;
+
+                string name = format("KingSafetyW[%i][%i]", type - 1, dist);
+
+                GPPB(Param(name, &KingSafetyW[type - 1][dist], 1, ub));
+            }
+        }
+       
+        for (int i = 0; i <= 3; i++) {
+            for (int rank = Rank3; rank <= Rank5; rank++) {
+                string name = format("KingStormP[%i][%i]", i, rank);
+
+                int lb = -125 + 50 * (rank - 2);
+
+                GPPB(Param(name, &KingStormP[i][rank], lb, 0));
+            }
+        }
+        
+        for (int i = 0; i <= 3; i++) {
+            for (int rank = Rank3; rank <= Rank8; rank++) {
+                string name = format("KingShelterP[%i][%i]", i, rank);
+
+                int lb = -25 * (rank - 1);
+
+                GPPB(Param(name, &KingShelterP[i][rank], lb, 0));
+            }
+        }
+    }
+    
+    // 12
+    if (TuneCurrent & TunePinned) {
+        GPPB(Param(MP(NPinAbsPm), -150, 50));
+        GPPB(Param(MP(NPinAbsPe), -150, 50));
+        GPPB(Param(MP(BPinAbsPm), -150, 50));
+        GPPB(Param(MP(BPinAbsPe), -150, 50));
+        GPPB(Param(MP(RPinAbsPe), -500,  0));
+        GPPB(Param(MP(RPinRelPm), -150, 50));
+        GPPB(Param(MP(RPinRelPe), -150, 50));
+    }
+  
+    // 47
+    if (TuneCurrent & TunePieces) {
+        GPPB(Param(MP(MinorBehindPawnBm),     1,  50));
+        GPPB(Param(MP(MinorBehindPawnBe),     1,  50));
+        GPPB(Param(MP(KnightOutpostBm),       1,  50));
+        GPPB(Param(MP(KnightOutpostBe),       1,  50));
+        GPPB(Param(MP(KnightDistDivPm),       1,  25));
+        GPPB(Param(MP(KnightDistDivPe),       1,  25));
+
+        GPPB(Param(MP(BishopOutpostBm),       1,  50));
+        GPPB(Param(MP(BishopOutpostBe),       1,  50));
+
+        GPPB(Param(MP(RookClosedPm),        -75,  75));
+        GPPB(Param(MP(RookClosedPe),        -75,  75));
+        GPPB(Param(MP(RookOpenAdjKingBm),   -10, 100));
+        GPPB(Param(MP(RookOpenAdjKingBe),   -10, 100));
+        GPPB(Param(MP(RookOpenBm),          -10, 100));
+        GPPB(Param(MP(RookOpenBe),          -10, 100));
+        GPPB(Param(MP(RookOpenSameKingBm),  -20, 200));
+        GPPB(Param(MP(RookOpenSameKingBe),  -20, 200));
+        GPPB(Param(MP(RookSemiAdjKingBm),   -10, 100));
+        GPPB(Param(MP(RookSemiAdjKingBe),   -10, 100));
+        GPPB(Param(MP(RookSemiBm),          -50, 100));
+        GPPB(Param(MP(RookSemiBe),          -50, 100));
+        GPPB(Param(MP(RookSemiSameKingBm),  -10, 100));
+        GPPB(Param(MP(RookSemiSameKingBe),  -10, 100));
+        GPPB(Param(MP(RookSeventhRankBm),   -50, 100));
+        GPPB(Param(MP(RookSeventhRankBe),   -50, 100));
+
+        GPPB(Param(MP(QueenSeventhRankBm), -100, 200));
+        GPPB(Param(MP(QueenSeventhRankBe), -100, 200));
+       
+        for (int phase : { PhaseMg, PhaseEg }) {
+            for (int type = Knight; type <= Rook; type++) {
+                string name = format("PiecePawnOffset[%i][%i]", phase, type);
+                
+                int delta = MatValue[phase][type] / 25;
+            
+                GPPB(Param(name, &PiecePawnOffset[phase][type], -delta, delta));
+            }
+        }
+    }
+ 
+    if (TuneCurrent & TunePawns) {
+        GPPB(Param(MP(PawnBackOpenPm), -50,   0));
+        GPPB(Param(MP(PawnBackOpenPe), -50,   0));
+        GPPB(Param(MP(PawnBackwardPm), -50,   0));
+        GPPB(Param(MP(PawnBackwardPe), -50,   0));
+        GPPB(Param(MP(PawnDoubledPm),  -50,   0));
+        GPPB(Param(MP(PawnDoubledPe),  -50,   0));
+        GPPB(Param(MP(PawnIsoOpenPm),  -50,   0));
+        GPPB(Param(MP(PawnIsoOpenPe),  -50,   0));
+        GPPB(Param(MP(PawnIsolatedPm), -50,   0));
+        GPPB(Param(MP(PawnIsolatedPe), -50,   0));
+        GPPB(Param(MP(PawnConnectedPB),  1,  20));
+
+        GPPB(Param(MP(PawnPassedGaurdedBm), 0, 50));
+        GPPB(Param(MP(PawnPassedGaurdedBe), 0, 50));
+
+        for (int phase : { PhaseMg, PhaseEg }) {
+            for (int type = Knight; type <= Queen; type++) {
+                string name = format("PawnAttackB[%i][%i]", phase, type);
+
+                GPPB(Param(name, &PawnAttackB[phase][type], 1, 100));
+            }
+        }
+       
+        for (int rank = Rank2; rank < Rank7; rank++) {
+            string name = format("PawnCandidateB[%i]", rank);
+
+            int ub[8] = { 0, 25, 25, 50, 100, 200, 0, 0 };
+            
+            GPPB(Param(name, &PawnCandidateB[rank], 0, ub[rank]));
+        }
+
+        for (int phase : { PhaseMg, PhaseEg }) {
+            for (int i = 0; i < 3; i++) {
+                // Passed pawned bonus is always 0 in this case since an 
+                // unstoppable passed pawn is assumed to be impossible when
+                // the other side has at least one piece
+                if (phase == PhaseMg && i == 1) continue;
+                    
+                for (int rank = Rank1; rank <= Rank8; rank++) {
+                    int ub;
+           
+                    // Rank indices 0 and 7 are reserved for king distance factors
+                    if (rank == Rank1 || rank == Rank8)
+                        ub = 25;
+                    else
+                        ub = (50 + 100 * phase) * rank;
+                    
+                    string name = format("PawnPassedB[%i][%i][%i]", phase, i, rank);
+
+                    GPPB(Param(name, &PawnPassedB[phase][i][rank], 0, ub));
+                }
+            }
+        }
+
+        for (int rank = Rank2; rank < Rank8; rank++) {
+            string name = format("PawnConnectedB[%i]", rank);
+
+            GPPB(Param(name, &PawnConnectedB[rank], 0, 10 * rank));
+        }
+    }
+
+    if (TuneCurrent & TuneComplexity) {
+        GPPB(Param(MP(ComplexityPawnsTotal),      0,  16));
+        GPPB(Param(MP(ComplexityPawnsFlanked),    0, 150));
+        GPPB(Param(MP(ComplexityPawnsEndgame),    0, 250));
+        GPPB(Param(MP(ComplexityAdjustment),   -200, 200));
+    }
+
+    if (TuneCurrent & TuneScale) {
+        GPPB(Param(MP(ScaleOcbBishopsOnly),      16, 128));
+        GPPB(Param(MP(ScaleOcbOneKnight),        16, 128));
+        GPPB(Param(MP(ScaleOcbOneRook),          16, 128));
+        GPPB(Param(MP(ScaleLoneQueen),           64, 224));
+        GPPB(Param(MP(ScaleLargePawnAdv),        64, 224));
+        GPPB(Param(MP(ScalePNone),                8, 126));
+        GPPB(Param(MP(ScalePOne),                 9, 127));
+        GPPB(Param(MP(ScalePTwo),                10, 128));
+    }
+    
+    if (TuneCurrent & TuneTempo)
+        GPPB(Param(MP(TempoB), 1, 50));
+
+#undef MP
+#undef MPS
+#undef GPPB
+
+    if (tuner.debug) {
+#if 0
+        size_t count = 0;
+
+        for (auto &pos : g_pos) {
+            int cp;
+            double mse = eval_error(pos, KOptimal, &cp);
+
+            int np = popcount(pos.occ());
+
+            if (abs(pos.score1()) > 500) {
+                ++count;
+
+                cerr << int(pos.side()) << ','
+                     << pos.score1() << ','
+                     << pos.score2() << ','
+                     << cp << ','
+                     << mse << ','
+                     << np << ','
+                     << pos.phase(pos.side()) << ','
+                     << pos.to_fen() << endl;
+            }
+        }
+
+        cout << "count = " << count << endl;
+#endif
+
+#if 0
+        const double err = eval_error(g_pos, KOptimal);
+
+        cout << err << endl;
+        
+        cout << "name,vmin,start,vmax,err0,err1,dx0,emx,emn,err2,dx1" << endl;
+        for (Param param : g_params) {
+            string name = param.name;
+
+            int vmin = param.min;
+            int vmax = param.max;
+            
+            *param.pvalue = vmin;
+            double err0 = eval_error(g_pos, KOptimal);
+
+            *param.pvalue = vmax;
+            double err1 = eval_error(g_pos, KOptimal);
+
+            *param.pvalue = param.start + 1;
+            double err2 = eval_error(g_pos, KOptimal);
+
+            *param.pvalue = param.start;
+            
+            double dx0 = abs((err1 - err0) / (vmax - vmin));
+            double dx1 = abs(err2 - err);
+                 
+            double emx = max(abs(err - err0), abs(err - err1));
+            double emn = min(abs(err - err0), abs(err - err1));
+
+            cout << name << ','
+                 << fixed << setprecision(10) 
+                 << vmin << ',' 
+                 << param.start << ',' 
+                 << vmax << ',' 
+                 << err0 << ',' 
+                 << err1 << ',' 
+                 << dx0  << ',' 
+                 << emx  << ','
+                 << emn  << ','
+                 << err2 << ',' 
+                 << dx1  << endl;
+        }
+#endif
     }
 
     if (!tuner.opt)
         return;
 
-#define MP(name1) MPS(name1), &name1
-#define MPS(name2) #name2
-#define GPPB g_params.push_back
+    cout << tuner.str() << endl;
 
-#if 1
-    // Piece Values : 13
-    //GPPB(Param(MP(ValuePawnMg),       50,  100));
-    //GPPB(Param(MP(ValuePawnEg),      100,  200));
+    for (Param param : g_params)
+        cout << param.str() << endl;
 
-    GPPB(Param(MP(ValueKnightMg),    100,  900));
-    GPPB(Param(MP(ValueKnightEg),    100,  900));
-    GPPB(Param(MP(ValueBishopMg),    100,  900));
-    GPPB(Param(MP(ValueBishopEg),    100,  900));
-    GPPB(Param(MP(ValueRookMg),      150, 1500));
-    GPPB(Param(MP(ValueRookEg),      150, 1500));
-    GPPB(Param(MP(ValueQueenMg),     300, 3000));
-    GPPB(Param(MP(ValueQueenEg),     300, 3000));
-   
-    GPPB(Param(MP(BishopPairBMg),      0,  100));
-    GPPB(Param(MP(BishopPairBEg),      0,  150));
-
-    GPPB(Param(MP(TempoB),             1,   50));
-#endif
-
-#if 0
-    // PSQT : 55
-    GPPB(Param(MP(NPSFactorEg),   0,  50));
-    GPPB(Param(MP(BPSFactorEg),   0,  50));
-    GPPB(Param(MP(RPSFactorEg),   0,  50));
-    GPPB(Param(MP(QPSFactorEg),   0, 100));
-    GPPB(Param(MP(KPSFactorMg), -50,   0));
-    GPPB(Param(MP(KPSFactorEg),   0,  50));
-
-    GPPB(Param(MP(NRank1Pm), -50, 0));
-    GPPB(Param(MP(BRank1Pm), -50, 0));
-
-    GPPB(Param(MP(PRank5Eg), 0, 250));
-    GPPB(Param(MP(PRank6Eg), 0, 250));
-    GPPB(Param(MP(PRank7Eg), 0, 250));
-
-    GPPB(Param(MP(PFileAHBm), -100, 100));
-    GPPB(Param(MP(PFileAHBe), -100, 100));
-    GPPB(Param(MP(PFileBGBm), -100, 100));
-    GPPB(Param(MP(PFileBGBe), -100, 100));
-    GPPB(Param(MP(PFileCFBm), -100, 100));
-    GPPB(Param(MP(PFileCFBe), -100, 100));
-    GPPB(Param(MP(PFileDEBm), -100, 100));
-    GPPB(Param(MP(PFileDEBe), -100, 100));
-
-    GPPB(Param(MP(NRank4Bm), 0, 100));
-    GPPB(Param(MP(NRank4Be), 0, 100));
-    GPPB(Param(MP(NRank5Bm), 0, 100));
-    GPPB(Param(MP(NRank5Be), 0, 100));
-    GPPB(Param(MP(NRank6Bm), 0, 100));
-    GPPB(Param(MP(NRank6Be), 0, 100));
-
-    GPPB(Param(MP(RRank7Bm), 0, 100));
-    GPPB(Param(MP(RRank7Be), 0, 100));
-    GPPB(Param(MP(RRank8Bm), 0, 100));
-    GPPB(Param(MP(RRank8Be), 0, 100));
-
-    GPPB(Param(MP(QRank7Be), 0, 250));
-    GPPB(Param(MP(QRank8Be), 0, 250));
-
-    GPPB(Param(MP(NCornerPm), -100, 0));
-    GPPB(Param(MP(NCornerPe), -100, 0));
-    GPPB(Param(MP(KCornerPm), -100, 0));
-    GPPB(Param(MP(KCornerPe), -100, 0));
+    nlopt::opt opt(tuner.local ? nlopt::LN_SBPLX : nlopt::GN_CRS2_LM, g_params.size());
     
-    GPPB(Param(MP(RFileAHBm), -50, 50));
-    GPPB(Param(MP(RFileAHBe), -50, 50));
-    GPPB(Param(MP(RFileBGBm), -50, 50));
-    GPPB(Param(MP(RFileBGBe), -50, 50));
-    GPPB(Param(MP(RFileCFBm), -50, 50));
-    GPPB(Param(MP(RFileCFBe), -50, 50));
-    GPPB(Param(MP(RFileDEBm), -50, 50));
-    GPPB(Param(MP(RFileDEBe), -50, 50));
-
-    GPPB(Param(MP(QFileAHBe), -100, 100));
-    GPPB(Param(MP(QFileBGBe), -100, 100));
-    GPPB(Param(MP(QFileCFBe), -100, 100));
-    GPPB(Param(MP(QFileDEBe), -100, 100));
+    if (tuner.maxtime)
+        opt.set_maxtime(60 * 60 * tuner.maxtime);
     
-    GPPB(Param(MP(KCastleBm),   0, 50));
-    GPPB(Param(MP(KCastlePm), -50,  0));
-#endif
+    g_params_orig = g_params;
 
-#if 0
-    // Mobility : 12
-    GPPB(Param(MP(NMobFactorMg),   0, 25));
-    GPPB(Param(MP(NMobFactorEg),   0, 25));
-    GPPB(Param(MP(BMobFactorMg),   0, 25));
-    GPPB(Param(MP(BMobFactorEg),   0, 25));
-    GPPB(Param(MP(RMobFactorMg),   0, 25));
-    GPPB(Param(MP(RMobFactorEg),   0, 25));
-    GPPB(Param(MP(QMobFactorMg),   0, 25));
-    GPPB(Param(MP(QMobFactorEg),   0, 25));
-#endif
-
-#if 0
-    // King Safety : 4
-    GPPB(Param(MP(KingSafetyA),   10, 50));
-    GPPB(Param(MP(KingSafetyB),   10, 30));
-    GPPB(Param(MP(KingSafetyC),   10, 30));
-    GPPB(Param(MP(KingSafetyD),  -50, -1));
-
-    GPPB(Param(MP(KingStormP[0][2]), -100, 100));
-    GPPB(Param(MP(KingStormP[0][3]), -100, 100));
-    GPPB(Param(MP(KingStormP[0][4]), -100, 100));
-    GPPB(Param(MP(KingStormP[1][2]), -100, 100));
-    GPPB(Param(MP(KingStormP[1][3]), -100, 100));
-    GPPB(Param(MP(KingStormP[1][4]), -100, 100));
-    GPPB(Param(MP(KingStormP[2][2]), -100, 100));
-    GPPB(Param(MP(KingStormP[2][3]), -100, 100));
-    GPPB(Param(MP(KingStormP[2][4]), -100, 100));
-    GPPB(Param(MP(KingStormP[3][2]), -100, 100));
-    GPPB(Param(MP(KingStormP[3][3]), -100, 100));
-    GPPB(Param(MP(KingStormP[3][4]), -100, 100));
-   
-    GPPB(Param(MP(KingShelterP[0][2]), -100, 100));
-    GPPB(Param(MP(KingShelterP[0][3]), -100, 100));
-    GPPB(Param(MP(KingShelterP[0][4]), -100, 100));
-    GPPB(Param(MP(KingShelterP[0][5]), -100, 100));
-    GPPB(Param(MP(KingShelterP[0][6]), -100, 100));
-    GPPB(Param(MP(KingShelterP[0][7]), -100, 100));
-    GPPB(Param(MP(KingShelterP[1][2]), -100, 100));
-    GPPB(Param(MP(KingShelterP[1][3]), -100, 100));
-    GPPB(Param(MP(KingShelterP[1][4]), -100, 100));
-    GPPB(Param(MP(KingShelterP[1][5]), -100, 100));
-    GPPB(Param(MP(KingShelterP[1][6]), -100, 100));
-    GPPB(Param(MP(KingShelterP[1][7]), -100, 100));
-    GPPB(Param(MP(KingShelterP[2][2]), -100, 100));
-    GPPB(Param(MP(KingShelterP[2][3]), -100, 100));
-    GPPB(Param(MP(KingShelterP[2][4]), -100, 100));
-    GPPB(Param(MP(KingShelterP[2][5]), -100, 100));
-    GPPB(Param(MP(KingShelterP[2][6]), -100, 100));
-    GPPB(Param(MP(KingShelterP[2][7]), -100, 100));
-    GPPB(Param(MP(KingShelterP[3][2]), -100, 100));
-    GPPB(Param(MP(KingShelterP[3][3]), -100, 100));
-    GPPB(Param(MP(KingShelterP[3][4]), -100, 100));
-    GPPB(Param(MP(KingShelterP[3][5]), -100, 100));
-    GPPB(Param(MP(KingShelterP[3][6]), -100, 100));
-    GPPB(Param(MP(KingShelterP[3][7]), -100, 100));
-#endif
-    
-#if 0
-    // Pieces : 47
-    GPPB(Param(MP(MinorBehindPawnBonusMg),     0,  50));
-    GPPB(Param(MP(MinorBehindPawnBonusEg),     0,  50));
-
-    GPPB(Param(MP(KnightOutpostBonusMg),       0,  50));
-    GPPB(Param(MP(KnightOutpostBonusEg),       0,  50));
-    GPPB(Param(MP(KnightPawnBonusMMg),       -25,  25));
-    GPPB(Param(MP(KnightPawnBonusMEg),       -25,  25));
-    GPPB(Param(MP(KnightPawnBonusBAg),         0,   8));
-    GPPB(Param(MP(KnightDistOffsetMg),         0,  50));
-    GPPB(Param(MP(KnightDistOffsetEg),         0,  50));
-
-    GPPB(Param(MP(BishopOutpostBonusMg),       0,  50));
-    GPPB(Param(MP(BishopOutpostBonusEg),       0,  50));
-    GPPB(Param(MP(BishopBlockedPm),         -100,   0));
-    GPPB(Param(MP(BishopTrappedPm),         -100,   0));
-    GPPB(Param(MP(BishopQueenBonusMg),         0, 100));
-    GPPB(Param(MP(BishopQueenBonusEg),         0, 100));
-    GPPB(Param(MP(BishopPawnSquareBonusMg),  -10,  10));
-    GPPB(Param(MP(BishopPawnSquareBonusEg),  -10,  10));
-    GPPB(Param(MP(BishopPawnBonusMMg),       -25,  25));
-    GPPB(Param(MP(BishopPawnBonusMEg),       -25,  25));
-    GPPB(Param(MP(BishopPawnBonusBAg),         0,   8));
-
-    GPPB(Param(MP(RookBlockedPm),           -100,   0));
-    GPPB(Param(MP(RookClosedPm),            -100, 100));
-    GPPB(Param(MP(RookClosedPe),            -100, 100));
-    GPPB(Param(MP(RookOpenAdjKingBonusMg),     0, 100));
-    GPPB(Param(MP(RookOpenAdjKingBonusEg),     0, 100));
-    GPPB(Param(MP(RookOpenBonusMg),         -100, 100));
-    GPPB(Param(MP(RookOpenBonusEg),         -100, 100));
-    GPPB(Param(MP(RookOpenSameKingBonusMg), -200, 200));
-    GPPB(Param(MP(RookOpenSameKingBonusEg), -200, 200));
-    GPPB(Param(MP(RookRookBonusMg),            0,  50));
-    GPPB(Param(MP(RookRookBonusEg),            0,  50));
-    GPPB(Param(MP(RookQueenBonusMg),           0, 100));
-    GPPB(Param(MP(RookQueenBonusEg),           0, 100));
-    GPPB(Param(MP(RookPawnBonusMMg),         -25,  25));
-    GPPB(Param(MP(RookPawnBonusMEg),         -25,  25));
-    GPPB(Param(MP(RookPawnBonusBAg),           0,   8));
-    GPPB(Param(MP(RookSemiAdjKingBonusMg),  -100, 100));
-    GPPB(Param(MP(RookSemiAdjKingBonusEg),  -100, 100));
-    GPPB(Param(MP(RookSemiBonusMg),         -100, 100));
-    GPPB(Param(MP(RookSemiBonusEg),         -100, 100));
-    GPPB(Param(MP(RookSemiSameKingBonusMg), -100, 100));
-    GPPB(Param(MP(RookSemiSameKingBonusEg), -100, 100));
-    GPPB(Param(MP(RookSeventhRankBonusMg),  -100, 100));
-    GPPB(Param(MP(RookSeventhRankBonusEg),  -100, 100));
-
-    GPPB(Param(MP(QueenSeventhRankBonusMg), -100, 100));
-    GPPB(Param(MP(QueenSeventhRankBonusEg), -100, 100));
-#endif
-
-#if 0
-    // Pawns : 23
-    GPPB(Param(MP(PawnBackOpenPm),        -100, 100));
-    GPPB(Param(MP(PawnBackOpenPe),        -100, 100));
-    GPPB(Param(MP(PawnBackwardPm),        -100, 100));
-    GPPB(Param(MP(PawnBackwardPe),        -100, 100));
-    GPPB(Param(MP(PawnCandidateBaseMg),   -100, 100));
-    GPPB(Param(MP(PawnCandidateBaseEg),   -100, 100));
-    GPPB(Param(MP(PawnCandidateFactorMg), -500, 500));
-    GPPB(Param(MP(PawnCandidateFactorEg), -500, 500));
-    GPPB(Param(MP(PawnDoubledPm),         -100, 100));
-    GPPB(Param(MP(PawnDoubledPe),         -100, 100));
-    GPPB(Param(MP(PawnIsoOpenPm),         -100, 100));
-    GPPB(Param(MP(PawnIsoOpenPe),         -100, 100));
-    GPPB(Param(MP(PawnIsolatedPm),        -100, 100));
-    GPPB(Param(MP(PawnIsolatedPe),        -100, 100));
-
-    GPPB(Param(MP(PawnPassedBaseMg),      -100, 100));
-    GPPB(Param(MP(PawnPassedBaseEg),      -100, 100));
-    GPPB(Param(MP(PawnPassedFactorMg),    -500, 500));
-    GPPB(Param(MP(PawnPassedFactorEg),    -500, 500));
-
-    GPPB(Param(MP(PawnPassedFactorA),        0, 100));
-    GPPB(Param(MP(PawnPassedFactorB),        1,  50));
-    GPPB(Param(MP(PawnPassedFactorC),     -500, 500));
-    
-    GPPB(Param(MP(PawnAttackMg),             1, 100));
-    GPPB(Param(MP(PawnAttackEg),             1, 100));
-#endif
-
-#if 0
-    // Scaling and Complexity : 11
-    GPPB(Param(MP(ComplexityPawnsTotal),      0,  10));
-    GPPB(Param(MP(ComplexityPawnsFlanked),    0,  50));
-    GPPB(Param(MP(ComplexityPawnsEndgame),    0, 100));
-    GPPB(Param(MP(ComplexityAdjustment),   -100, 100));
-
-    GPPB(Param(MP(ScaleOcbBishopsOnly),       0, 250));
-    GPPB(Param(MP(ScaleOcbOneKnight),         0, 250));
-    GPPB(Param(MP(ScaleOcbOneRook),           0, 250));
-    GPPB(Param(MP(ScaleLoneQueen),            0, 250));
-    GPPB(Param(MP(ScaleLargePawnAdv),         0, 250));
-    GPPB(Param(MP(ScaleM),                    0, 100));
-    GPPB(Param(MP(ScaleB),                    0, 100));
-#endif
-
-    // Global
-    nlopt::opt opt(nlopt::GN_CRS2_LM, g_params.size());
-    //nlopt::opt opt(nlopt::GN_ISRES, g_params.size());
-    //nlopt::opt opt(nlopt::GN_ESCH, g_params.size());
-
-    // Local
-    //nlopt::opt opt(nlopt::LN_SBPLX, g_params.size());
-    
-    opt.set_xtol_abs(1.0);
-
-    if (tuner.time)
-        opt.set_maxtime(60 * 60 * tuner.time);
+    // Random shuffle of parameters
+    shuffle(g_params.begin(), g_params.end(), mt);
     
     vector<double> x = tune_init(opt);
 
     try {
         double minf;
 
-        int btime = time(0);
+        int btime = time(nullptr);
         opt.optimize(x, minf);
-        int etime = time(0);
+        int etime = time(nullptr);
 
         cout << "opt complete" << endl;
         cout << (etime - btime) << ',' << minf << endl;
 
-        for (size_t j = 0; j < g_params.size(); j++)
-            cout << g_params[j].name << " = " << int(round(x[j])) << endl;
+        for (size_t j = 0; j < g_params_orig.size(); j++)
+            cout << g_params_orig[j].name << " = " << int(round(x[j])) << endl;
 
-    } catch (exception& e) {
+    }
+    catch (exception& e) {
         cout << "nlopt failed: " << e.what() << endl;
     }
 }
 
 #endif
-
-// End Tuner

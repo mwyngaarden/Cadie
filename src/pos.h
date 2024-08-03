@@ -4,6 +4,7 @@
 #include <bit>
 #include <bitset>
 #include <string>
+#include <tuple>
 #include <vector>
 #include <cassert>
 #include <cstdint>
@@ -14,6 +15,34 @@
 #include "piece.h"
 #include "square.h"
 #include "zobrist.h"
+
+class PositionBin
+{
+public:
+    u64 get(size_t pos, size_t bits) const
+    {
+        size_t index  = pos >> 6;
+        size_t offset = pos & 63;
+        
+        return (data_[index] >> offset) & ((1 << bits) - 1);
+    }
+    
+    void set(size_t pos, u64 n)
+    {
+        size_t index  = pos >> 6;
+        size_t offset = pos & 63;
+        
+        data_[index] |= n << offset;
+    }
+
+    const char * get() const
+    {
+        return reinterpret_cast<const char *>(data_);
+    }
+
+private:
+    u64 data_[5] = { };
+};
 
 class Position {
 public:
@@ -28,35 +57,35 @@ public:
     static constexpr int CastleFlags = BlackCastleQFlag | WhiteCastleQFlag | BlackCastleKFlag | WhiteCastleKFlag;
 
     Position() = default;
-    Position(const std::string fen, double outcome = 1);
+    Position(const std::string fen, int score1 = 0, int score2 = 0);
     Position(const char fen[]) : Position(std::string(fen)) { }
+    Position(const PositionBin& bin);
 
     Move note_move(const std::string& s) const;
 
-    bool   make_move_hack(const Move& m, bool test);
-    void unmake_move_hack(const Move& m, u8 csq1, u8 csq2, u8 c);
+    bool   make_move_hack(const Move& m);
     void   make_move     (const Move& m);
     void   make_move     (const Move& m,       UndoMove& undo);
     void unmake_move     (const Move& m, const UndoMove& undo);
-   
+
     void   make_null(      UndoNull& undo);
     void unmake_null(const UndoNull& undo);
-    
+
     std::string to_fen() const;
 
     u64 key() const { return key_; }
 
     u64 pawn_key() const { return pawn_key_; }
 
-    bool move_is_check      (const Move& m) const;
-    bool move_is_legal      (const Move& m) const;
+    bool move_is_check      (const Move& m);
+
     bool move_is_recap      (const Move& m) const;
+    bool move_is_legal      (const Move& m, u64 pins) const;
     bool move_is_safe       (const Move& m, int& see, int threshold = 0) const;
-    bool move_is_dangerous  (const Move& m, bool gives_check) const;
 
     int mvv_lva             (const Move& m) const;
 
-    bool ep_is_valid        (int sq) const;
+    bool ep_is_valid        (side_t side, int sq) const;
     bool side_attacks       (side_t side, int dest) const;
     bool piece_attacks      (int orig, int dest) const;
 
@@ -76,57 +105,24 @@ public:
 
         return I == 6 ? P256ToP6[piece] : P256ToP12[piece];
     }
-  
-    bool empty64(int sq) const
+
+    bool empty(int sq) const
     {
         assert(sq64_is_ok(sq));
 
-        return board_[sq] == PieceNone256;
+        return !bb::test(occ(), sq);
     }
-    
+
     bool line_is_empty(int orig, int dest) const;
-
-    template <side_t Side>
-    bool is_side(int sq) const
-    {
-        assert(sq88_is_ok(sq));
-
-        return board(to_sq64(sq)) & make_flag(Side);
-    }
-    
-    bool is_side(int sq, side_t side) const
-    {
-        assert(sq88_is_ok(sq));
-        assert(side_is_ok(side));
-
-        return board(to_sq64(sq)) & make_flag(side);
-    }
-
-    bool is_piece(int sq, int piece) const
-    {
-        assert(sq88_is_ok(sq));
-        assert(piece_is_ok(piece));
-
-        return board<6>(to_sq64(sq)) == piece;
-    }
 
     int king(side_t side) const
     {
         assert(side_is_ok(side));
 
-        return to_sq88(std::countr_zero(bb(side, King)));
+        return bb::lsb(bb(side, King));
     }
 
     int king() const { return king(side_); }
-    
-    int king64(side_t side) const
-    {
-        assert(side_is_ok(side));
-
-        return std::countr_zero(bb(side, King));
-    }
-
-    int king64() const { return king64(side_); }
 
     side_t side() const { return side_; }
 
@@ -143,22 +139,39 @@ public:
 
     bool draw_mat_insuf(           ) const;
     bool draw_mat_insuf(side_t side) const;
-    bool non_pawn_mat  (           ) const;
-    bool non_pawn_mat  (side_t side) const;
 
     void counts(int& p, int& n, int& lb, int& db, int& r, int& q, side_t side) const
     {
-        p  = counts_[WP12 + side];
-        n  = counts_[WN12 + side];
+        p  = pawns(side);
+        n  = knights(side);
         lb = lsbishops(side);
         db = dsbishops(side);
-        r  = counts_[WR12 + side];
-        q  = counts_[WQ12 + side];
+        r  = rooks(side);
+        q  = queens(side);
+    }
+    
+    void counts(int& wp, int& wn, int& wb, int& wr, int& wq,
+                int& bp, int& bn, int& bb, int& br, int& bq) const
+    {
+        wp = pawns(White);
+        wn = knights(White);
+        wb = bishops(White);
+        wr = rooks(White);
+        wq = queens(White);
+        
+        bp = pawns(Black);
+        bn = knights(Black);
+        bb = bishops(Black);
+        br = rooks(Black);
+        bq = queens(Black);
     }
 
     bool ocb() const
     {
-        return (lsbishops(White) && dsbishops(Black)) || (dsbishops(White) && lsbishops(Black));
+        u64 wbb = bb(White, Bishop);
+        u64 bbb = bb(Black, Bishop);
+
+        return (wbb & bb::Light && bbb & bb::Dark) || (wbb & bb::Dark && bbb & bb::Light);
     }
 
     std::string pretty() const;
@@ -175,28 +188,9 @@ public:
         return checkers_sq_[i];
     }
 
-    int phase    (           ) const;
-    int phase_inv(side_t side) const;
-    
-    int pawns  (side_t side) const { return counts_[WP12 + side]; }
-    int knights(side_t side) const { return counts_[WN12 + side]; }
-    int bishops(side_t side) const { return counts_[WB12 + side]; }
-    int rooks  (side_t side) const { return counts_[WR12 + side]; }
-    int queens (side_t side) const { return counts_[WQ12 + side]; }
+    int phase(           ) const;
+    int phase(side_t side) const;
 
-    int minors (side_t side) const { return knights(side) + bishops(side); }
-    int majors (side_t side) const { return rooks  (side) + queens (side); }
-    int pieces (side_t side) const { return knights(side) + bishops(side) + rooks(side); }
-
-    int pawns  () const { return pawns  (White) + pawns  (Black); }
-    int knights() const { return knights(White) + knights(Black); }
-    int bishops() const { return bishops(White) + bishops(Black); }
-    int rooks  () const { return rooks  (White) + rooks  (Black); }
-    int queens () const { return queens (White) + queens (Black); }
-    int minors () const { return minors (White) + minors (Black); }
-    int majors () const { return majors (White) + majors (Black); }
-    int pieces () const { return pieces (White) + pieces (Black); }
-    
     int lsbishops(side_t side) const
     {
         assert(side_is_ok(side));
@@ -212,13 +206,15 @@ public:
     bool bishop_pair(side_t side) const
     {
         assert(side_is_ok(side));
-        return lsbishops(side) && dsbishops(side);
+
+        u64 b = bb(side, Bishop);
+
+        return (b & bb::Light) && (b & bb::Dark);
     }
 
-    Move move_prev() const { return move_prev_; }
+    Move prev_move() const { return prev_move_; }
 
-    u64 occ(           ) const { return bb_all_; }
-    u64 occ(side_t side) const { return bb_side_[side]; }
+    u64 occ() const { return bb_side_[White] | bb_side_[Black]; }
 
     u64 bb(side_t side) const
     {
@@ -239,9 +235,68 @@ public:
         return bb_side_[side] & bb_pieces_[type];
     }
    
-#ifdef TUNE
-    double outcome() const { return outcome_; }
-#endif
+    int pawns  (side_t side) const { return std::popcount(bb(side, Pawn)); }
+    int knights(side_t side) const { return std::popcount(bb(side, Knight)); }
+    int bishops(side_t side) const { return std::popcount(bb(side, Bishop)); }
+    int rooks  (side_t side) const { return std::popcount(bb(side, Rook)); }
+    int queens (side_t side) const { return std::popcount(bb(side, Queen)); }
+    
+    int pawns  ()            const { return std::popcount(bb(Pawn)); }
+    int knights()            const { return std::popcount(bb(Knight)); }
+    int bishops()            const { return std::popcount(bb(Bishop)); }
+    int rooks  ()            const { return std::popcount(bb(Rook)); }
+    int queens ()            const { return std::popcount(bb(Queen)); }
+
+    u64 minors() const
+    {
+        return bb_pieces_[Knight] | bb_pieces_[Bishop];
+    }
+    
+    u64 minors(side_t side) const
+    {
+        return bb(side) & minors();
+    }
+    
+    u64 majors() const
+    {
+        return bb_pieces_[Rook] | bb_pieces_[Queen];
+    }
+    
+    u64 majors(side_t side) const
+    {
+        return bb(side) & majors();
+    }
+
+    u64 sliders() const
+    {
+        return bb_pieces_[Bishop] | bb_pieces_[Rook] | bb_pieces_[Queen];
+    }
+    
+    u64 sliders(side_t side) const
+    {
+        return bb(side) & sliders();
+    }
+
+    u64 pieces() const
+    { 
+        return bb_pieces_[Knight] | bb_pieces_[Bishop] | bb_pieces_[Rook] | bb_pieces_[Queen];
+    }
+
+    u64 pieces(side_t side) const
+    {
+        return bb(side) & pieces();
+    }
+
+    std::string to_egtb() const;
+
+    // Tuning
+    
+    int score1() const { return score1_; }
+    int score2() const { return score2_; }
+
+    PositionBin serialize() const;
+
+    void deserialize(const PositionBin& bin);
 
 private:
     template <bool UpdateKey> void add_piece(int sq, u8 piece);
@@ -259,29 +314,26 @@ private:
     
     u64 bb_side_[2]     = { };
     u64 bb_pieces_[6]   = { };
-    u64 bb_all_         = 0;
-    int counts_[12]     = { };
 
-    u8 board_[64];
-    
+    u8 board_[64]       = { };
+
     u64 key_            = 0;
     u64 pawn_key_       = 0;
 
-    u8 flags_           = 0;
+    Move prev_move_     = MoveNone;
 
     side_t side_        = 2;
-    u8 ep_sq_           = SquareNone;
+    u8 flags_           = 0;
+    u8 ep_sq_           = square::SquareCount;
     u8 half_moves_      = 0;
     u16 full_moves_     = 1;
 
     u8 checkers_        = 0;
-    u8 checkers_sq_[2];
+    u8 checkers_sq_[2]  = { };
 
-    Move move_prev_     = MoveNone;
-
-#ifdef TUNE
-    double outcome_     = 0;
-#endif
+    // Tuning
+    i16 score1_;
+    i16 score2_;
 };
 
 #endif

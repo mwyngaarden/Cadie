@@ -14,29 +14,30 @@
 
 class History {
 public:
-    static constexpr int HistoryMax = DepthMax * DepthMax;
+    static constexpr int HistoryMax = 16384;
 
     void clear();
-    void update(const Node& node, const MoveList& qmoves, const MoveList& cmoves);
-    
-    int special_index(const Position& pos, int ply, const Move& m) const;
-
+    void update(const Node& node, const MoveList& qmoves);
+    void specials(const Node& node, Move& killer1, Move& killer2, Move& counter) const;
     void clear_killers(side_t side, int ply);
-    
-    int quiet_score(const Position& pos, const Move& m);
-    int capture_score(const Position& pos, const Move& m);
+
+    int score(const Position& pos, const Move& m);
 
 private:
 
-    i16 * quiet_ptr(const Position& pos, const Move& m);
-    i16 * capture_ptr(const Position& pos, const Move& m);
+    int quiet_score(side_t side, const Move& m);
+    int cont_score(const Position& pos, const Move& m);
+
+    i16 * quiet_ptr(side_t side, const Move& m);
+    i16 * cont_ptr(const Position& pos, const Move& m);
 
     void update(i16 * p, int bonus);
 
-    i16 quiets_[2][64][64];
-    i16 captures_[6][64][6];
-    Move killers_[6][PliesMax][2];
-    Move counters_[6][64];
+    i16 cont_[2][12][64][6][64];
+    i16 quiets_[8192]; // 2 x 64 x 64
+
+    Move killers_[2][PliesMax + 2][2];
+    Move counters_[2][12][64];
 };
 
 #endif

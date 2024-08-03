@@ -16,79 +16,82 @@
 
 class Move {
 public:
-    static constexpr u32 CaptureFlags   = 0xff   << 14;
+    static constexpr u32 CaptureFlags   = 0xff   << 12;
 
-    static constexpr u32 PromoNFlag     = Knight << 22;
-    static constexpr u32 PromoBFlag     = Bishop << 22;
-    static constexpr u32 PromoRFlag     = Rook   << 22;
-    static constexpr u32 PromoQFlag     = Queen  << 22;
+    static constexpr u32 PromoNFlag     = Knight << 20;
+    static constexpr u32 PromoBFlag     = Bishop << 20;
+    static constexpr u32 PromoRFlag     = Rook   << 20;
+    static constexpr u32 PromoQFlag     = Queen  << 20;
     static constexpr u32 PromoUFlags    = PromoNFlag | PromoBFlag | PromoRFlag;
     static constexpr u32 PromoFlags     = PromoUFlags | PromoQFlag;
 
     static_assert(std::has_single_bit(PromoQFlag));
     static_assert((PromoQFlag & PromoUFlags) == 0);
 
-    static constexpr u32 EPFlag         = 1 << 25;
-    static constexpr u32 DoubleFlag     = 1 << 26;
-    static constexpr u32 CastleFlag     = 1 << 27;
+    static constexpr u32 EPFlag         = 1 << 23;
+    static constexpr u32 SingleFlag     = 1 << 24;
+    static constexpr u32 DoubleFlag     = 1 << 25;
+    static constexpr u32 CastleFlag     = 1 << 26;
 
     static_assert((EPFlag & PromoFlags) == 0);
 
     constexpr Move() : data_(0) { }
 
     constexpr Move(u32 data) : data_(data) { }
-
-    constexpr Move(int orig, int dest, u8 piece = PieceNone256)
+    
+    constexpr Move(int orig, int dest)
     {
-        assert(sq88_is_ok(orig));
-        assert(sq88_is_ok(dest));
-        assert(!is_king(piece));
+        assert(sq64_is_ok(orig));
+        assert(sq64_is_ok(dest));
 
-        data_ = (piece << 14) | (dest << 7) | orig;
+        data_ = (dest << 6) | orig;
     }
 
-    void set_capture(u8 piece)  { data_ |= piece << 14; }
-    void set_flag(u32 flag)     { data_ |= flag; }
+    constexpr Move(int orig, int dest, u8 cap)
+    {
+        assert(sq64_is_ok(orig));
+        assert(sq64_is_ok(dest));
+        assert(!is_king(cap));
+
+        data_ = (cap << 12) | (dest << 6) | orig;
+    }
+
+    void set_capture(u8 cap)  { data_ |= cap << 12; }
+    void set_flag(u32 flag)   { data_ |= flag; }
     
     operator u32()          const { return data_; }
 
-    int orig()              const { return  data_        & 0x7f; }
-    int dest()              const { return (data_ >>  7) & 0x7f; }
+    int orig()              const { return  data_       & 0x3f; }
+    int dest()              const { return (data_ >> 6) & 0x3f; }
 
-    int orig64()            const { return to_sq64(orig()); }
-    int dest64()            const { return to_sq64(dest()); }
-
-    u8 capture_piece()      const { return (data_ >> 14) & 0xff; }
-    int promo_piece6()      const { return (data_ >> 22) & 0x07; }
+    u8 captured()           const { return (data_ >> 12) & 0xff; }
+    int promo6()            const { return (data_ >> 20) & 0x07; }
 
     bool is_capture()       const { return data_ & CaptureFlags; }
     bool is_tactical()      const { return data_ & (EPFlag | CaptureFlags | PromoFlags); }
     bool is_promo()         const { return data_ & PromoFlags; }
-    bool is_under()         const { return data_ & PromoUFlags; }
+    bool is_under_promo()   const { return data_ & PromoUFlags; }
+    bool is_queen_promo()   const { return data_ & PromoQFlag; }
     bool is_ep()            const { return data_ & EPFlag; }
+    bool is_single()        const { return data_ & SingleFlag; }
     bool is_double()        const { return data_ & DoubleFlag; }
     bool is_castle()        const { return data_ & CastleFlag; }
     bool is_valid()         const { return orig() != dest(); }
-    
-    std::size_t index(int side) const
-    {
-        assert(is_valid());
-        assert(side_is_ok(side));
 
-        return (side << 14) | (data_ & 0x3fff);
-    }
+    int index(        )     const { return  data_ & 0xfff; }
+    int index(int side)     const { return (data_ & 0xfff) | (side << 12); }
 
     std::string str() const
     {
         std::ostringstream oss;
 
-        oss << square::sq_to_san(orig64());
-        oss << square::sq_to_san(dest64());
+        oss << square::sq_to_san(orig());
+        oss << square::sq_to_san(dest());
 
-             if (promo_piece6() == Knight) oss << 'n';
-        else if (promo_piece6() == Bishop) oss << 'b';
-        else if (promo_piece6() == Rook) oss << 'r';
-        else if (promo_piece6() == Queen) oss << 'q';
+             if (promo6() == Knight) oss << 'n';
+        else if (promo6() == Bishop) oss << 'b';
+        else if (promo6() == Rook) oss << 'r';
+        else if (promo6() == Queen) oss << 'q';
 
         return oss.str();
     }
@@ -109,11 +112,11 @@ public:
         assert(file_is_ok(dfile));
         assert(rank_is_ok(drank));
 
-        int orig = to_sq88(ofile, orank);
-        int dest = to_sq88(dfile, drank);
+        int orig = to_sq64(ofile, orank);
+        int dest = to_sq64(dfile, drank);
 
-        assert(sq88_is_ok(orig));
-        assert(sq88_is_ok(dest));
+        assert(sq64_is_ok(orig));
+        assert(sq64_is_ok(dest));
 
         Move move(orig, dest);
 
@@ -199,7 +202,7 @@ struct UndoMove {
     u8 half_moves;
     u8 checkers_sq[2];
     u8 checkers;
-    Move move_prev;
+    Move prev_move;
 };
 
 struct UndoNull {
@@ -208,14 +211,14 @@ struct UndoNull {
     u8 ep_sq;
     u8 checkers_sq[2];
     u8 checkers;
-    Move move_prev;
+    Move prev_move;
 };
 
 using MoveList  = List<Move, MovesMax>;
 using MoveStack = List<Move, 1024>;
 using PV        = Move[PliesMax];
 
-const Move MoveNone(0, 0);
-const Move MoveNull(1, 1);
+constexpr Move MoveNone(0, 0);
+constexpr Move MoveNull(1, 1);
 
 #endif

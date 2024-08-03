@@ -18,7 +18,7 @@
 #include "uciopt.h"
 using namespace std;
 
-fstream dfile;
+fstream logfile;
 
 GlobalStats gstats;
 
@@ -56,13 +56,13 @@ int  RazoringFactor     =   200;
 
 int  AspMargin          =    10;
 
-int  MoveOverhead       =    15;
+int  UciOverhead        =    15;
 bool UciLog             = false;
 
 int  FutilityFactor     =    60;
 
 bool EasyMove           =  true;
-int  EMMargin           =   500;
+int  EMMargin           =   400;
 int  EMShare            =    25;
 
 UCIOptionList opt_list;
@@ -91,7 +91,7 @@ void uci_init()
     
     opt_list.add(UCIOption("AspMargin", 5, AspMargin, 30));
     
-    opt_list.add(UCIOption("MoveOverhead", 1, MoveOverhead, 2000));
+    opt_list.add(UCIOption("UciOverhead", 1, UciOverhead, 2000));
     opt_list.add(UCIOption("UciLog", UciLog));
     
     opt_list.add(UCIOption("FutilityFactor", 10, FutilityFactor, 100));
@@ -101,8 +101,8 @@ void uci_init()
     opt_list.add(UCIOption("EMShare",   1, EMShare,    99));
     
     if (UciLog) {
-        dfile.open(uci_log_filename(), ios::out | ios::app);
-        assert(dfile.is_open());
+        logfile.open(uci_log_filename(), ios::out | ios::app);
+        assert(logfile.is_open());
     }
 }
 
@@ -117,7 +117,8 @@ void uci_loop()
 #endif
 
     for (string line; getline(cin, line); ) {
-        uci_log<Direction::In>(line);
+        if (UciLog)
+            uci_log<Direction::In>(line);
 
         if (line.empty() || line[0] == '#')
             continue;
@@ -180,15 +181,15 @@ void uci_go(const string& s)
 
     assert(fields.size() > 0);
 
-    MoveOverhead = opt_list.get("MoveOverhead").spin_value();
+    UciOverhead = opt_list.get("UciOverhead").spin_value();
 
-    slimits = SearchLimits();
+    sl = SearchLimits();
 
     i64 time[2] = { };
     i64 inc[2] = { };
 
     for (size_t i = 1; i < fields.size(); i++) {
-        const string token = fields[i];
+        string token = fields[i];
 
         if (token == "wtime")
             time[White] = stoll(fields[++i]);
@@ -199,48 +200,45 @@ void uci_go(const string& s)
         else if (token == "binc")
             inc[Black] = stoll(fields[++i]);
         else if (token == "movestogo")
-            slimits.movestogo = stoi(fields[++i]);
+            sl.movestogo = stoi(fields[++i]);
         else if (token == "depth")
-            slimits.depth = stoi(fields[++i]);
+            sl.depth = stoi(fields[++i]);
         else if (token == "nodes")
-            slimits.nodes = stoi(fields[++i]);
+            sl.nodes = stoi(fields[++i]);
         else if (token == "movetime")
-            slimits.movetime = stoll(fields[++i]);
+            sl.move_time = stoll(fields[++i]);
         else if (token == "infinite")
-            slimits.infinite = true;
+            sl.infinite = true;
         else
             assert(false);
     }
 
-    slimits.time = time[sinfo.pos.side()];
-    slimits.inc = inc[sinfo.pos.side()];
+    sl.time = time[si.pos.side()];
+    sl.inc = inc[si.pos.side()];
 
-    if (slimits.movetime)
-        slimits.movetime = max(i64(slimits.movetime - MoveOverhead), i64(1));
-    
-    else if (slimits.time) {
-        double mtg = slimits.movestogo ? min(double(slimits.movestogo), 50.0) : 50.0;
-        double rem = slimits.time + (mtg - 1) * slimits.inc - (mtg + 2) * MoveOverhead;
+    if (sl.move_time)
+        sl.move_time = max(i64(sl.move_time - UciOverhead), i64(1));
+
+    else if (sl.time || sl.inc) {
+        double mtg = sl.movestogo ? clamp(sl.movestogo, 1, 50) : 50;
+        double rem = sl.time + (mtg - 1) * sl.inc - (mtg + 2) * UciOverhead;
         double tpm = max(rem / mtg, 1.0);
 
-        double x1 = max(double(slimits.time - MoveOverhead), 1.0);
+        double x1 = max(double(sl.time - UciOverhead), 1.0);
         double x2 = max(rem * 0.9, 1.0);
         double bound = min(x1, x2);
 
-        double ntime = clamp(tpm * 0.6, 0.0, bound);
-        double xtime = clamp(tpm * 2.5, 1.0, bound);
-        double ptime = clamp(tpm * 5.0, 1.0, bound);
+        double f1 = sl.movestogo ?  1.75 : 2.25;
+        double f2 = sl.movestogo ? 10.50 : 9.00;
 
-        assert(ntime <= xtime && xtime <= ptime);
+        double xtime = clamp(tpm * f1, 1.0, bound);
+        double ptime = clamp(tpm * f2, 1.0, bound);
 
-        slimits.time_min   = i64(ntime + 0.5);
-        slimits.time_max   = i64(xtime + 0.5);
-        slimits.time_panic = i64(ptime + 0.5);
-
-        // uci_send("info string ntime %i xtime %i ptime %i bound %i rem %i tpm %i", ntime, xtime, ptime, bound, rem, tpm);
+        sl.max_time   = i64(xtime + 0.5);
+        sl.panic_time = i64(ptime + 0.5);
     }
 
-    sinfo.timer.start();
+    si.timer.start();
 
     sthread = thread(search_start);
 }
@@ -256,7 +254,8 @@ void uci_send(const char format[], ...)
 
     fprintf(stdout, "%s\n", buf);
 
-    uci_log<Direction::Out>(buf);
+    if (UciLog)
+        uci_log<Direction::Out>(buf);
 }
 
 string uci_score(int score)
@@ -305,21 +304,21 @@ void uci_position(const string& s)
     if (index < fields.size() && fields[index] == "moves")
         moves = fields.subtok(index + 1);
 
-    sinfo = SearchInfo(Position(fen));
+    si = SearchInfo(Position(fen));
 
     mstack.clear();
     mstack.add(MoveNone);
     mstack.add(MoveNone);
 
     kstack.clear();
-    kstack.add(sinfo.pos.key());
+    kstack.add(si.pos.key());
 
     for (auto m : moves) {
-        Move move = sinfo.pos.note_move(m);
+        Move move = si.pos.note_move(m);
 
         UndoMove undo;
 
-        sinfo.pos.make_move(move, undo);
+        si.pos.make_move(move, undo);
     }
 }
 
@@ -359,10 +358,10 @@ void uci_setoption(const string& s)
         else if (name == "UciLog") {
             UciLog = opt.check_value();
 
-            if (!UciLog && dfile.is_open())
-                dfile.close();
-            else if (UciLog && !dfile.is_open())
-                dfile.open(uci_log_filename(), ios::out | ios::app);
+            if (!UciLog && logfile.is_open())
+                logfile.close();
+            else if (UciLog && !logfile.is_open())
+                logfile.open(uci_log_filename(), ios::out | ios::app);
         }
     }
     // Button
@@ -405,7 +404,7 @@ void uci_ucinewgame()
 {
     search_reset();
     
-    sinfo = SearchInfo();
+    si = SearchInfo();
 }
 
 void uci_dump()
@@ -418,9 +417,7 @@ void uci_dump()
 template <Direction D>
 void uci_log(const string& s)
 {
-    if (!UciLog) return;
-                
-    assert(dfile.is_open());
+    assert(logfile.is_open());
     
     i64 elapsed = Timer::now() - gstats.time_init;
 
@@ -430,23 +427,20 @@ void uci_log(const string& s)
         << setfill(' ') << setw(16) << dec << right << elapsed
         << (D == Direction::In ? " << " : " >> ") << s << endl;
 
-    dfile << oss.str();
-    dfile.flush();
+    logfile << oss.str();
+    logfile.flush();
 }
 
 string uci_log_filename()
 {
-    string filename;
-
-    for (size_t i = 0; i < 1000 && filename.empty(); i++) {
+    for (size_t i = 0; i < 1000; i++) {
         stringstream oss;
 
         oss << "uci_" << setfill('0') << setw(5) << i << ".log";
 
-        if (!filesystem::exists(filesystem::path { oss.str() }))
-            filename = oss.str();
+        if (!filesystem::exists(filesystem::path{oss.str()}))
+            return oss.str();
     }
 
-    assert(!filename.empty());
-    return filename;
+    return "uci_default.log";
 }

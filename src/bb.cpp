@@ -2,13 +2,17 @@
 #include <string>
 #include <cassert>
 #include <cstdlib>
+#include "attack.h"
 #include "bb.h"
+#include "gen.h"
 #include "misc.h"
 #include "square.h"
 
 using namespace std;
 
 namespace bb {
+
+u64 InBetween[64][64];
 
 u64 PawnSpan[2][64];
 u64 PawnSpanAdj[2][64];
@@ -25,6 +29,25 @@ void init()
         PawnSpanAdj[0][sq] = FilesAdj[file] & RanksGT[rank];
         PawnSpanAdj[1][sq] = FilesAdj[file] & RanksLT[rank];
     }
+
+    for (int i = 0; i < 64; i++) {
+        int sq1 = to_sq88(i);
+
+        for (int j = 0; j < 64; j++) {
+            if (i == j) continue;
+
+            int sq2 = to_sq88(j);
+
+            //if (!bb::test(QueenAttacks[to_sq64(sq1)], to_sq64(sq2))) continue;
+            
+            if (!pseudo_attack(sq2, sq1, QueenFlags256)) continue;
+
+            int incr = delta_incr(sq2, sq1);
+
+            for (sq2 += incr; sq2 != sq1; sq2 += incr)
+                InBetween[i][j] |= bb::bit(to_sq64(sq2));
+        }
+    }
 }
 
 int lsb(u64 bb)
@@ -32,27 +55,29 @@ int lsb(u64 bb)
     return std::countr_zero(bb);
 }
 
-u64 bit(int sq)
+int msb(u64 bb)
 {
-    assert(sq64_is_ok(sq));
-
-    return 1ull << sq;
-}
-
-u64 bit88(int sq)
-{
-    assert(sq88_is_ok(sq));
-    
-    return bit(to_sq64(sq));
+    return 63 - std::countl_zero(bb);
 }
 
 int pop(u64& bb)
 {
     assert(bb);
 
-    int sq = std::countr_zero(bb);
+    int sq = lsb(bb);
 
     bb &= (bb - 1);
+
+    return sq;
+}
+
+int poprev(u64& bb)
+{
+    assert(bb);
+
+    int sq = msb(bb);
+
+    bb ^= 1ull << sq;
 
     return sq;
 }
@@ -67,14 +92,24 @@ bool single(u64 bb)
     return bb && (bb & (bb - 1)) == 0;
 }
 
+bool multi(u64 bb)
+{
+    return bb && (bb & (bb - 1)) != 0;
+}
+
 u64 set(u64 bb, int i)
 {
-    return bb |= (1ull << i);
+    return bb | (1ull << i);
 }
 
 u64 reset(u64 bb, int i)
 {
     return bb & ~(1ull << i);
+}
+
+int pawns2(u64 bb)
+{
+    return bool(bb) + bb::multi(bb);
 }
 
 u64 flip(u64 bb, int i)

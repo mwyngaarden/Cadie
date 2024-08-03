@@ -5,7 +5,7 @@
 #include <cstdint>
 #include "list.h"
 
-constexpr char CADIE_VERSION[] = "1.7";
+constexpr char CADIE_VERSION[] = "1.8";
 constexpr char CADIE_DATE[] = __DATE__;
 constexpr char CADIE_TIME[] = __TIME__;
 
@@ -32,9 +32,9 @@ typedef int64_t i64;
 
 using KeyStack = List<u64, 1024>;
 
-constexpr int DepthMin =  -4;
-constexpr int DepthMax = 120;
-constexpr int PliesMax = DepthMax - DepthMin + 2;
+constexpr int DepthMin =  -6;
+constexpr int DepthMax = 114;
+constexpr int PliesMax = DepthMax - DepthMin;
 constexpr int MovesMax = 128;
 
 constexpr bool ply_is_ok(int ply) { return ply >= 0 && ply < PliesMax; }
@@ -52,13 +52,12 @@ constexpr int PhaseMax      = 4 * PhaseN + 4 * PhaseB + 4 * PhaseR + 2 * PhaseQ;
 constexpr bool phase_is_ok(int phase) { return phase == PhaseMg || phase == PhaseEg; }
 
 struct Value {
-    int mg = 0;
-    int eg = 0;
+    int mg;
+    int eg;
 
-    bool value_is_ok() const
-    {
-        return abs(mg) < 20000 && abs(eg) < 20000;
-    }
+    constexpr Value(int m, int e) : mg(m), eg(e) { }
+
+    constexpr Value() : Value(0, 0) { }
 
     constexpr int operator[](int phase) const
     {
@@ -109,9 +108,12 @@ struct Value {
 
     int lerp(int phase, int factor = 128) const
     {
-        assert(value_is_ok());
+        return (mg * (PhaseMax - phase) + (eg * phase * factor / 128)) / PhaseMax;
+    }
 
-        return (mg * (PhaseMax - phase) + eg * phase * factor / 128) / PhaseMax;
+    friend Value operator-(Value val)
+    {
+        return Value(-val.mg, -val.eg);
     }
 };
 

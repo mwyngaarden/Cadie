@@ -9,9 +9,9 @@
 #include "pos.h"
 
 struct Bench {
-    std::size_t num     =  120;
+    std::size_t num     =   30;
     std::size_t time    =    0;
-    std::size_t depth   =   11;
+    std::size_t depth   =   13;
     std::size_t nodes   =    0;
     std::size_t hash    =    8;
 

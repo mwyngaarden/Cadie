@@ -33,8 +33,6 @@ public:
         start(b);
     }
     
-    Status status() const { return status_; }
-
     static std::string to_string(i64 n, std::vector<std::string> v)
     {
         std::ostringstream oss;
@@ -99,8 +97,6 @@ public:
 
         return true;
     }
-
-    void reset() { status_ = None; }
 
     template <class T = Milli>
     i64 elapsed_time(i64 min = 0) const

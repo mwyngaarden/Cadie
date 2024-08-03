@@ -15,12 +15,12 @@ constexpr int IncrsR[4] = { -16,  -1,   1,  16 };
 constexpr int IncrsQ[8] = { -17, -16, -15,  -1,  1, 15, 16, 17 };
 
 std::size_t gen_moves(MoveList& moves, const Position& pos, GenMode mode);
+u64 gen_pins(const Position& pos);
 
 GenState gen_state(const Position& pos);
 
-int  delta_incr     (int orig, int dest);
-bool pseudo_attack  (int orig, int dest, u8 piece);
-bool pseudo_attack64(int orig, int dest, u8 piece);
+int  delta_incr   (int orig, int dest);
+bool pseudo_attack(int orig, int dest, u8 piece);
 
 constexpr int DeltaCount = 240;
 constexpr int DeltaOffset = 120;

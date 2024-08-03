@@ -75,10 +75,12 @@ static i64 perft(Position& pos, size_t depth, size_t height)
         pos.unmake_move(m, undo);
     }
 #else
+    u64 pins = !pos.checkers() ? gen_pins(pos) : 0;
+
     gen_moves(moves, pos, GenMode::Pseudo);
 
     for (const auto& m : moves) {
-        if (pos.move_is_legal(m)) {
+        if (pos.move_is_legal(m, pins)) {
             UndoMove undo;
 
             pos.make_move(m, undo);
@@ -146,6 +148,7 @@ static void perft_go(PerftInfo &pinfo)
                << "d = " << setw(1) << pinfo.depth << ' '
                << "dl = " << setw(1) << leaves_diff << ' '
                << "inv = " << setw(1) << invalid << ' '
+               << "cpl = " << setw(4) << pinfo.cycles / pinfo.leaves << ' '
                << "cklps = " << setw(7) << size_t(cklps) << ' '
                << (leaves_diff == 0 ? "PASS" : "FAIL !!!");
 

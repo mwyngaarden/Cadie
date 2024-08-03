@@ -8,21 +8,12 @@
 
 namespace bb {
 
-extern u64 PawnSpan[2][64];
-extern u64 PawnSpanAdj[2][64];
-
 void init();
 
-enum {
-    A1, B1, C1, D1, E1, F1, G1, H1,
-    A2, B2, C2, D2, E2, F2, G2, H2,
-    A3, B3, C3, D3, E3, F3, G3, H3,
-    A4, B4, C4, D4, E4, F4, G4, H4,
-    A5, B5, C5, D5, E5, F5, G5, H5,
-    A6, B6, C6, D6, E6, F6, G6, H6,
-    A7, B7, C7, D7, E7, F7, G7, H7,
-    A8, B8, C8, D8, E8, F8, G8, H8
-};
+extern u64 InBetween[64][64];
+
+extern u64 PawnSpan[2][64];
+extern u64 PawnSpanAdj[2][64];
 
 constexpr u64 Rank1 = 0x00000000000000ffull;
 constexpr u64 Rank2 = Rank1 << 8;
@@ -46,8 +37,10 @@ constexpr u64 Full       = 0xffffffffffffffffull;
 constexpr u64 QueenSide  = FileA | FileB | FileC | FileD;
 constexpr u64 KingSide   = ~QueenSide;
 constexpr u64 PromoRanks = Rank1 | Rank8;
+constexpr u64 PawnRanks  = ~PromoRanks;
 constexpr u64 Light      = 0x55aa55aa55aa55aaull;
 constexpr u64 Dark       = ~Light;
+constexpr u64 Corners    = 0x8100000000000081;
 
 constexpr u64 Ranks[8] = { Rank1, Rank2, Rank3, Rank4, Rank5, Rank6, Rank7, Rank8 };
 constexpr u64 Files[8] = { FileA, FileB, FileC, FileD, FileE, FileF, FileG, FileH };
@@ -60,7 +53,7 @@ constexpr u64 RanksLT[8] = {
     Rank1 | Rank2 | Rank3 | Rank4,
     Rank1 | Rank2 | Rank3 | Rank4 | Rank5,
     Rank1 | Rank2 | Rank3 | Rank4 | Rank5 | Rank6,
-    Rank1 | Rank2 | Rank3 | Rank4 | Rank5 | Rank6 | Rank7,
+    Rank1 | Rank2 | Rank3 | Rank4 | Rank5 | Rank6 | Rank7
 };
 
 constexpr u64 RanksGT[8] = {
@@ -85,13 +78,56 @@ constexpr u64 FilesAdj[8] = {
     FileG
 };
 
+constexpr u64 Diags[15] = {
+    0x0000000000000080ull,
+    0x0000000000008040ull,
+    0x0000000000804020ull,
+    0x0000000080402010ull,
+    0x0000008040201008ull,
+    0x0000804020100804ull,
+    0x0080402010080402ull,
+    0x8040201008040201ull,
+    0x4020100804020100ull,
+    0x2010080402010000ull,
+    0x1008040201000000ull,
+    0x0804020100000000ull,
+    0x0402010000000000ull,
+    0x0201000000000000ull,
+    0x0100000000000000ull
+};
+
+constexpr u64 AntiDiags[15] = {
+    0x0000000000000001ull,
+    0x0000000000000102ull,
+    0x0000000000010204ull,
+    0x0000000001020408ull,
+    0x0000000102040810ull,
+    0x0000010204081020ull,
+    0x0001020408102040ull,
+    0x0102040810204080ull,
+    0x0204081020408000ull,
+    0x0408102040800000ull,
+    0x0810204080000000ull,
+    0x1020408000000000ull,
+    0x2040800000000000ull,
+    0x4080000000000000ull,
+    0x8000000000000000ull
+};
+
 int lsb(u64 bb);
-u64 bit(int sq);
-u64 bit88(int sq);
+int msb(u64 bb);
+
+constexpr u64 bit(int sq)
+{
+    return 1ull << sq;
+}
 
 int pop     (u64& bb);
+int poprev  (u64& bb);
 bool test   (u64 bb, int i);
 bool single (u64 bb);
+bool multi  (u64 bb);
+int pawns2  (u64 bb);
 u64 set     (u64 bb, int i);
 u64 reset   (u64 bb, int i);
 u64 flip    (u64 bb, int i);

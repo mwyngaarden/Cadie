@@ -6,6 +6,7 @@
 #include <sstream>
 #include <utility>
 #include <cassert>
+#include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include "attack.h"
@@ -21,13 +22,8 @@
 #include "string.h"
 using namespace std;
 
-Position::Position(const string fen, [[maybe_unused]] double outcome)
+Position::Position(const string fen, int score1, int score2)
 {
-    // init
-
-    for (int i = 0; i < 64; i++)
-        board(i) = PieceNone256;
-
     // fen
 
     Tokenizer fields(fen);
@@ -90,7 +86,7 @@ Position::Position(const string fen, [[maybe_unused]] double outcome)
 
         assert(sq64_is_ok(sq));
 
-        ep_sq_ = ep_is_valid(sq) ? sq : SquareNone;
+        ep_sq_ = ep_is_valid(side_, sq) ? sq : square::SquareCount;
     }
 
     // half moves counter
@@ -115,9 +111,61 @@ Position::Position(const string fen, [[maybe_unused]] double outcome)
     if (side_ == White)
         key_ ^= zob::side();
 
-#ifdef TUNE
-    outcome_ = outcome;
+    // Tuning
+    score1_ = score1;
+    score2_ = score2;
+}
+
+// Tuning
+Position::Position(const PositionBin& bin)
+{
+    size_t pos = 0;
+
+    for (size_t sq = 0; sq < 64; sq++) {
+        u8 p12 = bin.get(pos, 4);
+
+        if (piece12_is_ok(p12)) {
+            u8 piece = P12ToP256[p12];
+
+            add_piece<true>(sq, piece);
+        }
+
+        pos += 4;
+    }
+
+    flags_ = bin.get(pos, 8);
+    pos += 8;
+
+    side_ = bin.get(pos, 8);
+    pos += 8;
+    
+    ep_sq_ = bin.get(pos, 8);
+    pos += 8;
+    
+    half_moves_ = bin.get(pos, 8);
+    pos += 8;
+    
+    score1_ = i16(bin.get(pos, 16));
+    pos += 16;
+    
+    score2_ = i16(bin.get(pos, 16));
+    //pos += 16;
+
+#ifndef NDEBUG
+
+    // checkers
+
+    set_checkers();
+
 #endif
+
+    // key
+
+    key_ ^= zob::castle(flags_);
+    key_ ^= zob::ep(ep_sq_);
+
+    if (side_ == White)
+        key_ ^= zob::side();
 }
 
 string Position::to_fen() const
@@ -160,7 +208,7 @@ string Position::to_fen() const
     if ((flags_ & CastleFlags)      == 0) oss << '-';
 
     oss << ' ';
-    oss << (ep_sq_ == SquareNone ? "-" : square::sq_to_san(ep_sq_));
+    oss << (ep_sq_ == square::SquareCount ? "-" : square::sq_to_san(ep_sq_));
 
     oss << ' ';
     oss << (int)half_moves_;
@@ -177,8 +225,8 @@ Move Position::note_move(const string& s) const
 
     Move m = Move::from_string(s);
 
-    int orig = m.orig64();
-    int dest = m.dest64();
+    int orig = m.orig();
+    int dest = m.dest();
 
     u8 mpiece = board(orig);
     u8 opiece = board(dest);
@@ -186,21 +234,28 @@ Move Position::note_move(const string& s) const
     m.set_capture(opiece);
 
     if (is_pawn(mpiece)) {
-        if (abs(orig - dest) == 16) {
-            assert(opiece == PieceNone256);
-            m.set_flag(Move::DoubleFlag);
-        }
-
-        else if (dest == ep_sq_) {
-            assert(opiece == PieceNone256);
+        if (dest == ep_sq_) {
+            assert(empty(dest));
             m.set_flag(Move::EPFlag);
             m.set_capture(make_pawn(!side_));
+        }
+
+        else if (!m.is_promo() && !m.is_capture()) {
+            if (abs(orig - dest) == 8) {
+                assert(empty(dest));
+                m.set_flag(Move::SingleFlag);
+            }
+
+            else if (abs(orig - dest) == 16) {
+                assert(empty(dest));
+                m.set_flag(Move::DoubleFlag);
+            }
         }
     }
 
     else if (is_king(mpiece)) {
         if (abs(orig - dest) == 2) {
-            assert(opiece == PieceNone256);
+            assert(empty(dest));
             m.set_flag(Move::CastleFlag);
         }
     }
@@ -214,12 +269,12 @@ void Position::make_move(const Move& m)
     key_ ^= zob::ep(ep_sq_);
     key_ ^= zob::side();
 
-    int orig  = m.orig64();
-    int dest  = m.dest64();
+    int orig  = m.orig();
+    int dest  = m.dest();
     int piece = board(orig);
-    int pincr = square::incr(side_);
+    int incr = square::incr(side_);
 
-    ep_sq_ = SquareNone;
+    ep_sq_ = square::SquareCount;
 
     if (m.is_castle()) {
         int rorig = dest > orig ? orig + 3 : orig - 4;
@@ -229,13 +284,13 @@ void Position::make_move(const Move& m)
         mov_piece<true>(rorig, rdest);
     }
     else if (m.is_ep()) {
-        rem_piece<true>(dest - pincr);
+        rem_piece<true>(dest - incr);
         mov_piece<true>(orig, dest);
     }
     else if (m.is_double()) {
         mov_piece<true>(orig, dest);
 
-        if (ep_is_valid(square::ep_dual(dest)))
+        if (ep_is_valid(!side_, square::ep_dual(dest)))
             ep_sq_ = square::ep_dual(dest);
     }
     else {
@@ -244,7 +299,7 @@ void Position::make_move(const Move& m)
 
         if (m.is_promo()) {
             rem_piece<true>(orig);
-            add_piece<true>(dest, to_piece256(side_, m.promo_piece6()));
+            add_piece<true>(dest, to_piece256(side_, m.promo6()));
         }
         else
             mov_piece<true>(orig, dest);
@@ -261,7 +316,7 @@ void Position::make_move(const Move& m)
 
     set_checkers();
 
-    move_prev_ = m;
+    prev_move_ = m;
 
     key_ ^= zob::castle(flags_);
     key_ ^= zob::ep(ep_sq_);
@@ -271,7 +326,7 @@ void Position::make_move(const Move& m, UndoMove& undo)
 {
     assert(m.is_valid());
     assert(m.dest() != king(!side_));
-    assert(!is_king(m.capture_piece()));
+    assert(!is_king(m.captured()));
     assert(mstack.empty() || m != mstack.back());
 
     undo.flags          = flags_;
@@ -283,18 +338,18 @@ void Position::make_move(const Move& m, UndoMove& undo)
     undo.checkers_sq[0] = checkers_sq_[0];
     undo.checkers_sq[1] = checkers_sq_[1];
     undo.checkers       = checkers_;
-    undo.move_prev      = move_prev_;
+    undo.prev_move      = prev_move_;
 
     key_ ^= zob::castle(flags_);
     key_ ^= zob::ep(ep_sq_);
     key_ ^= zob::side();
 
-    int orig  = m.orig64();
-    int dest  = m.dest64();
+    int orig  = m.orig();
+    int dest  = m.dest();
     int piece = board(orig);
-    int pincr = square::incr(side_);
+    int incr = square::incr(side_);
 
-    ep_sq_ = SquareNone;
+    ep_sq_ = square::SquareCount;
 
     if (m.is_castle()) {
         int rorig = dest > orig ? orig + 3 : orig - 4;
@@ -304,13 +359,13 @@ void Position::make_move(const Move& m, UndoMove& undo)
         mov_piece<true>(rorig, rdest);
     }
     else if (m.is_ep()) {
-        rem_piece<true>(dest - pincr);
+        rem_piece<true>(dest - incr);
         mov_piece<true>(orig, dest);
     }
     else if (m.is_double()) {
         mov_piece<true>(orig, dest);
 
-        if (ep_is_valid(square::ep_dual(dest)))
+        if (ep_is_valid(!side_, square::ep_dual(dest)))
             ep_sq_ = square::ep_dual(dest);
     }
     else {
@@ -319,7 +374,7 @@ void Position::make_move(const Move& m, UndoMove& undo)
 
         if (m.is_promo()) {
             rem_piece<true>(orig);
-            add_piece<true>(dest, to_piece256(side_, m.promo_piece6()));
+            add_piece<true>(dest, to_piece256(side_, m.promo6()));
         } 
         else
             mov_piece<true>(orig, dest);
@@ -336,17 +391,17 @@ void Position::make_move(const Move& m, UndoMove& undo)
 
     set_checkers();
 
-    move_prev_ = m;
+    prev_move_ = m;
 
     key_ ^= zob::castle(flags_);
     key_ ^= zob::ep(ep_sq_);
     
-    assert(!side_attacks(side_, king64(!side_)));
+    assert(!side_attacks(side_, king(!side_)));
 
     kstack.add(key_);
     mstack.add(m);
 
-    sinfo.tnodes++;
+    si.tnodes++;
 }
 
 void Position::unmake_move(const Move& m, const UndoMove& undo)
@@ -362,10 +417,10 @@ void Position::unmake_move(const Move& m, const UndoMove& undo)
     checkers_sq_[0] = undo.checkers_sq[0];
     checkers_sq_[1] = undo.checkers_sq[1];
     checkers_       = undo.checkers;
-    move_prev_      = undo.move_prev;
+    prev_move_      = undo.prev_move;
 
-    int orig = m.orig64();
-    int dest = m.dest64();
+    int orig = m.orig();
+    int dest = m.dest();
 
     if (m.is_castle()) {
         int rorig = dest > orig ? orig + 3 : orig - 4;
@@ -387,7 +442,7 @@ void Position::unmake_move(const Move& m, const UndoMove& undo)
             mov_piece<false>(dest, orig);
 
         if (m.is_capture())
-            add_piece<false>(dest, m.capture_piece());
+            add_piece<false>(dest, m.captured());
     }
 
     side_ ^= 1;
@@ -396,14 +451,14 @@ void Position::unmake_move(const Move& m, const UndoMove& undo)
     mstack.pop_back();
 }
 
-bool Position::make_move_hack(const Move& m, bool test)
+bool Position::make_move_hack(const Move& m)
 {
     assert(m.is_valid());
     assert(m.dest() != king(!side_));
-    assert(!is_king(m.capture_piece()));
+    assert(!is_king(m.captured()));
 
-    int orig = m.orig64();
-    int dest = m.dest64();
+    int orig = m.orig();
+    int dest = m.dest();
 
     if (m.is_castle()) {
         int rorig = dest > orig ? orig + 3 : orig - 4;
@@ -424,64 +479,13 @@ bool Position::make_move_hack(const Move& m, bool test)
 
         if (m.is_promo()) {
             rem_piece<false>(orig);
-            add_piece<false>(dest, to_piece256(side_, m.promo_piece6()));
+            add_piece<false>(dest, to_piece256(side_, m.promo6()));
         } 
         else
             mov_piece<false>(orig, dest);
     }
 
-    side_ ^= 1;
-
-    bool ret;
-
-    if (test)
-        ret = !side_attacks(side_, king64(!side_));
-    else {
-        checkers_ = 0;
-
-        set_checkers();
-
-        ret = checkers_;
-    }
-    
-    return ret;
-}
-
-void Position::unmake_move_hack(const Move& m, u8 csq1, u8 csq2, u8 c)
-{
-    assert(m == mstack.back());
-
-    checkers_sq_[0] = csq1;
-    checkers_sq_[1] = csq2;
-    checkers_       = c;
-
-    int orig = m.orig64();
-    int dest = m.dest64();
-
-    if (m.is_castle()) {
-        int rorig = dest > orig ? orig + 3 : orig - 4;
-        int rdest = dest > orig ? orig + 1 : orig - 1;
-
-        mov_piece<false>(dest, orig);
-        mov_piece<false>(rdest, rorig);
-    } 
-    else if (m.is_ep()) {
-        mov_piece<false>(dest, orig);
-        add_piece<false>(square::ep_dual(dest), make_pawn(side_));
-    } 
-    else {
-        if (m.is_promo()) {
-            rem_piece<false>(dest);
-            add_piece<false>(orig, make_pawn(!side_));
-        } 
-        else
-            mov_piece<false>(dest, orig);
-
-        if (m.is_capture())
-            add_piece<false>(dest, m.capture_piece());
-    }
-
-    side_ ^= 1;
+    return !side_attacks(!side_, king(side_));
 }
 
 void Position::make_null(UndoNull& undo)
@@ -491,22 +495,21 @@ void Position::make_null(UndoNull& undo)
     undo.checkers_sq[0] = checkers_sq_[0];
     undo.checkers_sq[1] = checkers_sq_[1];
     undo.checkers       = checkers_;
-    undo.move_prev      = move_prev_;
+    undo.prev_move      = prev_move_;
 
     key_    ^= zob::side();
     key_    ^= zob::ep(ep_sq_);
     side_   ^= 1;
 
-    ep_sq_          = SquareNone;
-    checkers_sq_[0] = SquareNone;
-    checkers_sq_[1] = SquareNone;
+    ep_sq_          = square::SquareCount;
+
     checkers_       = 0;
-    move_prev_      = MoveNull;
+    prev_move_      = MoveNull;
 
     kstack.add(key_);
     mstack.add(MoveNull);
 
-    sinfo.tnodes++;
+    si.tnodes++;
 }
 
 void Position::unmake_null(const UndoNull& undo)
@@ -516,7 +519,7 @@ void Position::unmake_null(const UndoNull& undo)
     checkers_sq_[0] = undo.checkers_sq[0];
     checkers_sq_[1] = undo.checkers_sq[1];
     checkers_       = undo.checkers;
-    move_prev_      = undo.move_prev;
+    prev_move_      = undo.prev_move;
 
     side_ ^= 1;
 
@@ -528,13 +531,11 @@ template <bool UpdateKey>
 void Position::add_piece(int sq, u8 piece)
 {
     assert(sq64_is_ok(sq));
-    assert(empty64(sq));
+    assert(empty(sq));
     assert(piece256_is_ok(piece));
 
     int p12 = P256ToP12[piece];
-
-    ++counts_[p12];
-
+    
     if (UpdateKey) {
         key_ ^= zob::piece(p12, sq);
 
@@ -542,7 +543,6 @@ void Position::add_piece(int sq, u8 piece)
             pawn_key_ ^= zob::piece(p12, sq);
     }
 
-    bb_all_              |= bb::bit(sq);
     bb_side_[p12 & 1]    ^= bb::bit(sq);
     bb_pieces_[p12 >> 1] ^= bb::bit(sq);
 
@@ -553,7 +553,7 @@ template <bool UpdateKey>
 void Position::rem_piece(int sq)
 {
     assert(sq64_is_ok(sq));
-    assert(!empty64(sq));
+    assert(!empty(sq));
 
     u8 piece = board(sq);
 
@@ -562,8 +562,6 @@ void Position::rem_piece(int sq)
 
     int p12 = P256ToP12[piece];
 
-    --counts_[p12];
-
     if (UpdateKey) {
         key_ ^= zob::piece(p12, sq);
 
@@ -571,7 +569,6 @@ void Position::rem_piece(int sq)
             pawn_key_ ^= zob::piece(p12, sq);
     }
 
-    bb_all_              &= ~bb::bit(sq);
     bb_side_[p12 & 1]    ^=  bb::bit(sq);
     bb_pieces_[p12 >> 1] ^=  bb::bit(sq);
 
@@ -583,8 +580,8 @@ void Position::mov_piece(int orig, int dest)
 {
     assert(sq64_is_ok(orig));
     assert(sq64_is_ok(dest));
-    assert(!empty64(orig));
-    assert(empty64(dest));
+    assert(!empty(orig));
+    assert(empty(dest));
 
     u8 piece = board(orig);
 
@@ -601,8 +598,7 @@ void Position::mov_piece(int orig, int dest)
             pawn_key_ ^= zob::piece(p12, dest);
         }
     }
-
-    bb_all_              ^= bb::bit(orig) | bb::bit(dest);
+    
     bb_side_[p12 & 1]    ^= bb::bit(orig) | bb::bit(dest);
     bb_pieces_[p12 >> 1] ^= bb::bit(orig) | bb::bit(dest);
 
@@ -619,21 +615,39 @@ bool Position::side_attacks(side_t side, int dest) const
     if (PawnAttacks[!side][dest] & bb(side, Pawn))
         return true;
 
-    // knights and sliders
+    // knights
 
-    for (u64 occ = this->occ(side); occ; ) {
+    for (u64 occ = bb(side, Knight); occ; ) {
         int sq = bb::pop(occ);
 
-        if (is_pawn(board(sq)) || is_king(board(sq)))
-            continue;
+        if (bb::Leorik::Knight(sq, bb::bit(dest)))
+            return true;
+    }
 
-        if (piece_attacks(sq, dest))
+    // sliders
+
+    u64 occ = this->occ();
+    u64 bbb = bb(side, Bishop);
+    u64 rbb = bb(side, Rook);
+    u64 qbb = bb(side, Queen);
+
+    for (u64 bb = BishopAttacks[dest] & (bbb | qbb); bb; ) {
+        int sq = bb::pop(bb);
+
+        if ((bb::InBetween[sq][dest] & occ) == 0)
+            return true;
+    }
+    
+    for (u64 bb = RookAttacks[dest] & (rbb | qbb); bb; ) {
+        int sq = bb::pop(bb);
+
+        if ((bb::InBetween[sq][dest] & occ) == 0)
             return true;
     }
 
     // king
 
-    if (int ksq = king64(side); pseudo_attack64(ksq, dest, KingFlag256))
+    if (bb::Leorik::King(king(side), bb::bit(dest)))
         return true;
 
     return false;
@@ -643,13 +657,13 @@ bool Position::piece_attacks(int orig, int dest) const
 {
     assert(sq64_is_ok(orig));
     assert(sq64_is_ok(dest));
-    assert(board(orig) != PieceNone256);
+    assert(!empty(orig));
 
     u8 piece = board(orig);
 
     assert(piece256_is_ok(piece));
 
-    if (!pseudo_attack64(orig, dest, piece))
+    if (!pseudo_attack(to_sq88(orig), to_sq88(dest), piece))
         return false;
 
     return !is_slider(piece) || line_is_empty(orig, dest);
@@ -674,9 +688,9 @@ string Position::pretty() const
         for (int file = 0; file <= 7; file++) {
             u8 piece = board(to_sq64(file, rank));
 
-            if (is_white(piece))
+            if (piece & WhiteFlag256)
                 oss << '-' << (char)piece256_to_char(piece) << '-';
-            else if (is_black(piece))
+            else if (piece & BlackFlag256)
                 oss << '<' << (char)toupper(piece256_to_char(piece)) << '>';
             else {
                 int dark = ~(file ^ rank) & 1;
@@ -697,57 +711,51 @@ string Position::pretty() const
     return oss.str();
 }
 
-bool Position::ep_is_valid(int sq) const
+bool Position::ep_is_valid(side_t side, int sq) const
 {
     assert(sq64_is_ok(sq));
-    assert(square::rank(sq) == Rank3 || square::rank(sq) == Rank6);
+    assert(bb::test(bb(Pawn), square::ep_dual(sq)));
 
-    sq = square::ep_dual(sq);
-
-    assert(is_pawn(board(sq)));
-
-    u8 opawn = flip_pawn(board(sq));
-
-    int file = square::file(sq);
-
-    return (file != FileA && board(sq - 1) == opawn) || (file != FileH && board(sq + 1) == opawn);
+    return PawnAttacks[!side][sq] & bb(side, Pawn);
 }
 
 void Position::set_checkers()
 {
     assert(checkers_ == 0);
 
-    int ksq = king64();
+    int ksq = king();
 
-    u8 opawn = make_pawn(!side_);
+    u64 cbb = 0;
 
-    int pincr = side_ == White ? -8 : 8;
-    int file = square::file(ksq);
+    u64 occ = this->occ();
+    u64 nbb = bb(!side_, Knight);
+    u64 bbb = bb(!side_, Bishop);
+    u64 rbb = bb(!side_, Rook);
+    u64 qbb = bb(!side_, Queen);
 
-    {
-        int orig1 = ksq - pincr - 1;
-        int orig2 = ksq - pincr + 1;
+    cbb |= PawnAttacks[side_][ksq] & bb(!side_, Pawn);
+    cbb |= bb::Leorik::Knight(ksq, nbb);
 
-        if (file != FileA && sq64_is_ok(orig1) && board(orig1) == opawn)
-            checkers_sq_[checkers_++] = to_sq88(orig1);
+    for (u64 bb = BishopAttacks[ksq] & (bbb | qbb); bb; ) {
+        int sq = bb::pop(bb);
 
-        if (file != FileH && sq64_is_ok(orig2) && board(orig2) == opawn)
-            checkers_sq_[checkers_++] = to_sq88(orig2);
+        if ((bb::InBetween[sq][ksq] & occ) == 0)
+            cbb |= bb::bit(sq);
     }
 
-    u64 obb = bb(side_^1, Knight)
-            | bb(side_^1, Bishop)
-            | bb(side_^1, Rook)
-            | bb(side_^1, Queen);
+    for (u64 bb = RookAttacks[ksq] & (rbb | qbb); bb; ) {
+        int sq = bb::pop(bb);
 
-    obb &= PieceAttacks[Knight][ksq] | PieceAttacks[Queen][ksq];
+        if ((bb::InBetween[sq][ksq] & occ) == 0)
+            cbb |= bb::bit(sq);
+    }
 
-    while (obb) {
-        int orig64 = bb::pop(obb);
-        int orig   = to_sq88(orig64);
+    assert(popcount(cbb) <= 2);
 
-        if (piece_attacks(orig64, ksq))
-            checkers_sq_[checkers_++] = orig;
+    while (cbb) {
+        int sq = bb::pop(cbb);
+            
+        checkers_sq_[checkers_++] = sq;
     }
 }
 
@@ -756,123 +764,261 @@ bool Position::line_is_empty(int orig, int dest) const
     assert(sq64_is_ok(orig));
     assert(sq64_is_ok(dest));
 
-    u64 occ = this->occ(White) | this->occ(Black);
-
-    return (InBetween[orig][dest] & occ) == 0;
+    return (bb::InBetween[orig][dest] & occ()) == 0;
 }
 
-bool Position::move_is_check(const Move& m) const
+bool Position::move_is_check(const Move& m)
 {
-    u8 mflag = make_flag(side_);
+    int oksq  = king(!side_);
+    int orig  = m.orig();
+    int dest  = m.dest();
 
-    int oksq = king(!side_);
-    int orig = m.orig();
-    int dest = m.dest();
-            
-    u8 mpiece = board(to_sq64(orig));
-    u8 piece;
+    u64 occ   = this->occ();
+    u64 okbb  = bb::bit(oksq);
+    u64 mobb  = bb::bit(orig);
+    u64 mdbb  = bb::bit(dest);
+    u64 mbbb  = bb(side_, Bishop);
+    u64 mrbb  = bb(side_, Rook);
+    u64 mqbb  = bb(side_, Queen);
 
-    int sq;
-    int incr;
+    u64 batt = BishopAttacks[oksq];
+    u64 ratt = RookAttacks[oksq];
 
-#if PROFILE >= PROFILE_SOME
-    gstats.ctests++;
-#endif
+    int type = board<6>(orig);
+    
+    if (m.is_ep()) [[unlikely]] {
+        int incr = square::incr(side_);
 
-    if (m.is_ep()) {
-        Position p = *this;
+        rem_piece<false>(dest - incr);
+        mov_piece<false>(orig, dest);
+    
+        bool checks = side_attacks(side_, oksq);
+        
+        mov_piece<false>(dest, orig);
+        add_piece<false>(dest - incr, make_pawn(!side_));
 
-        return p.make_move_hack(m, false);
+        return checks;
+    }
+    
+    else if (m.is_castle()) [[unlikely]] {
+        int rdest = dest > orig ? orig + 1 : orig - 1;
+        
+        if (square::file_eq(rdest, oksq) || square::rank_eq(rdest, oksq))
+            return (bb::InBetween[rdest][oksq] & (occ ^ mobb)) == 0;
+
+        return false;
     }
 
-    else if (is_pawn(mpiece)) {
+    else if (type == Knight) {
 
-        if (PawnAttacks[side_][to_sq64(dest)] & bb::bit88(oksq))
+        // Direct check?
+        if (bb::Leorik::Knight(dest, okbb))
             return true;
 
-        else if (m.is_promo()) {
-            u8 promo = to_piece256(side_, m.promo_piece6());
+        // Discovered check by bishop/queen?
+       
+        if (batt & mobb) {
+            for (u64 bb = batt & (mbbb | mqbb); bb; ) {
+                int sq = bb::pop(bb);
 
-            if (pseudo_attack(dest, oksq, promo)) {
-                if (is_knight(promo))
-                    return true;
+                if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
+            }
+        }
+        
+        // Discovered check by rook/queen?
+     
+        else if (ratt & mobb) {
+            for (u64 bb = ratt & (mrbb | mqbb); bb; ) {
+                int sq = bb::pop(bb);
 
-                assert(is_slider(promo));
-                
-                incr = delta_incr(oksq, dest);
-                sq = oksq;
+                if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
+            }
+        }
+       
+        return false;
+    }
+    
+    else if (((batt | ratt) & (mobb | mdbb)) == 0)
+        return false;
+    
+    else if (type == Bishop) {
 
-                do {
-                    sq += incr;
+        // Direct check?
+        if (bb::test(batt, dest) && (bb::InBetween[dest][oksq] & occ) == 0)
+            return true;
+        
+        // Discovered check by rook/queen?
 
-                    if (sq == dest) return true;
-                } while (sq == orig || (sq64_is_ok(to_sq64(sq)) && board(to_sq64(sq)) == PieceNone256));
+        if (ratt & mobb) {
+            for (u64 bb = ratt & (mrbb | mqbb); bb; ) {
+                int sq = bb::pop(bb);
+
+                if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
             }
         }
 
-        // Discovered checks not possible?
-        if (!m.is_capture() && sq88_file(orig) == sq88_file(oksq))
+        return false;
+    }
+    
+    else if (type == Rook) {
+
+        // Direct check?
+        if (bb::test(ratt, dest) && (bb::InBetween[dest][oksq] & occ) == 0)
+            return true;
+
+        // Discovered check not possible by bishop/queen in this case
+       
+        if (!square::diag_eq(orig, oksq) && !square::anti_eq(orig, oksq))
             return false;
+
+        if (batt & mobb) {
+            for (u64 bb = batt & (mbbb | mqbb); bb; ) {
+                int sq = bb::pop(bb);
+
+                if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
+            }
+        }
+
+        return false;
     }
 
-    else if (is_king(mpiece)) {
-        if (m.is_castle()) {
-            int rdest = dest > orig ? orig + 1 : orig - 1;
+    else if (type == Queen)
+        return bb::test(QueenAttacks[oksq], dest) && (bb::InBetween[dest][oksq] & occ) == 0;
 
-            if (!pseudo_attack(rdest, oksq, RookFlag256))
+    else if (type == King) {
+
+        // Discovered check not possible if our king is moving on the same line
+        // as the opponent king
+
+        if (bb::test(batt, orig) && bb::test(batt, dest)) return false;
+        if (bb::test(ratt, orig) && bb::test(ratt, dest)) return false;
+
+        // Discovered check by bishop/queen?
+        
+        if (ratt & mobb) {
+            for (u64 bb = ratt & (mrbb | mqbb); bb; ) {
+                int sq = bb::pop(bb);
+
+                if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
+            }
+        }
+        
+        // Discovered check by rook/queen?
+
+        else if (batt & mobb) {
+            for (u64 bb = batt & (mbbb | mqbb); bb; ) {
+                int sq = bb::pop(bb);
+
+                if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
+            }
+        }
+
+        return false;
+    }
+   
+    else if (type == Pawn) {
+
+        if (m.is_single() || m.is_double()) {
+
+            // Direct check?
+            if (PawnAttacks[side_][dest] & okbb)
+                return true;
+
+            // Discovered check not possible in these cases
+            
+            if (square::file_eq(orig, oksq))
                 return false;
 
-            incr = delta_incr(rdest, oksq);
-            sq = rdest;
+            if ((bb::FileA | bb::FileH) & mobb)
+                return false;
 
-            do { sq += incr; } while (sq64_is_ok(to_sq64(sq)) && board(to_sq64(sq)) == PieceNone256);
+            // Discovered check by bishop/queen?
 
-            return sq == oksq;
-        }
+            if (batt & mobb) {
+                for (u64 bb = batt & (mbbb | mqbb); bb; ) {
+                    int sq = bb::pop(bb);
 
-        // Discovered checks not possible?
-        if (delta_incr(oksq, orig) == delta_incr(oksq, dest))
+                    if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
+                }
+            }
+            
+            // Discovered attack by rook/queen?
+
+            else if (ratt & mobb) {
+                for (u64 bb = ratt & (mrbb | mqbb); bb; ) {
+                    int sq = bb::pop(bb);
+
+                    if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
+                }
+            }
+
             return false;
-    }
+        }
 
-    else if (is_knight(mpiece)) {
-        if (pseudo_attack(oksq, dest, KnightFlag256))
-            return true;
-    }
+        else if (!m.is_promo()) {
+            assert(m.is_capture());
 
-    else if (is_slider(mpiece)) {
-        if (pseudo_attack(dest, oksq, mpiece)) {
-            incr = delta_incr(oksq, dest);
-            sq = oksq;
-
-            do { sq += incr; } while (sq != dest && sq64_is_ok(to_sq64(sq)) && board(to_sq64(sq)) == PieceNone256);
-
-            if (sq == dest)
+            // Direct check?
+            if (PawnAttacks[side_][dest] & okbb)
                 return true;
+            
+            // Discovered check not possible in these cases
+
+            if (bb::test(batt, orig) && bb::test(batt, dest))
+                return false;
+        
+            // Discovered check by bishop/queen?
+
+            if (batt & mobb) {
+                for (u64 bb = batt & (mbbb | mqbb); bb; ) {
+                    int sq = bb::pop(bb);
+
+                    if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
+                }
+            }
+
+            // Discovered attack by rook/queen?
+
+            else if (ratt & mobb) {
+                for (u64 bb = ratt & (mrbb | mqbb); bb; ) {
+                    int sq = bb::pop(bb);
+
+                    if ((bb::InBetween[sq][oksq] & (occ ^ mobb)) == 0) return true;
+                }
+            }
+
+            return false;
         }
     }
 
-    // Is there a discovered check?
+    // Pawn promotions handled here
 
-    if (!pseudo_attack(orig, oksq, QueenFlags256))
-        return false;
+    assert(m.is_promo());
+    
+    u8 piece = m.captured();
 
-    incr = delta_incr(oksq, orig);
-    sq = oksq;
+    if (m.is_capture())
+        rem_piece<false>(dest);
 
-    do {
-        sq += incr;
+    rem_piece<false>(orig);
+    add_piece<false>(dest, to_piece256(side_, m.promo6()));
 
-        if (!sq88_is_ok(sq)) return false;
-    } while (sq == orig || (piece = board(to_sq64(sq))) == PieceNone256);
+    bool checks = side_attacks(side_, oksq);
+    
+    rem_piece<false>(dest);
+    add_piece<false>(orig, make_pawn(side_));
+    
+    if (m.is_capture())
+        add_piece<false>(dest, piece);
 
-    return (piece & mflag) && pseudo_attack(sq, oksq, piece);
+    return checks;
 }
 
-bool Position::move_is_legal(const Move& m) const
+bool Position::move_is_legal(const Move& m, u64 pins) const
 {
     // Only legal evasions are generated when in check
-    if (checkers_ > 0) return true;
+    if (checkers_ > 0) [[unlikely]]
+        return true;
 
     int ksq  = king();
     int orig = m.orig();
@@ -880,38 +1026,24 @@ bool Position::move_is_legal(const Move& m) const
 
     // At move generation we validated that we are not castling over check, but
     // not if we were castling into check. See note in move generation.
-    if (orig == ksq)
-        return !side_attacks(!side_, to_sq64(dest));
+    if (orig == ksq) [[unlikely]]
+        return !side_attacks(!side_, dest);
     
-    if (m.is_ep()) {
+    if (m.is_ep()) [[unlikely]] {
         Position p = *this;
         
-        return p.make_move_hack(m, true);
+        return p.make_move_hack(m);
     }
 
-    if (!pseudo_attack(orig, ksq, QueenFlags256))
+    if (!bb::test(pins, orig)) [[likely]]
         return true;
 
-    if (!line_is_empty(to_sq64(orig), to_sq64(ksq)))
-        return true;
+    if (square::file_eq(orig, ksq) && square::file_eq(dest, ksq)) return true;
+    if (square::rank_eq(orig, ksq) && square::rank_eq(dest, ksq)) return true;
+    if (square::diag_eq(orig, ksq) && square::diag_eq(dest, ksq)) return true;
+    if (square::anti_eq(orig, ksq) && square::anti_eq(dest, ksq)) return true;
 
-    int kincr = delta_incr(ksq, orig);
-    int mincr = delta_incr(orig, dest);
-
-    if (abs(mincr) == abs(kincr))
-        return true;
-
-    u8 oflag = make_flag(!side_);
-    u8 piece;
-
-    do {
-        orig += kincr;
-
-        if (!sq88_is_ok(orig)) return true;
-
-    } while ((piece = board(to_sq64(orig))) == PieceNone256);
-
-    return (piece & oflag) == 0 || !pseudo_attack(ksq, orig, piece);
+    return false;
 }
 
 int Position::phase() const
@@ -926,7 +1058,7 @@ int Position::phase() const
     return max(0, phase);
 }
 
-int Position::phase_inv(side_t side) const
+int Position::phase(side_t side) const
 {
     int phase = 0;
 
@@ -935,7 +1067,7 @@ int Position::phase_inv(side_t side) const
     phase += PhaseR * rooks(side);
     phase += PhaseQ * queens(side);
 
-    return phase;
+    return min(phase, PhaseMax);
 }
 
 bool Position::draw_mat_insuf(side_t side) const
@@ -958,59 +1090,85 @@ bool Position::draw_mat_insuf() const
     return draw_mat_insuf(White) && draw_mat_insuf(Black);
 }
 
-bool Position::non_pawn_mat(side_t side) const
-{
-    return minors(side) > 0 || majors(side) > 0;
-}
-
-bool Position::non_pawn_mat() const
-{
-    return non_pawn_mat(White) || non_pawn_mat(Black);
-}
-
 int Position::mvv_lva(const Move& m) const
 {
     assert(m.is_tactical());
 
-    int mval = 5 - board<6>(m.orig64());
-    int oval = m.is_capture() ? P256ToP6[m.capture_piece()] + 2 : 0;
+    int mval = 5 - board<6>(m.orig());
+    int oval = m.is_capture() ? P256ToP6[m.captured()] + 2 : 0;
 
-    int score = oval * 128 + mval * 16;
+    int score = 8 * oval + mval;
 
-    if (m.is_promo()) score += 128;
+    if (m.is_promo()) score += 8;
 
     return score;
 }
 
 bool Position::move_is_recap(const Move& m) const
 {
-    return move_prev_.is_capture() && move_prev_.dest() == m.dest();
+    return prev_move_.is_capture() && prev_move_.dest() == m.dest();
 }
 
 bool Position::move_is_safe(const Move& m, int& see, int threshold) const
 {
-    if (m.is_under()) return false;
-
-    u8 mpiece = board(m.orig64());
-
-    if (is_king(mpiece)) return true;
-
-    if (m.is_capture()) {
-        u8 opiece = m.capture_piece();
-    
-        int mtype = P256ToP6[mpiece];
-        int otype = P256ToP6[opiece];
-
-        if (otype >= mtype) return true;
-    }
-
     if (see == 2)
         see = see::calc(*this, m, threshold);
 
     return see;
 }
 
-bool Position::move_is_dangerous(const Move& m, bool gives_check) const
+// Tuning
+PositionBin Position::serialize() const
 {
-    return checkers() || gives_check || m.is_tactical();
+    PositionBin bin;
+
+    size_t pos = 0;
+
+    for (size_t sq = 0; sq < 64; sq++) {
+        u8 piece = board(sq);
+        u8 p12 = P256ToP12[piece];
+
+        bin.set(pos, p12);
+        pos += 4;
+    }
+
+    bin.set(pos, flags_);
+    pos += 8;
+
+    bin.set(pos, side_);
+    pos += 8;
+
+    bin.set(pos, ep_sq_);
+    pos += 8;
+   
+    bin.set(pos, half_moves_);
+    pos += 8;
+    
+    bin.set(pos, u16(score1_));
+    pos += 16;
+    
+    bin.set(pos, u16(score2_));
+    //pos += 16;
+
+    return bin;
+}
+
+string Position::to_egtb() const
+{
+    ostringstream oss;
+
+    oss << 'K';
+    oss << string(queens(White),  'Q');
+    oss << string(rooks(White),   'R');
+    oss << string(bishops(White), 'B');
+    oss << string(knights(White), 'N');
+    oss << string(pawns(White),   'P');
+    oss << 'K';
+    oss << string(queens(Black),  'Q');
+    oss << string(rooks(Black),   'R');
+    oss << string(bishops(Black), 'B');
+    oss << string(knights(Black), 'N');
+    oss << string(pawns(Black),   'P');
+
+    return oss.str();
 }

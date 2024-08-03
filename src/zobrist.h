@@ -7,7 +7,6 @@
 namespace zob {
 
 void init();
-void validate();
 
 u64 piece(int piece, int sq);
 u64 castle(u8 flags);

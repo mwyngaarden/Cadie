@@ -11,6 +11,7 @@
 #include <vector>
 #include "bench.h"
 #include "misc.h"
+#include "pawn.h"
 #include "search.h"
 #include "string.h"
 #include "timer.h"
@@ -44,7 +45,7 @@ void benchmark(int argc, char* argv[])
         else if (k == "depth") {
             assert(args.size() == 2);
             size_t n = stoull(v);
-            assert(n > 0 && n <= DepthMax);
+            //assert(n > 0 && n <= DepthMax);
             bench.depth = n;
         }
         else if (k == "file") {
@@ -138,7 +139,7 @@ void benchmark_go(Bench &bench)
 
         search_reset();
 
-        sinfo = SearchInfo(pos);
+        si = SearchInfo(pos);
 
         mstack.clear();
         mstack.add(MoveNone);
@@ -147,13 +148,13 @@ void benchmark_go(Bench &bench)
         kstack.clear();
         kstack.add(pos.key());
             
-        slimits = SearchLimits();
+        sl = SearchLimits();
 
-        slimits.depth = bench.depth;
-        slimits.nodes = bench.nodes;
-        slimits.movetime = bench.time;
+        sl.depth = bench.depth;
+        sl.nodes = bench.nodes;
+        sl.move_time = bench.time;
 
-        sinfo.timer.start();
+        si.timer.start();
 
         search_start();
         
@@ -167,9 +168,7 @@ void benchmark_go(Bench &bench)
     double etime        = gstats.time_eval_ns;
     i64 eps             = etime == 0 ? 0 : 1e+9 * tevals / etime;
 
-    i64 tcycles         = timer.accrued_cycles();
     i64 ttime           = timer.accrued_time().count();
-    i64 hz              = tcycles / ttime_s;
     i64 tnodes          = gstats.nodes_sum;
     i64 num             = gstats.num;
     i64 gtime           = gstats.time_gen_ns;
@@ -189,7 +188,6 @@ void benchmark_go(Bench &bench)
     
     vector<string> units_time { "ns", "us", "ms", "s " };
     vector<string> units_speed { "nps ", "knps", "mnps" };
-    vector<string> units_hertz { "Hz ", "kHz", "MHz", "GHz" };
     
     if (bench.barenodes) {
         cerr << tnodes << endl;
@@ -250,12 +248,12 @@ void benchmark_go(Bench &bench)
          << "tests check  = " << ralign<i64>(gstats.ctests, 11) << endl
          << "tests see    = " << ralign<i64>(gstats.stests, 11) << endl
          << endl
+         << "et hitrate   = " << ralign<i64>(etable.hitrate(), 11) << endl
          << "evals        = " << ralign<i64>(tevals, 11) << endl
          << "eps          = " << ralign<i64>(eps, 11) << endl
          << "nodes        = " << ralign<i64>(tnodes, 11) << endl
          << "nps          = " << ralign<i64>(tnodes / ttime_s, 11) << endl
-         << "time         = " << ralign(Timer::to_string(ttime_ns, { "ns", "us", "ms" }), 14) << endl
-         << "cpu          = " << ralign(Timer::to_string(hz, units_hertz),      15) << endl;
+         << "time         = " << ralign(Timer::to_string(ttime_ns, { "ns", "us", "ms" }), 14) << endl;
 }
 
 void benchmark_input(Bench& bench)

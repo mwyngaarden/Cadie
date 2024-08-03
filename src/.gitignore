@@ -3,6 +3,7 @@ build/
 include/
 cadie*
 lib*
+*.bin
 *.book
 *.obj
 *.out

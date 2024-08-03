@@ -43,7 +43,6 @@ int main(int argc, char* argv[])
     search_init();
     zob::init();
     uci_init();
-    attack_init();
     eval_init();
     bb::init();
 
@@ -58,8 +57,6 @@ int main(int argc, char* argv[])
 #endif
         else if (strcmp(argv[1], "help") == 0)
             help(argv[0]);
-        else if (strcmp(argv[1], "validate") == 0)
-            zob::validate();
 
         return EXIT_SUCCESS;
     }

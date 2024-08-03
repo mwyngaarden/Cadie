@@ -56,13 +56,6 @@ struct Entry {
 
         return true;
     }
-
-    static constexpr Entry init()
-    {
-        // TODO test with invalid depth and/or invalid gen and/or invalid bound
-        
-        return Entry { 0, MoveNone, -ScoreMate, -ScoreMate, 0, 0, BoundNone, 0 };
-    }
 };
 
 static_assert(sizeof(Entry) == 16);
@@ -85,7 +78,6 @@ public:
         gen_  = 0;
         hits_ = 0;
         gets_ = 0;
-        sets_ = 0;
 
         std::memset((void *)entries_.data(), 0, size_);
     }
@@ -113,7 +105,6 @@ public:
         mem::prefetch(&entries_[key & mask_]);
     }
 
-    std::size_t size() const { return size_; }
     std::size_t size_mb() const { return size_ / 1024 / 1024; }
 
     std::size_t hitrate() const { return gets_ ? 100 * hits_ / gets_ : 0; }
@@ -127,7 +118,6 @@ private:
     u8  gen_  = 0;
     u64 hits_ = 0;
     u64 gets_ = 0;
-    u64 sets_ = 0;
     
     std::size_t size_;
 };

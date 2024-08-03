@@ -10,13 +10,17 @@ using namespace std;
 
 Order::Order(const Node& node, History& history)
 {
-    bool tactical = node.depth < 0 && !node.pos.checkers();
-
-    GenMode mode = tactical ? GenMode::Tactical : GenMode::Pseudo;
+    bool qs = node.depth < 0 && !node.pos.checkers();
 
     MoveList moves;
 
-    gen_moves(moves, node.pos, mode);
+    gen_moves(moves, node.pos, qs ? GenMode::Tactical : GenMode::Pseudo);
+
+    Move killer1;
+    Move killer2;
+    Move counter;
+
+    history.specials(node, killer1, killer2, counter);
 
     for (size_t i = 0; i < moves.size(); i++) {
         Move m = moves[i];
@@ -30,19 +34,20 @@ Order::Order(const Node& node, History& history)
         else if (m.is_tactical()) {
             score = ScoreTactical;
             score += node.pos.mvv_lva(m);
-            
-            if (!node.pos.move_is_safe(m, see))
-                score -= tactical ? 1024 : ScoreTT;
 
-            if (!tactical && m.is_capture())
-                score += history.capture_score(node.pos, m) / 16;
+            if ((see = see::calc(node.pos, m)) == 0)
+                score -= qs ? 1024 : ScoreTT;
         }
 
-        else if (int index = history.special_index(node.pos, node.ply, m); index)
-            score = ScoreSpecial + index;
+        else if (m == killer1) score = ScoreKiller1;
+        else if (m == killer2) score = ScoreKiller2;
+        else if (m == counter) score = ScoreCounter;
 
-        else
-            score = history.quiet_score(node.pos, m);
+        else {
+            assert(!m.is_tactical());
+
+            score = history.score(node.pos, m);
+        }
 
         omoves_[count_++] = OMove::make(m, see, score);
     }
@@ -80,9 +85,9 @@ bool Order::singular() const
     return count_ == 1;
 }
 
-bool Order::special(int score)
+bool Order::is_special(int score)
 {
-    return score >= ScoreSpecial && score < ScoreTactical;
+    return score >= ScoreCounter && score <= ScoreKiller1;
 }
 
 int Order::score() const

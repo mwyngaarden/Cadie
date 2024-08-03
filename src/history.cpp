@@ -9,131 +9,136 @@
 #include "search.h"
 using namespace std;
 
-
 void History::clear()
 {
     memset(counters_, 0, sizeof(counters_));
-    memset(killers_, 0, sizeof(killers_));
-    memset(quiets_, 0, sizeof(quiets_));
-    memset(captures_, 0, sizeof(captures_));
+    memset(killers_,  0, sizeof(killers_));
+    memset(quiets_,   0, sizeof(quiets_));
+    memset(cont_,     0, sizeof(cont_));
 }
 
-void History::update(const Node& node, const MoveList& qmoves, const MoveList& cmoves)
+void History::update(const Node& node, const MoveList& qmoves)
 {
-    Move bm = node.bm;
+    Move best_move = node.best_move;
+
+    assert(!best_move.is_tactical());
+
+    int depth = min(node.depth, 10);
+    int bonus = 4 * (depth * depth + 40 * depth - 30);
+
+    if (Move pm = node.pos.prev_move(); pm.is_valid()) {
+        int dest = pm.dest();
+        int piece = node.pos.board<12>(dest);
+
+        assert(piece12_is_ok(piece));
+
+        // Counter moves
+
+        counters_[pm.is_capture()][piece][dest] = best_move;
+
+        // Continuation heuristic
+
+        update(cont_ptr(node.pos, best_move), bonus);
+
+        for (const Move& m : qmoves)
+            if (m != best_move)
+                update(cont_ptr(node.pos, m), -bonus);
+    }
 
     side_t side = node.pos.side();
 
     int ply = node.ply;
-    int depth = node.depth;
 
-    int inc = depth * depth;
-    int dec = -1 - depth * depth / 2;
-
-    if (!bm.is_tactical()) {
-
-        // Counter moves
-        
-        if (Move mp = node.pos.move_prev(); mp.is_valid()) {
-            int type = P256ToP6[node.pos.board(mp.dest64())];
-
-            assert(piece_is_ok(type));
-
-            counters_[type][mp.dest64()] = bm;
-        }
-
-        // Killer moves
-        
-        if (killers_[side][ply][0] != bm) {
-            killers_[side][ply][1] = killers_[side][ply][0];
-            killers_[side][ply][0] = bm;
-        }
-
-        // History heuristic
-        
-        update(quiet_ptr(node.pos, bm), inc);
-
-        for (const Move& m : qmoves) {
-            if (m == bm) continue;
-
-            update(quiet_ptr(node.pos, m), dec);
-        }
+    // Killer moves
+    
+    if (killers_[side][ply][0] != best_move) {
+        killers_[side][ply][1] = killers_[side][ply][0];
+        killers_[side][ply][0] = best_move;
     }
 
-    else if (bm.is_capture()) {
+    // Quiet heuristic
 
-        // Capture history
-        
-        update(capture_ptr(node.pos, bm), inc);
+    update(quiet_ptr(side, best_move), bonus);
 
-    }
-
-    for (const Move& m : cmoves) {
-        if (m == bm) continue;
-
-        update(capture_ptr(node.pos, m), dec);
-    }
+    for (const Move& m : qmoves)
+        if (m != best_move)
+            update(quiet_ptr(side, m), -bonus);
 }
 
-int History::special_index(const Position& pos, int ply, const Move& m) const
+void History::specials(const Node& node, Move& killer1, Move& killer2, Move& counter) const
 {
-    if (m == killers_[pos.side()][ply][0]) return 3;
-    if (m == killers_[pos.side()][ply][1]) return 2;
+    side_t side = node.pos.side();
 
-    if (Move mp = pos.move_prev(); mp.is_valid()) {
-        int type = P256ToP6[pos.board(mp.dest64())];
+    int ply = node.ply;
 
-        assert(piece_is_ok(type));
+    killer1 = killers_[side][ply][0];
+    killer2 = killers_[side][ply][1];
 
-        if (m == counters_[type][mp.dest64()])
-            return 1;
+    if (Move pm = node.pos.prev_move(); pm.is_valid()) {
+        int dest = pm.dest();
+        int piece = node.pos.board<12>(dest);
+
+        assert(piece12_is_ok(piece));
+
+        counter = counters_[pm.is_capture()][piece][dest];
     }
-
-    return 0;
 }
 
 void History::clear_killers(side_t side, int ply)
 {
-    assert(side_is_ok(side));
-    assert(ply_is_ok(ply));
-
     killers_[side][ply][0] = MoveNone;
     killers_[side][ply][1] = MoveNone;
 }
 
-int History::quiet_score(const Position& pos, const Move& m)
+int History::quiet_score(side_t side, const Move& m)
 {
-    int s = *quiet_ptr(pos, m);
+    assert(!m.is_tactical());
 
-    return s;
+    return quiets_[m.index(side)];
 }
 
-int History::capture_score(const Position& pos, const Move& m)
+i16 * History::quiet_ptr(side_t side, const Move& m)
 {
-    int s = *capture_ptr(pos, m);
+    assert(!m.is_tactical());
 
-    return s;
+    return &quiets_[m.index(side)];
 }
 
-i16 * History::quiet_ptr(const Position& pos, const Move& m)
+int History::cont_score(const Position& pos, const Move& m)
 {
-    return &quiets_[pos.side()][m.orig64()][m.dest64()];
+    i16 * p = cont_ptr(pos, m);
+
+    return p ? *p : 0;
 }
 
-i16 * History::capture_ptr(const Position& pos, const Move& m)
+i16 * History::cont_ptr(const Position& pos, const Move& m)
 {
-    int mtype = P256ToP6[pos.board(m.orig64())];
-    int otype = P256ToP6[m.capture_piece()];
+    assert(!m.is_tactical());
 
-    return &captures_[mtype][m.dest64()][otype];
+    Move pm = pos.prev_move();
+
+    if (!pm.is_valid()) [[unlikely]]
+        return nullptr;
+
+    int mdest =  m.dest();
+    int odest = pm.dest();
+
+    int mtype6  = pos.board< 6>(mdest);
+    int otype12 = pos.board<12>(odest);
+
+    return &cont_[pm.is_capture()][otype12][odest][mtype6][mdest];
+}
+
+int History::score(const Position& pos, const Move& m)
+{
+    assert(!m.is_tactical());
+
+    return quiet_score(pos.side(), m) + cont_score(pos, m);
 }
 
 void History::update(i16 * p, int bonus)
 {
-    int score = *p;
+    assert(p != nullptr);
 
-    score += 32 * bonus - score * std::abs(bonus) / 128;
-    score  = std::clamp(score, -HistoryMax, HistoryMax);
-
-    *p = score;
+    *p += bonus - *p * abs(bonus) / 16384;
 }

@@ -6,8 +6,6 @@
 #include <cstdint>
 #include "misc.h"
 
-enum class PieceAttr : int { Color2, Type6, Type12 };
-
 typedef u8 side_t;
 
 constexpr side_t White          =  0;
@@ -90,17 +88,11 @@ constexpr u8 BR12 = BlackRook12;
 constexpr u8 BQ12 = BlackQueen12;
 constexpr u8 BK12 = BlackKing12;
 
-constexpr bool is_white(u8 piece) { return (piece & WhiteFlag256) != PieceNone256; }
-constexpr bool is_black(u8 piece) { return (piece & BlackFlag256) != PieceNone256; }
-constexpr bool is_pawn(u8 piece) { return (piece & PawnFlags256) != PieceNone256; }
-constexpr bool is_knight(u8 piece) { return (piece & KnightFlag256) != PieceNone256; }
-constexpr bool is_bishop(u8 piece) { return (piece & QueenFlags256) == BishopFlag256; }
-constexpr bool is_rook(u8 piece) { return (piece & QueenFlags256) == RookFlag256; }
-constexpr bool is_queen(u8 piece) { return (piece & QueenFlags256) == QueenFlags256; }
-constexpr bool is_king(u8 piece) { return (piece & KingFlag256) != PieceNone256; }
-constexpr bool is_slider(u8 piece) { return (piece & QueenFlags256) != PieceNone256; }
+constexpr bool is_pawn(u8 piece) { return piece & PawnFlags256; }
+constexpr bool is_knight(u8 piece) { return piece & KnightFlag256; }
+constexpr bool is_king(u8 piece) { return piece & KingFlag256; }
+constexpr bool is_slider(u8 piece) { return piece & QueenFlags256; }
 
-constexpr u8 flip_pawn(u8 piece) { return piece ^ (ColorFlags256 | PawnFlags256); }
 constexpr u8 make_pawn(side_t side) { return WhitePawn256 << side; }
 constexpr u8 make_flag(side_t side) { return side + 1; }
 

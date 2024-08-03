@@ -8,10 +8,9 @@
 #include <cstring>
 #include "mem.h"
 
-template <std::size_t K, class T>
+template <std::size_t Bytes, class T>
 class HashTable {
 public:
-    static constexpr std::size_t Bytes = K * 1024;
     static constexpr std::size_t Count = Bytes / sizeof(T);
     static constexpr std::size_t Mask  = Count - 1;
     
@@ -73,7 +72,7 @@ public:
         mem::prefetch(&entries_[key & Mask]);
     }
 
-    std::size_t hitrate() const { return gets_ ? 100 * hits_ / gets_ : 0; }
+    std::size_t hitrate() const { return gets_ ? 1000 * hits_ / gets_ : 0; }
 
 private:
     std::vector<T> entries_;

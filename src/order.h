@@ -10,20 +10,13 @@
 
 
 struct OMove {
-
-    static constexpr int Offset = 100000;
+    static constexpr int Offset = 1 << 28;
 
     static u64 make(Move m, int see, int score)
     {
-        assert(see >= 0 && see <= 2);
+        assert(m.is_valid());
 
-        score = std::clamp(score + Offset, 0, 2 * Offset);
-
-        u64 ret =  u64(m)
-                | (u64(see)   << 32)
-                | (u64(score) << 34);
-
-        return ret;
+        return (u64(score + Offset) << 34) | (u64(see) << 32) | u64(m);
     }
 
     static Move move (u64 data) { return u32(data); }
@@ -33,9 +26,11 @@ struct OMove {
 };
 
 struct Order {
-    static constexpr int ScoreTT        =  1 << 16;
-    static constexpr int ScoreTactical  =  1 << 15;
-    static constexpr int ScoreSpecial   =  1 << 14;
+    static constexpr int ScoreTT        =  1 << 26;
+    static constexpr int ScoreTactical  =  1 << 25;
+    static constexpr int ScoreKiller1   = (1 << 24) + 2;
+    static constexpr int ScoreKiller2   = (1 << 24) + 1;
+    static constexpr int ScoreCounter   = (1 << 24) + 0;
 
     Order(const Node& node, History& history);
 
@@ -45,7 +40,7 @@ struct Order {
     int& see(const Position& pos, bool calc);
     int score() const;
 
-    static bool special(int score);
+    static bool is_special(int score);
 
 private:
     std::size_t index_ = 0;
