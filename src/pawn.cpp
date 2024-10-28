@@ -1,16 +1,14 @@
 #include <bit>
 #include <cassert>
 #include <cmath>
-#include "attack.h"
+#include "attacks.h"
 #include "bb.h"
 #include "eval.h"
 #include "ht.h"
 #include "pawn.h"
-#include "see.h"
 
 using namespace std;
 
-template <side_t Side> static bool pawn_backward   (const Position& pos, int orig);
 template <side_t Side> static Value eval_passed    (const Position& pos, int orig);
 template <side_t Side> static Value eval_pawn      (const Position& pos, int orig);
 
@@ -19,28 +17,26 @@ bool unstoppable_passer(const Position& pos, int orig)
 {
     constexpr int incr = square::incr(Side);
 
-    int rank_rel = square::rank(orig, Side);
-    int rank     = square::rank(orig);
-
     int king = pos.king(!Side);
+    int rank = square::rank(orig, Side);
     
-    if (pos.bb(Side) & bb::PawnSpan[Side][rank])
+    if (pos.bb(Side) & bb::PawnSpan[Side][orig])
         return false;
 
-    if (rank_rel == Rank2) {
+    if (rank == Rank2) {
         orig += incr;
-        ++rank_rel;
+        rank++;
         
-        assert(rank_rel == square::rank(orig, Side));
+        assert(rank == square::rank(orig, Side));
     }
         
-    assert(rank_rel >= Rank3 && rank_rel <= Rank7);
+    assert(rank >= Rank3 && rank <= Rank7);
 
     int prom = square::pawn_promo(Side, orig);
 
     int dist = square::dist(orig, prom);
 
-    assert(dist == Rank8 - rank_rel);
+    assert(dist == Rank8 - rank);
 
     if (pos.side() == side_t(!Side)) dist++;
 
@@ -63,62 +59,7 @@ bool king_passer(const Position& pos, int orig)
     return false;
 }
 
-template <side_t Side>
-bool free_passer(const Position& pos, int orig)
-{
-    constexpr int incr = square::incr(Side);
-
-    int sq = orig + incr;
-
-    if (!pos.empty(sq)) return false;
-
-    Move mv(orig, sq);
-   
-    return see::calc(pos, mv) > 0;
-}
-
-template <side_t Side>
-bool pawn_backward(const Position& pos, int orig)
-{
-    constexpr int incr = square::incr(Side);
-
-    int rank     = square::rank(orig);
-    int rank_rel = square::rank(orig, Side);
-    int file     = square::file(orig);
-
-    if (rank_rel == Rank7) return false;
-
-    u64 mpbb = pos.bb(Side, Pawn);
-    u64 opbb = pos.bb(!Side, Pawn);
-
-    u64 pbb = mpbb | opbb;
-    
-    mpbb &= bb::FilesAdj[file];
-    opbb &= bb::FilesAdj[file];
-
-    if (mpbb & ~(Side == White ? bb::RanksGT[rank] : bb::RanksLT[rank]))
-        return false;
-
-    if (bb::test(pbb, orig + incr))
-        return true;
-
-    u64 p1rank = bb::Ranks[rank+(Side==White?1:-1)];
-    u64 p2rank = bb::Ranks[rank+(Side==White?2:-2)];
-
-    if (opbb & (p1rank | p2rank)) return true;
-
-    if (mpbb & p1rank) return false;
-
-    if (rank_rel != Rank2) return true;
-
-    if (sq64_is_ok(orig + 2 * incr) && bb::test(pbb, orig + 2 * incr)) return true;
-    
-    if ((mpbb & p2rank) == 0)
-        return true;
-
-    return rank_rel != Rank6 && (opbb & bb::Ranks[rank+(Side==White?3:-3)]);
-}
-
+// TODO refactor
 template <side_t Side>
 Value eval_passed(const Position& pos, int orig)
 {
@@ -137,32 +78,31 @@ Value eval_passed(const Position& pos, int orig)
 
     if (!pos.pieces(!Side) && (unstoppable_passer<Side>(pos, orig) || king_passer<Side>(pos, orig)))
         idx = 1;
-    else if (free_passer<Side>(pos, orig))
+    else if (pos.empty(dest) && !pos.side_attacks(!Side, dest))
         idx = 2;
     
     if (idx != 1) {
         u64 occ    = pos.occ();
-        u64 king   = pos.bb(Side, King);
-        u64 pawns  = pos.bb(Side, Pawn);
-        u64 minors = pos.minors(Side);
         u64 majors = pos.majors(Side);
+        u64 rspan  = bb::PawnSpan[!Side][orig];
 
-        u64 rspan = bb::PawnSpan[!Side][orig];
-
-        for (u64 bb = rspan & majors; bb; ) {
+        for (u64 bb = rspan & pos.bb(Side, Rook); bb; ) {
             int sq = bb::pop(bb);
 
-            u64 between = bb::InBetween[sq][orig] & occ;
+            u64 between = bb::Between[sq][orig] & occ;
 
-            if (between & pawns) continue;
-
-            u64 blockers = between & (minors | king);
-
-            if (!blockers) {
-                val.mg += PawnPassedGaurdedBm;      
-                val.eg += PawnPassedGaurdedBe;      
-            }
+            if ((between & ~majors) == 0)
+                val += Value(PawnPassedGaurdedBm, PawnPassedGaurdedBe);
         }
+
+        int psq   = square::pawn_promo(Side, orig);
+        bool mdef = pos.side_attacks( Side, psq);
+        bool oatt = pos.side_attacks(!Side, psq);
+
+        if (mdef && !oatt)
+            val.eg += PawnPassedStopOffset;
+        else if (!mdef && oatt)
+            val.eg -= PawnPassedStopOffset;
     }
 
     int mkdist_mg = PawnPassedB[PhaseMg][idx][0];
@@ -182,25 +122,26 @@ Value eval_passed(const Position& pos, int orig)
 template <side_t Side>
 Value eval_pawn(const Position& pos, int orig)
 {
+    constexpr int incr = square::incr(Side);
+
     Value val;
 
-    u64 mpbb = pos.bb(Side, Pawn);
-    u64 opbb = pos.bb(!Side, Pawn);
-    u64 adjbb = bb::FilesAdj[square::file(orig)];
-    u64 span = bb::PawnSpan[Side][orig];
-    u64 span_adj = bb::PawnSpanAdj[Side][orig];
-    u64 rspan_adj = bb::PawnSpanAdj[!Side][orig];
-    
-    int rank     = square::rank(orig);
-    int rank_rel = square::rank(orig, Side);
-        
+    u64 mpbb        = pos.bb(Side, Pawn);
+    u64 opbb        = pos.bb(!Side, Pawn);
+    u64 adjbb       = bb::FilesAdj[square::file(orig)];
+    u64 span        = bb::PawnSpan[Side][orig];
+    u64 span_adj    = bb::PawnSpanAdj[Side][orig];
+    u64 rspan_adj   = bb::PawnSpanAdj[!Side][orig];
+
+    int rank        = square::rank(orig);
+    int rank_rel    = square::rank(orig, Side);
+
     bool backward   = false;
     bool isolated   = false;
     bool passed     = false;
-    bool candidate  = false;
     bool opposed    = false;
-   
-    bool open = (span & (mpbb | opbb)) == 0;
+
+    bool open = !(span & (mpbb | opbb));
 
     if (open) {
         passed = !(opbb & span_adj);
@@ -211,19 +152,23 @@ Value eval_pawn(const Position& pos, int orig)
     else
         opposed = opbb & span;
 
-    int phalanx = bb::pawns2(mpbb & adjbb & bb::Ranks[rank]);
-    int support = bb::pawns2(mpbb & PawnAttacks[!Side][orig]);
-    int attacks = bb::pawns2(opbb & PawnAttacks[ Side][orig]);
+    int phalanx = popcount(mpbb & adjbb & bb::Ranks[rank]);
+    int support = popcount(mpbb & PawnAttacks[!Side][orig]);
+    int levers  = popcount(opbb & PawnAttacks[ Side][orig]);
 
     bool doubled = mpbb & bb::PawnSpan[!Side][orig];
+    bool blocked = !pos.empty(orig + incr);
 
     if (support == 0 && phalanx == 0) {
         isolated = !(mpbb & adjbb);
 
-        if (!isolated)
-            backward = pawn_backward<Side>(pos, orig);
+        if (!isolated) {
+            u64 leversp = opbb & PawnAttacks[Side][orig + incr];
+
+            backward = !(mpbb & rspan_adj) && (leversp || bb::test(opbb, orig + incr));
+        }
     }
-    
+
     assert(!(isolated && backward));
 
     // Candidate
@@ -231,13 +176,11 @@ Value eval_pawn(const Position& pos, int orig)
     if (open && !passed) {
         assert(rank_rel < Rank7);
 
-        if (support >= attacks) {
+        if (support >= levers) {
             int mp = popcount(mpbb & rspan_adj) + phalanx;
             int op = popcount(opbb & span_adj);
 
-            candidate = mp >= op;
-
-            if (candidate)
+            if (mp >= op)
                 val.eg += PawnCandidateB[rank_rel];
         }
     }
@@ -254,10 +197,21 @@ Value eval_pawn(const Position& pos, int orig)
     for (u64 bb = PawnAttacks[Side][orig] & pos.pieces(!Side); bb; ) {
         int sq = bb::pop(bb);
 
-        int type = P256ToP6[pos.board(sq)];
+        int type = pos.board<6>(sq);
 
-        val.mg += PawnAttackB[PhaseMg][type];
-        val.eg += PawnAttackB[PhaseEg][type];
+        val.mg += PawnAttackB[PhaseMg][!!support][type];
+        val.eg += PawnAttackB[PhaseEg][!!support][type];
+    }
+
+    if (!blocked) {
+        for (u64 bb = PawnAttacks[Side][orig + incr] & pos.pieces(!Side); bb; ) {
+            int sq = bb::pop(bb);
+
+            int type = pos.board<6>(sq);
+
+            val.mg += PawnAttackPushB[PhaseMg][!!phalanx][type];
+            val.eg += PawnAttackPushB[PhaseEg][!!phalanx][type];
+        }
     }
 
     // Penalties
@@ -281,13 +235,16 @@ Value eval_pawns(const Position& pos)
 {
     Value val;
 
-    for (u64 bb = pos.bb(White, Pawn); bb; ) {
-        int sq = bb::pop(bb);
+    u64 wpawns = pos.bb(White, Pawn);
+    u64 bpawns = pos.bb(Black, Pawn);
+
+    while (wpawns) {
+        int sq = bb::pop(wpawns);
         val += eval_pawn<White>(pos, sq);
     }
-    
-    for (u64 bb = pos.bb(Black, Pawn); bb; ) {
-        int sq = bb::pop(bb);
+
+    while (bpawns) {
+        int sq = bb::pop(bpawns);
         val -= eval_pawn<Black>(pos, sq);
     }
 

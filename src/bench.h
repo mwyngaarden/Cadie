@@ -9,13 +9,13 @@
 #include "pos.h"
 
 struct Bench {
-    std::size_t num     =   30;
-    std::size_t time    =    0;
-    std::size_t depth   =   13;
-    std::size_t nodes   =    0;
-    std::size_t hash    =    8;
+    std::size_t num     = 30;
+    std::size_t time    =  0;
+    std::size_t depth   = 13;
+    std::size_t nodes   =  0;
+    std::size_t hash    =  8;
 
-    bool exc        =  true;
+    bool exc_mated  = true;
     bool rand       = false;
     bool barenodes  = false;
     bool baretime   = false;

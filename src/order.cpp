@@ -5,75 +5,112 @@
 #include "move.h"
 #include "order.h"
 #include "search.h"
-#include "see.h"
 using namespace std;
 
-Order::Order(const Node& node, History& history)
+Order::Order(Position& pos, const History& history, Move best_move, int ply, int depth) : pos_(pos)
 {
-    bool qs = node.depth < 0 && !node.pos.checkers();
+    bool tactical = depth <= -1 && !pos.checkers();
+    bool prune    = depth <=  0 && !pos.checkers();
+    bool checks   = depth ==  0 && !pos.checkers();
 
     MoveList moves;
 
-    gen_moves(moves, node.pos, qs ? GenMode::Tactical : GenMode::Pseudo);
+    if (checks) {
+        gen_moves(moves, pos, GenMode::Tactical);
+        add_checks(moves, pos);
+    }
+    else
+        gen_moves(moves, pos, tactical ? GenMode::Tactical : GenMode::Pseudo);
 
-    Move killer1;
-    Move killer2;
-    Move counter;
+    Move killer1 = Move::None();
+    Move killer2 = Move::None();
+    Move counter = Move::None();
 
-    history.specials(node, killer1, killer2, counter);
+    if (!tactical)
+        history.specials(pos, ply, killer1, killer2, counter);
 
     for (size_t i = 0; i < moves.size(); i++) {
         Move m = moves[i];
 
-        int see = 2; // 2 = not calculated
-        int score;
+        int score = 0;
+        int see = -1;
 
-        if (m == node.entry.move)
+        assert(!checks || m.is_tactical() || pos.move_is_check(m));
+
+        // Don't prune losing checks if in qs and depth == 0 && !pos.checkers() ?
+        if (prune && !(see = pos.see(m)))
+            continue;
+
+        if (m == best_move)
             score = ScoreTT;
 
         else if (m.is_tactical()) {
-            score = ScoreTactical;
-            score += node.pos.mvv_lva(m);
+            score = ScoreTactical + pos.mvv_lva(m);
 
-            if ((see = see::calc(node.pos, m)) == 0)
-                score -= qs ? 1024 : ScoreTT;
+            if (see == -1)
+                see = pos.see(m);
+
+            if (!see)
+                score -= ScoreTT;
         }
 
-        else if (m == killer1) score = ScoreKiller1;
-        else if (m == killer2) score = ScoreKiller2;
-        else if (m == counter) score = ScoreCounter;
-
-        else {
-            assert(!m.is_tactical());
-
-            score = history.score(node.pos, m);
+        else if (!tactical) {
+            if (m == killer1)
+                score = ScoreKiller1;
+            else if (m == killer2)
+                score = ScoreKiller2;
+            else if (m == counter)
+                score = ScoreCounter;
+            else
+                score = history.score(pos, m);
         }
 
-        omoves_[count_++] = OMove::make(m, see, score);
+        emoves_[count_++] = ExtMove::make(m, score);
+    }
+}
+
+Order::Order(Position& pos, Move best_move) : pos_(pos)
+{
+    MoveList moves;
+
+    gen_moves(moves, pos, GenMode::Tactical);
+
+    for (size_t i = 0; i < moves.size(); i++) {
+        Move m = moves[i];
+
+        if (!pos.see(m))
+            continue;
+
+        int score = m == best_move ? ScoreTT : ScoreTactical + pos.mvv_lva(m);
+
+        emoves_[count_++] = ExtMove::make(m, score);
     }
 }
 
 Move Order::next()
 {
     if (index_ >= count_)
-        return MoveNone;
+        return Move::None();
 
     u64 move_max = 0;
     size_t index_max = index_;
 
     for (size_t i = index_; i < count_; i++) {
-        if (OMove::score(omoves_[i]) > OMove::score(move_max)) {
-            move_max = omoves_[i];
+        // TODO maybe use move itself?
+        if (ExtMove::score(emoves_[i]) > ExtMove::score(move_max)) {
+            move_max = emoves_[i];
             index_max = i;
         }
     }
 
     if (index_max != index_)
-        swap(omoves_[index_max], omoves_[index_]);
+        swap(emoves_[index_max], emoves_[index_]);
 
-    score_ = OMove::score(move_max);
-    see_ = OMove::see(move_max);
-    move_ = OMove::move(move_max);
+    score_ = ExtMove::score(move_max);
+    move_ = ExtMove::move(move_max);
+
+    see_ = score_ == ScoreTT || !move_.is_tactical() ? 2
+         : score_ >= ScoreTactical ? 1 : 0;
 
     index_++;
 
@@ -85,20 +122,15 @@ bool Order::singular() const
     return count_ == 1;
 }
 
-bool Order::is_special(int score)
-{
-    return score >= ScoreCounter && score <= ScoreKiller1;
-}
-
 int Order::score() const
 {
     return score_;
 }
 
-int& Order::see(const Position& pos, bool calc)
+int Order::see()
 {
-    if (calc && see_ == 2) // 2 = not calculated
-        see_ = see::calc(pos, move_);
+    if (see_ == 2)
+        see_ = pos_.see(move_);
 
     return see_;
 }

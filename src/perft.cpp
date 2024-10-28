@@ -64,28 +64,24 @@ static i64 perft(Position& pos, size_t depth, size_t height)
 
     i64 leaves = 0;
 
+    UndoInfo undo = pos.undo_info();
+
 #if 1
     gen_moves(moves, pos, GenMode::Legal);
 
     for (const auto& m : moves) {
-        UndoMove undo;
-
-        pos.make_move(m, undo);
+        pos.make_move(m);
         leaves += perft(pos, depth - 1, height + 1);
-        pos.unmake_move(m, undo);
+        pos.unmake_move(undo);
     }
 #else
-    u64 pins = !pos.checkers() ? gen_pins(pos) : 0;
-
     gen_moves(moves, pos, GenMode::Pseudo);
 
     for (const auto& m : moves) {
-        if (pos.move_is_legal(m, pins)) {
-            UndoMove undo;
-
-            pos.make_move(m, undo);
+        if (pos.move_is_legal(m)) {
+            pos.make_move(m);
             leaves += perft(pos, depth - 1, height + 1);
-            pos.unmake_move(m, undo);
+            pos.unmake_move(undo);
         }
     }
 #endif

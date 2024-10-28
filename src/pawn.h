@@ -20,8 +20,10 @@ extern int PawnIsolatedPe;
 extern int PawnPassedB[2][3][8];
 extern int PawnPassedGaurdedBm;
 extern int PawnPassedGaurdedBe;
+extern int PawnPassedStopOffset;
 
-extern int PawnAttackB[2][6];
+extern int PawnAttackB[2][2][6];
+extern int PawnAttackPushB[2][2][6];
 
 extern int PawnCandidateB[8];
 extern int PawnConnectedB[8];

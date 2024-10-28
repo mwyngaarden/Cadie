@@ -3,7 +3,7 @@
 #include <thread>
 #include <cstdlib>
 #include <cstring>
-#include "attack.h"
+#include "attacks.h"
 #include "bb.h"
 #include "bench.h"
 #include "gen.h"
@@ -12,7 +12,6 @@
 #include "piece.h"
 #include "pos.h"
 #include "search.h"
-#include "see.h"
 #include "square.h"
 #include "string.h"
 #include "tt.h"
@@ -20,19 +19,15 @@
 #include "uciopt.h"
 using namespace std;
 
-static void help(char* exe)
+static void help(string exe)
 {
-    assert(exe != nullptr);
-
     cout << "Usage: " << exe << " [options]" << endl
          << "Options:" << endl
          << "  bench [depth=N] [file=path] [num=N] [hash=MB] [nodes=N] [random] [time=ms] [mates] [option.K=V]" << endl
-         << "  perft [depth=N] [file=path] [num=N] [report=N]" << endl
 #ifdef TUNE
-         << "  tune <path> [full]" << endl
+         << "  tune  See tune.cpp" << endl
 #endif
-         << "  validate" << endl
-         << "  help" << endl;
+         << "  perft [depth=N] [file=path] [num=N] [report=N]" << endl;
 }
 
 int main(int argc, char* argv[])
@@ -46,17 +41,18 @@ int main(int argc, char* argv[])
     eval_init();
     bb::init();
 
-    if (argc >= 2) {
-        if (strcmp(argv[1], "bench") == 0)
+    Tokenizer tokens(argc, argv);
+
+    if (tokens.size() >= 2) {
+        if (tokens[1] == "bench")
             benchmark(argc - 2, argv + 2);
-        else if (strcmp(argv[1], "perft") == 0)
+        else if (tokens[1] == "perft")
             perft(argc - 2, argv + 2);
 #ifdef TUNE
-        else if (strcmp(argv[1], "tune") == 0)
+        else if (tokens[1] == "tune")
             eval_tune(argc - 2, argv + 2);
 #endif
-        else if (strcmp(argv[1], "help") == 0)
-            help(argv[0]);
+        else help(tokens[0]);
 
         return EXIT_SUCCESS;
     }

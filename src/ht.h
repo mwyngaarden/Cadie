@@ -72,7 +72,7 @@ public:
         mem::prefetch(&entries_[key & Mask]);
     }
 
-    std::size_t hitrate() const { return gets_ ? 1000 * hits_ / gets_ : 0; }
+    std::size_t hitrate() const { return gets_ ? 100 * hits_ / gets_ : 0; }
 
 private:
     std::vector<T> entries_;

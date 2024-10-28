@@ -3,6 +3,7 @@
 
 #include "misc.h"
 
+// TODO Different king zones may yield better results in king safety
 constexpr u64 KingZone[64] = {
     0x0000000000070507ull, 0x0000000000000705ull, 0x0000000000000e0aull, 0x0000000000001c14ull,
     0x0000000000003828ull, 0x0000000000007050ull, 0x000000000000e0a0ull, 0x0000000000e0a0e0ull,

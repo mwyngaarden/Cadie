@@ -6,6 +6,8 @@
 #include <cstdint>
 #include "misc.h"
 
+constexpr int SEEValue[6] = { 100, 325, 325, 500, 1000, 0 };
+
 typedef u8 side_t;
 
 constexpr side_t White          =  0;
@@ -30,6 +32,19 @@ constexpr int WhiteQueen12      =  8;
 constexpr int BlackQueen12      =  9;
 constexpr int WhiteKing12       = 10;
 constexpr int BlackKing12       = 11;
+
+constexpr u8 WP12 = WhitePawn12;
+constexpr u8 WN12 = WhiteKnight12;
+constexpr u8 WB12 = WhiteBishop12;
+constexpr u8 WR12 = WhiteRook12;
+constexpr u8 WQ12 = WhiteQueen12;
+constexpr u8 WK12 = WhiteKing12;
+constexpr u8 BP12 = BlackPawn12;
+constexpr u8 BN12 = BlackKnight12;
+constexpr u8 BB12 = BlackBishop12;
+constexpr u8 BR12 = BlackRook12;
+constexpr u8 BQ12 = BlackQueen12;
+constexpr u8 BK12 = BlackKing12;
 
 constexpr u8 PieceNone256       = 0;
 constexpr u8 WhiteFlag256       = 1 << 0;
@@ -75,30 +90,14 @@ constexpr u8 BR256 = BlackRook256;
 constexpr u8 BQ256 = BlackQueen256;
 constexpr u8 BK256 = BlackKing256;
 
-constexpr u8 WP12 = WhitePawn12;
-constexpr u8 WN12 = WhiteKnight12;
-constexpr u8 WB12 = WhiteBishop12;
-constexpr u8 WR12 = WhiteRook12;
-constexpr u8 WQ12 = WhiteQueen12;
-constexpr u8 WK12 = WhiteKing12;
-constexpr u8 BP12 = BlackPawn12;
-constexpr u8 BN12 = BlackKnight12;
-constexpr u8 BB12 = BlackBishop12;
-constexpr u8 BR12 = BlackRook12;
-constexpr u8 BQ12 = BlackQueen12;
-constexpr u8 BK12 = BlackKing12;
-
 constexpr bool is_pawn(u8 piece) { return piece & PawnFlags256; }
-constexpr bool is_knight(u8 piece) { return piece & KnightFlag256; }
 constexpr bool is_king(u8 piece) { return piece & KingFlag256; }
-constexpr bool is_slider(u8 piece) { return piece & QueenFlags256; }
 
 constexpr u8 make_pawn(side_t side) { return WhitePawn256 << side; }
-constexpr u8 make_flag(side_t side) { return side + 1; }
 
 constexpr bool side_is_ok(side_t side) { return side == White || side == Black; }
 constexpr bool piece_is_ok(int type) { return type >= Pawn && type <= King; }
-constexpr bool piece12_is_ok(int p12) { return p12 >= WhitePawn12 && p12 <= BlackKing12; }
+constexpr bool piece12_is_ok(int p12) { return p12 >= WP12 && p12 <= BK12; }
 
 bool piece256_is_ok(u8 piece);
 char piece256_to_char(u8 piece);

@@ -9,19 +9,18 @@
 #include "search.h"
 
 
-struct OMove {
-    static constexpr int Offset = 1 << 28;
+struct ExtMove {
+    static constexpr int Offset = 1 << 30;
 
-    static u64 make(Move m, int see, int score)
+    static u64 make(Move m, int score)
     {
         assert(m.is_valid());
 
-        return (u64(score + Offset) << 34) | (u64(see) << 32) | u64(m);
+        return (u64(score + Offset) << 32) | u64(m);
     }
 
-    static Move move (u64 data) { return u32(data); }
-    static int  see  (u64 data) { return int(data >> 32) & 0x3; }
-    static int  score(u64 data) { return int(data >> 34) - Offset; }
+    static Move move(u64 data) { return u32(data); }
+    static int score(u64 data) { return int(data >> 32) - Offset; }
 
 };
 
@@ -32,15 +31,14 @@ struct Order {
     static constexpr int ScoreKiller2   = (1 << 24) + 1;
     static constexpr int ScoreCounter   = (1 << 24) + 0;
 
-    Order(const Node& node, History& history);
+    Order(Position& pos, const History& history, Move best_move, int ply, int depth);
+    Order(Position& pos, Move best_move);
 
     Move next();
 
     bool singular() const;
-    int& see(const Position& pos, bool calc);
+    int see();
     int score() const;
-
-    static bool is_special(int score);
 
 private:
     std::size_t index_ = 0;
@@ -50,7 +48,9 @@ private:
     int score_;
 
     std::size_t count_ = 0;
-    u64 omoves_[128];
+    u64 emoves_[128];
+
+    Position& pos_;
 };
 
 #endif

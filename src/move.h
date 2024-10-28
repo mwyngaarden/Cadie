@@ -16,6 +16,9 @@
 
 class Move {
 public:
+    static constexpr Move None() { return Move(0, 0); }
+    static constexpr Move Null() { return Move(1, 1); }
+
     static constexpr u32 CaptureFlags   = 0xff   << 12;
 
     static constexpr u32 PromoNFlag     = Knight << 20;
@@ -32,11 +35,11 @@ public:
     static constexpr u32 SingleFlag     = 1 << 24;
     static constexpr u32 DoubleFlag     = 1 << 25;
     static constexpr u32 CastleFlag     = 1 << 26;
+    static constexpr u32 IrrevFlag      = CaptureFlags | PromoFlags | EPFlag | SingleFlag | DoubleFlag;
 
     static_assert((EPFlag & PromoFlags) == 0);
 
-    constexpr Move() : data_(0) { }
-
+    constexpr Move() = default;
     constexpr Move(u32 data) : data_(data) { }
     
     constexpr Move(int orig, int dest)
@@ -65,7 +68,7 @@ public:
     int dest()              const { return (data_ >> 6) & 0x3f; }
 
     u8 captured()           const { return (data_ >> 12) & 0xff; }
-    int promo6()            const { return (data_ >> 20) & 0x07; }
+    int promo()             const { return (data_ >> 20) & 0x07; }
 
     bool is_capture()       const { return data_ & CaptureFlags; }
     bool is_tactical()      const { return data_ & (EPFlag | CaptureFlags | PromoFlags); }
@@ -77,6 +80,8 @@ public:
     bool is_double()        const { return data_ & DoubleFlag; }
     bool is_castle()        const { return data_ & CastleFlag; }
     bool is_valid()         const { return orig() != dest(); }
+    bool is_irrev()         const { return data_ & IrrevFlag; }
+    bool is_special()       const { return data_ & (PromoFlags | EPFlag | CastleFlag | DoubleFlag); }
 
     int index(        )     const { return  data_ & 0xfff; }
     int index(int side)     const { return (data_ & 0xfff) | (side << 12); }
@@ -88,10 +93,10 @@ public:
         oss << square::sq_to_san(orig());
         oss << square::sq_to_san(dest());
 
-             if (promo6() == Knight) oss << 'n';
-        else if (promo6() == Bishop) oss << 'b';
-        else if (promo6() == Rook) oss << 'r';
-        else if (promo6() == Queen) oss << 'q';
+             if (promo() == Knight) oss << 'n';
+        else if (promo() == Bishop) oss << 'b';
+        else if (promo() == Rook) oss << 'r';
+        else if (promo() == Queen) oss << 'q';
 
         return oss.str();
     }
@@ -100,23 +105,13 @@ public:
 
     static Move from_string(std::string s)
     {
-        assert(s.size() == 4 || s.size() == 5);
-
         int ofile = s[0] - 'a';
         int orank = s[1] - '1';
         int dfile = s[2] - 'a';
         int drank = s[3] - '1';
 
-        assert(file_is_ok(ofile));
-        assert(rank_is_ok(orank));
-        assert(file_is_ok(dfile));
-        assert(rank_is_ok(drank));
-
         int orig = to_sq64(ofile, orank);
         int dest = to_sq64(dfile, drank);
-
-        assert(sq64_is_ok(orig));
-        assert(sq64_is_ok(dest));
 
         Move move(orig, dest);
 
@@ -125,7 +120,6 @@ public:
             else if (s[4] == 'b') move.set_flag(PromoBFlag);
             else if (s[4] == 'r') move.set_flag(PromoRFlag);
             else if (s[4] == 'q') move.set_flag(PromoQFlag);
-            else assert(false);
         }
 
         return move;
@@ -135,90 +129,20 @@ private:
     u32 data_;
 };
 
-struct MoveExt {
-    Move move;
-    int score;
-    int see;
-
-    static bool sort(const MoveExt& lhs, const MoveExt& rhs)
-    {
-        return lhs.score > rhs.score;
-    }
-};
-
-class MoveExtList {
-public:
-    void sort()
-    {
-        assert(size_ > 0);
-        std::sort(moves_.begin(), moves_.begin() + size_, MoveExt::sort);
-    }
-
-    void add(Move& m, int score, int see)
-    {
-        assert(m.is_valid());
-        moves_[size_++] = MoveExt { m, score, see };
-    }
-
-    const MoveExt& operator[](std::size_t i) const
-    {
-        assert(i < size_);
-        return moves_[i];
-    }
-
-    std::size_t size() const { return size_; }
-
-    void swap(std::size_t i, std::size_t j)
-    {
-        assert(i != j && i < size_ && j < size_);
-        std::swap(moves_[i], moves_[j]);
-    }
-
-    void set_score(const Move& m, int score)
-    {
-        assert(m.is_valid());
-
-        for (std::size_t i = 0; i < size_; i++) {
-            if (moves_[i].move == m) {
-                moves_[i].score = score;
-                return;
-            }
-        }
-
-        assert(false);
-    }
-
-private: 
-    std::array<MoveExt, MovesMax> moves_;
-    std::size_t size_ = 0;
-};
-
-struct UndoMove {
+struct UndoInfo {
     u64 key;
-    u64 pawn_key;
+    u64 pins;
+    u64 checkers;
+    //u64 pawn_key;
     u16 full_moves;
     u8 flags;
     u8 ep_sq;
     u8 half_moves;
-    u8 checkers_sq[2];
-    u8 checkers;
-    Move prev_move;
-};
-
-struct UndoNull {
-    u64 key;
-    u64 pawn_key;
-    u8 ep_sq;
-    u8 checkers_sq[2];
-    u8 checkers;
     Move prev_move;
 };
 
 using MoveList  = List<Move, MovesMax>;
 using MoveStack = List<Move, 1024>;
 using PV        = Move[PliesMax];
-
-constexpr Move MoveNone(0, 0);
-constexpr Move MoveNull(1, 1);
 
 #endif

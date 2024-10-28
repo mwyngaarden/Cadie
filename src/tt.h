@@ -5,14 +5,12 @@
 #include <bit>
 #include <vector>
 #include <cstring>
-#include <omp.h>
 #include "eval.h"
 #include "mem.h"
 #include "misc.h"
 #include "move.h"
 
 
-constexpr u8 BoundNone  = 0;
 constexpr u8 BoundLower = 1;
 constexpr u8 BoundUpper = 2;
 constexpr u8 BoundExact = 3;
@@ -38,28 +36,30 @@ struct Entry {
     u8 bound;
     u8 pad;
     
-    static Lock calc_lock(u64 key)
+    static constexpr Lock make_lock(u64 key)
     {
         return static_cast<Lock>(key >> (64 - LockBits));
     }
 
     bool is_valid() const
     {
-        if (move != MoveNone && !move.is_valid())
+        if (move != Move::None() && !move.is_valid())
             return false;
         if (abs(score) > ScoreMate)
             return false;
         if (depth > DepthMax)
             return false;
-        if (bound == 0 || (bound & ~BoundExact) != 0)
+        if (bound & ~BoundExact)
             return false;
 
         return true;
     }
+
+    constexpr Entry() = default;
+    constexpr Entry(Move m) : move(m) { }
 };
 
-static_assert(sizeof(Entry) == 16);
-static_assert(std::has_single_bit(sizeof(Entry)));
+static_assert(std::has_single_bit(sizeof(Entry)) && sizeof(Entry) == 16);
 
 class TT {
 public:
@@ -69,7 +69,7 @@ public:
     void init();
 
     bool get(Entry& dst, u64 key, int ply);
-    void set(Entry& src, u64 key);
+    void set(u64 key, Move m, i16 score, i16 eval, i8 depth, u8 bound, int ply);
 
     std::size_t count() const { return count_; }
 
@@ -94,7 +94,7 @@ public:
         for (std::size_t i = 0; i < 1000; i++) {
             const Entry& e = entries_[i];
 
-            pm += e.depth && e.gen == gen_;
+            pm += e.lock != 0;
         }
 
         return pm;

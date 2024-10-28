@@ -7,7 +7,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdarg>
-#include "attack.h"
+#include "attacks.h"
 #include "bb.h"
 #include "eval.h"
 #include "gen.h"
@@ -20,11 +20,10 @@ using namespace std;
 
 enum { FileClosed, FileSemiOpen, FileOpen };
 
-HashTable<16 * 1024 * 1024, EvalEntry> etable;
+HashTable<64 * 1024 * 1024, EvalEntry> etable;
 
 Value PSQTv[12][64];
 
-// Relative values: 100, 322, 340, 498, 958
 constexpr int MatValue[2][6] = {
     {  60, 246, 259, 288,  570, 0 },
     { 125, 350, 370, 633, 1203, 0 }
@@ -65,13 +64,24 @@ int KingSafetyB                     =      13;
 int KingSafetyC                     =      21;
 int KingSafetyD                     =      25;
 
-int NPinAbsPm                       =     -67;
-int NPinAbsPe                       =     -32;
-int BPinAbsPm                       =     -16;
-int BPinAbsPe                       =       0;
-int RPinAbsPe                       =    -440;
-int RPinRelPm                       =      11;
-int RPinRelPe                       =      12;
+int NPinByBAbsPm                    =     -68;
+int NPinByBAbsPe                    =    -116;
+int NPinByRAbsPm                    =     -39;
+int NPinByRAbsPe                    =     -29;
+int NPinByQAbsPm                    =     -42;
+int NPinByQAbsPe                    =       6;
+int BPinByRAbsPm                    =     -32;
+int BPinByRAbsPe                    =     -44;
+int BPinByQAbsPm                    =     -32;
+int BPinByQAbsPe                    =       5;
+int RPinByBAbsPm                    =    -100;
+int RPinByBAbsPe                    =    -400;
+int RPinByQAbsPm                    =     -26;
+int RPinByQAbsPe                    =     -68;
+int QPinByBRelPm                    =    -125;
+int QPinByBRelPe                    =    -280;
+int QPinByRRelPm                    =     -97;
+int QPinByRRelPe                    =    -289;
 
 int MinorBehindPawnBm               =       8;
 int MinorBehindPawnBe               =       6;
@@ -81,6 +91,8 @@ int KnightDistDivPm                 =       2;
 int KnightDistDivPe                 =       2;
 int BishopOutpostBm                 =      21;
 int BishopOutpostBe                 =      12;
+int BishopPawnsPm                   =      -1;
+int BishopPawnsPe                   =      -3;
 int RookClosedPm                    =      15;
 int RookClosedPe                    =      35;
 int RookOpenAdjKingBm               =      61;
@@ -100,10 +112,10 @@ int RookSeventhRankBe               =      19;
 int QueenSeventhRankBm              =     -47;
 int QueenSeventhRankBe              =      19;
 
-int PawnBackOpenPm                  =     -20;
-int PawnBackOpenPe                  =      -7;
-int PawnBackwardPm                  =      -3;
-int PawnBackwardPe                  =     -16;
+int PawnBackOpenPm                  =     -18;
+int PawnBackOpenPe                  =     -10;
+int PawnBackwardPm                  =      -1;
+int PawnBackwardPe                  =     -15;
 int PawnDoubledPm                   =      -9;
 int PawnDoubledPe                   =      -6;
 int PawnIsoOpenPm                   =     -14;
@@ -111,8 +123,9 @@ int PawnIsoOpenPe                   =     -17;
 int PawnIsolatedPm                  =       0;
 int PawnIsolatedPe                  =     -20;
 int PawnConnectedPB                 =       2;
-int PawnPassedGaurdedBm             =      10;
-int PawnPassedGaurdedBe             =      12;
+int PawnPassedGaurdedBm             =      15;
+int PawnPassedGaurdedBe             =      16;
+int PawnPassedStopOffset            =      12;
 
 int ComplexityPawnsTotal            =       5;
 int ComplexityPawnsFlanked          =      55;
@@ -169,20 +182,37 @@ int PawnConnectedB[8] = {0,0,1,5,14,28,34,0};
 
 int PawnPassedB[2][3][8] = {
     {
-        {6,0,-4,-2,26,56,149,0},
+        {5,0,0,0,26,58,144,0},
         {0,0,0,0,0,0,0,0},
-        {7,15,12,12,38,64,142,0}
+        {7,11,10,9,25,65,132,0}
     },
     {
-        {17,-12,12,50,80,125,217,21},
-        {2,60,62,179,328,514,711,9},
-        {15,4,17,60,102,184,303,19}
+        {16,0,12,51,81,121,208,21},
+        {3,56,52,186,342,548,711,12},
+        {15,4,18,65,118,221,376,19}
     }
 };
 
-int PawnAttackB[2][6] = {
-    {0,48,64,61,51,0},
-    {0,57,75,47,79,0}
+int PawnAttackB[2][2][6] = {
+    {
+        {0,44,65,64,52,0},
+        {0,50,59,51,42,0}
+    },
+    {
+        {0,57,69,32,78,0},
+        {0,58,91,105,97,0}
+    }
+};
+
+int PawnAttackPushB[2][2][6] = {
+    {
+        {0,6,3,8,6,0},
+        {0,7,10,5,11,0}
+    },
+    {
+        {0,10,1,13,1,0},
+        {0,24,8,31,13,0}
+    }
 };
 
 int KingShelterP[4][8] = {
@@ -211,10 +241,17 @@ int PiecePawnOffset[2][6] = {
     {0,0,-9,-7,0,0}
 };
 
+int RookKnightImbB[2] = {11,32};
+int RookBishopImbB[2] = {7,14};
+int RookTwoMinorsImbB[2] = {-42,-21};
+int QueenTwoRooksImbB[2] = {91,-1};
+int QueenRookKnightImbB[2] = {50,-16};
+int QueenRookBishopImbB[2] = {39,-10};
 
 template <side_t Side> static int piece_on_file     (const Position& pos, int orig);
 template <side_t Side> static bool minor_on_outpost (const Position& pos, int orig);
 template <side_t Side> static Value eval_pieces     (const Position& pos);
+template <side_t Side> static Value eval_imbalance  (const Position& pos);
 
 static int eval_shelter (const Position& pos, side_t side, int ksq);
 static int eval_storm   (const Position& pos, side_t side, int ksq);
@@ -468,62 +505,48 @@ Value eval_complexity(const Position& pos, int score)
 // a la Ethereal
 int eval_scale(const Position& pos, int score)
 {
-    int wp, wn, wlb, wdb, wr, wq;
-    int bp, bn, blb, bdb, br, bq;
-
-    pos.counts(wp, wn, wlb, wdb, wr, wq, White);
-    pos.counts(bp, bn, blb, bdb, br, bq, Black);
+    u64 white   = pos.bb(White);
+    u64 black   = pos.bb(Black);
+    u64 pawns   = pos.bb(Pawn);
+    u64 knights = pos.bb(Knight);
+    u64 bishops = pos.bb(Bishop);
+    u64 rooks   = pos.bb(Rook);
+    u64 queens  = pos.bb(Queen);
+    u64 pieces  = knights | bishops | rooks;
 
     // Opposite colored bishops
 
-    if (wlb + wdb == 1 && blb + bdb == 1 && wlb + blb == 1) {
-        if (!(wr + wq + br + bq) && wn == 1 && bn == 1)
+    if (bb::single(white & bishops) && bb::single(black & bishops) && bb::single(bishops & bb::Light)) {
+        if (!(rooks | queens) && bb::single(white & knights) && bb::single(black & knights))
             return ScaleOcbOneKnight;
 
-        if (!(wn + wq + bn + bq) && wr == 1 && br == 1)
+        if (!(knights | queens) && bb::single(white & rooks) && bb::single(black & rooks))
             return ScaleOcbOneRook;
 
-        if (!(wn + wr + wq + bn + br + bq))
+        if (!(knights | rooks | queens))
             return ScaleOcbBishopsOnly;
     }
-    
-    int lo_pawns;
-    int lo_pieces;
-    int hi_pawns;
-    int hi_minors;
-    int hi_total;
 
-    if (score < 0) {
-        lo_pawns = wp;
-        lo_pieces = wn + wlb + wdb + wr;
-        hi_pawns = bp;
-        hi_minors = bn + blb + bdb;
-        hi_total = bp + bn + blb + bdb + br + bq;
-    }
-    else {
-        lo_pawns = bp;
-        lo_pieces = bn + blb + bdb + br;
-        hi_pawns = wp;
-        hi_minors = wn + wlb + wdb;
-        hi_total = wp + wn + wlb + wdb + wr + wq;
-    }
+    // TODO Need a heuristic for bishop and pawn ending with pawn on A/H file
 
-    int wpieces = wn + wlb + wdb + wr;
-    int bpieces = bn + blb + bdb + br;
-    int tpieces = wpieces + bpieces;
+    u64 hi = score < 0 ? black : white;
+    u64 lo = score < 0 ? white : black;
 
-    if (wq + bq == 1 && tpieces > 1 && tpieces == lo_pieces)
+    int hpawns = popcount(hi & pawns);
+    int lpawns = popcount(lo & pawns);
+
+    if (bb::single(queens) && bb::multi(pieces) && pieces == (lo & pieces))
         return ScaleLoneQueen;
 
-    if (hi_minors && hi_total == 1)
+    if ((hi & (knights | bishops)) && bb::single(hi & ~pos.bb(King)))
         return 0;
 
-    if (wq + bq == 0 && wpieces < 2 && bpieces < 2 && hi_pawns - lo_pawns > 2)
+    if (!queens && !bb::multi(white & pieces) && !bb::multi(black & pieces) && hpawns - lpawns > 2)
         return ScaleLargePawnAdv;
 
-    if (hi_pawns == 0) return ScalePNone;
-    if (hi_pawns == 1) return ScalePOne;
-    if (hi_pawns == 2) return ScalePTwo;
+    if (hpawns == 0) return ScalePNone;
+    if (hpawns == 1) return ScalePOne;
+    if (hpawns == 2) return ScalePTwo;
 
     return 128;
 }
@@ -531,22 +554,18 @@ int eval_scale(const Position& pos, int score)
 template <side_t Side>
 bool minor_on_outpost(const Position& pos, int orig)
 {
-    int rank = square::rank(orig, Side);
-    int file = square::file(orig);
-
-    if (rank < Rank4 || rank > Rank6 || file < FileB || file > FileG)
-        return false;
-
-    if (pos.bb(!Side, Pawn) & bb::PawnSpanAdj[Side][orig])
-        return false;
-
-    return pos.bb(Side, Pawn) & PawnAttacks[!Side][orig];
+    constexpr u64 subset = ~(bb::FileA | bb::FileH) & (Side == White ? bb::Rank4 | bb::Rank5 | bb::Rank6 : bb::Rank3 | bb::Rank4 | bb::Rank5);
+    
+    return bb::test(subset, orig)
+        && (pos.bb(!Side, Pawn) & bb::PawnSpanAdj[Side][orig]) == 0
+        && (pos.bb(Side, Pawn) & PawnAttacks[!Side][orig]);
 }
 
 template <side_t Side>
 Value eval_pieces(const Position& pos)
 {
     constexpr int incr = square::incr(Side);
+    constexpr u64 outposts = ~(bb::FileA | bb::FileH) & (bb::Rank4 | bb::Rank5 | (Side == White ? bb::Rank6 : bb::Rank3));
     
     Value val;
 
@@ -566,8 +585,8 @@ Value eval_pieces(const Position& pos)
         int orig = bb::pop(bb);
         int type = pos.board<6>(orig);
 
-        int file = square::file(orig);
-        int rank = square::rank(orig, Side);
+        int file     = square::file(orig);
+        int rank_rel = square::rank(orig, Side);
 
         if (type != Queen) {
             int m_mg = PiecePawnOffset[PhaseMg][type];
@@ -578,10 +597,10 @@ Value eval_pieces(const Position& pos)
         }
 
         if (type == Knight) {
-            if (minor_on_outpost<Side>(pos, orig))
+            if (bb::test(outposts, orig) && !(opbb & bb::PawnSpanAdj[Side][orig]) && (mpbb & PawnAttacks[!Side][orig]))
                 val += Value(KnightOutpostBm, KnightOutpostBe);
 
-            if (rank < Rank7 && bb::test(mpbb, orig + incr))
+            if (rank_rel < Rank7 && bb::test(mpbb, orig + incr))
                 val += Value(MinorBehindPawnBm, MinorBehindPawnBe);
 
             int dist = square::dist(orig, mksq) * square::dist(orig, oksq);
@@ -591,27 +610,27 @@ Value eval_pieces(const Position& pos)
         }
 
         else if (type == Bishop) {
-            if (minor_on_outpost<Side>(pos, orig))
+            if (bb::test(outposts, orig) && !(opbb & bb::PawnSpanAdj[Side][orig]) && (mpbb & PawnAttacks[!Side][orig]))
                 val += Value(BishopOutpostBm, BishopOutpostBe);
-            
-            if (rank < Rank7 && bb::test(mpbb, orig + incr))
+
+            if (rank_rel < Rank7 && bb::test(mpbb, orig + incr))
                 val += Value(MinorBehindPawnBm, MinorBehindPawnBe);
+
+            u64 mask = square::color(orig) ? bb::Dark : bb::Light;
+
+            val += Value(BishopPawnsPm, BishopPawnsPe) * popcount(mpbb & mask);
         }
 
         else if (type == Rook) {
             int kfile    = square::file(oksq);
             int kfdiff   = abs(file - kfile);
             int semiopen = piece_on_file<Side>(pos, orig);
-            
-            if (rank == Rank7 && (krank == Rank8 || (opbb & rank7))) {
-                val.mg += RookSeventhRankBm;
-                val.eg += RookSeventhRankBe;
-            }
 
-            if (semiopen == FileClosed) {
-                val.mg += RookClosedPm;
-                val.eg += RookClosedPe;
-            }
+            if (rank_rel == Rank7 && (krank == Rank8 || (opbb & rank7)))
+                val += Value(RookSeventhRankBm, RookSeventhRankBe);
+
+            if (semiopen == FileClosed)
+                val += Value(RookClosedPm, RookClosedPe);
             else if (kfdiff == 0) {
                 val.mg += semiopen == FileSemiOpen ? RookSemiSameKingBm : RookOpenSameKingBm;
                 val.eg += semiopen == FileSemiOpen ? RookSemiSameKingBe : RookOpenSameKingBe;
@@ -627,13 +646,73 @@ Value eval_pieces(const Position& pos)
         }
 
         else if (type == Queen) {
-            if (rank == Rank7 && (krank == Rank8 || (opbb & rank7))) {
+            if (rank_rel == Rank7 && (krank == Rank8 || (opbb & rank7))) {
                 val.mg += QueenSeventhRankBm;
                 val.eg += QueenSeventhRankBe;
             }
         }
     }
     
+    return val;
+}
+
+// TODO refactor
+template <side_t Side>
+Value eval_imbalance(const Position& pos)
+{
+    Value val;
+
+    int mp, mn, mb, mr, mq;
+    int op, on, ob, orr, oq;
+
+    if (Side == White)
+        pos.counts(mp, mn, mb, mr, mq, op, on, ob, orr, oq);
+    else
+        pos.counts(op, on, ob, orr, oq, mp, mn, mb, mr, mq);
+
+    int nd = mn - on;
+    int bd = mb - ob;
+    int rd = mr - orr;
+    int qd = mq - oq;
+
+    // Up rook
+
+    if (rd == 1 && qd == 0) {
+        if (nd == -1 && bd == 0) {
+            val.mg += RookKnightImbB[PhaseMg];
+            val.eg += RookKnightImbB[PhaseEg];
+        }
+
+        else if (nd == 0 && bd == -1) {
+            val.mg += RookBishopImbB[PhaseMg];
+            val.eg += RookBishopImbB[PhaseEg];
+        }
+
+        else if ((mn + mb) - (on + ob) == -2) {
+            val.mg += RookTwoMinorsImbB[PhaseMg];
+            val.eg += RookTwoMinorsImbB[PhaseEg];
+        }
+    }
+
+    // Up queen
+
+    else if (qd == 1) {
+        if (rd == -2 && nd == 0 && bd == 0) {
+            val.mg += QueenTwoRooksImbB[PhaseMg];
+            val.eg += QueenTwoRooksImbB[PhaseEg];
+        }
+
+        else if (rd == -1 && nd == -1 && bd == 0) {
+            val.mg += QueenRookKnightImbB[PhaseMg];
+            val.eg += QueenRookKnightImbB[PhaseEg];
+        }
+
+        else if (rd == -1 && nd == 0 && bd == -1) {
+            val.mg += QueenRookBishopImbB[PhaseMg];
+            val.eg += QueenRookBishopImbB[PhaseEg];
+        }
+    }
+
     return val;
 }
 
@@ -790,101 +869,145 @@ Value eval_mob_ks(const Position& pos)
 
 Value eval_pattern(const Position& pos)
 {
-    using namespace square;
-
     Value val;
 
-    // White
-    
+    u64 brbb = pos.bb(Black, Rook);
+    u64 bkbb = pos.bb(Black, King);
     u64 wrbb = pos.bb(White, Rook);
     u64 wkbb = pos.bb(White, King);
 
-    constexpr u64 wqs_rmask = bb::bit(A1) | bb::bit(A2) | bb::bit(B1);
-    constexpr u64 wqs_kmask = bb::bit(B1) | bb::bit(C1);
-    constexpr u64 wks_rmask = bb::bit(H1) | bb::bit(H2) | bb::bit(G1);
-    constexpr u64 wks_kmask = bb::bit(F1) | bb::bit(G1);
-    
+    // White
+
+    constexpr u64 wqs_rmask = bb::bit(square::A1) | bb::bit(square::A2) | bb::bit(square::B1);
+    constexpr u64 wqs_kmask = bb::bit(square::B1) | bb::bit(square::C1);
+    constexpr u64 wks_rmask = bb::bit(square::H1) | bb::bit(square::H2) | bb::bit(square::G1);
+    constexpr u64 wks_kmask = bb::bit(square::F1) | bb::bit(square::G1);
+
     if ((wrbb & wqs_rmask) && (wqs_kmask & wkbb)) val += Value(RBlockedPm, RBlockedPe);
     if ((wrbb & wks_rmask) && (wks_kmask & wkbb)) val += Value(RBlockedPm, RBlockedPe);
 
     // Black
-    
-    u64 brbb = pos.bb(Black, Rook);
-    u64 bkbb = pos.bb(Black, King);
-    
-    constexpr u64 bqs_rmask = bb::bit(A7) | bb::bit(A8) | bb::bit(B8);
-    constexpr u64 bqs_kmask = bb::bit(B8) | bb::bit(C8);
-    constexpr u64 bks_rmask = bb::bit(H7) | bb::bit(H8) | bb::bit(G8);
-    constexpr u64 bks_kmask = bb::bit(F8) | bb::bit(G8);
-    
+
+    constexpr u64 bqs_rmask = bb::bit(square::A7) | bb::bit(square::A8) | bb::bit(square::B8);
+    constexpr u64 bqs_kmask = bb::bit(square::B8) | bb::bit(square::C8);
+    constexpr u64 bks_rmask = bb::bit(square::H7) | bb::bit(square::H8) | bb::bit(square::G8);
+    constexpr u64 bks_kmask = bb::bit(square::F8) | bb::bit(square::G8);
+
     if ((brbb & bqs_rmask) && (bqs_kmask & bkbb)) val -= Value(RBlockedPm, RBlockedPe);
     if ((brbb & bks_rmask) && (bks_kmask & bkbb)) val -= Value(RBlockedPm, RBlockedPe);
 
     return val;
 }
 
+// TODO refactor with pos.pins()
 template <side_t Side>
 Value eval_pins(const Position& pos)
 {
     Value val;
 
     u64 occ = pos.occ();
-    u64 mbb = pos.bb(Side);
-    u64 mpbb = pos.bb(Side, Pawn);
     u64 mnbb = pos.bb(Side, Knight);
     u64 mbbb = pos.bb(Side, Bishop);
     u64 mrbb = pos.bb(Side, Rook);
+    u64 mqbb = pos.bb(Side, Queen);
 
     u64 obbb = pos.bb(!Side, Bishop);
-    u64 orbb = pos.bb(!Side, Bishop);
-    u64 oqbb = pos.bb(!Side, Bishop);
+    u64 orbb = pos.bb(!Side, Rook);
+    u64 oqbb = pos.bb(!Side, Queen);
+
+    u64 blockers = ~(mnbb | mbbb | mrbb | mqbb);
 
     int ksq = pos.king(Side);
 
     for (u64 bb = BishopAttacks[ksq] & (obbb | oqbb); bb; ) {
         int sq = bb::pop(bb);
 
-        u64 between = bb::InBetween[ksq][sq] & occ;
+        u64 between = bb::Between[ksq][sq] & occ;
 
-        if ((between & mbb & ~mpbb) == 0 || !bb::single(between))
+        if ((between & blockers) || !bb::single(between))
             continue;
+
+        int pinner = bb::test(obbb, sq) ? Bishop : Queen;
 
         // Absolute pins
 
         if (between & mnbb) {
-            val.mg += NPinAbsPm;
-            val.eg += NPinAbsPe;
+            if (pinner == Bishop) {
+                val.mg += NPinByBAbsPm;
+                val.eg += NPinByBAbsPe;
+            }
+
+            else if (pinner == Queen) {
+                val.mg += NPinByQAbsPm;
+                val.eg += NPinByQAbsPe;
+            }
         }
 
-        else if (between & mrbb)
-            val.eg += RPinAbsPe;
+        else if (between & mrbb) {
+            if (pinner == Bishop) {
+                val.mg += RPinByBAbsPm;
+                val.eg += RPinByBAbsPe;
+            }
+
+            else if (pinner == Queen) {
+                val.mg += RPinByQAbsPm;
+                val.eg += RPinByQAbsPe;
+            }
+        }
+
+        // Relative pins
+
+        else if (between & mqbb) {
+            if (pinner == Bishop) {
+                val.mg += QPinByBRelPm;
+                val.eg += QPinByBRelPe;
+            }
+        }
     }
     
     for (u64 bb = RookAttacks[ksq] & (orbb | oqbb); bb; ) {
         int sq = bb::pop(bb);
 
-        u64 between = bb::InBetween[ksq][sq] & occ;
+        u64 between = bb::Between[ksq][sq] & occ;
 
-        if ((between & mbb & ~mpbb) == 0 || !bb::single(between))
+        if ((between & blockers) || !bb::single(between))
             continue;
+
+        int pinner = bb::test(orbb, sq) ? Rook : Queen;
 
         // Absolute pins
 
         if (between & mnbb) {
-            val.mg += NPinAbsPm;
-            val.eg += NPinAbsPe;
+            if (pinner == Rook) {
+                val.mg += NPinByRAbsPm;
+                val.eg += NPinByRAbsPe;
+            }
+
+            else if (pinner == Queen) {
+                val.mg += NPinByQAbsPm;
+                val.eg += NPinByQAbsPe;
+            }
         }
 
         else if (between & mbbb) {
-            val.mg += BPinAbsPm;
-            val.eg += BPinAbsPe;
+            if (pinner == Rook) {
+                val.mg += BPinByRAbsPm;
+                val.eg += BPinByRAbsPe;
+            }
+
+            else if (pinner == Queen) {
+                val.mg += BPinByQAbsPm;
+                val.eg += BPinByQAbsPe;
+            }
         }
 
         // Relative pins
 
-        else if (between & mrbb) {
-            val.mg += RPinRelPm;
-            val.eg += RPinRelPe;
+        else if (between & mqbb) {
+            if (pinner == Rook) {
+                val.mg += QPinByRRelPm;
+                val.eg += QPinByRRelPe;
+            }
         }
     }
 
@@ -909,7 +1032,7 @@ int eval_internal(const Position& pos)
     for (u64 bb = pos.occ(); bb; ) {
         int sq = bb::pop(bb);
         int p12 = pos.board<12>(sq);
-        
+
         val += PSQTv[p12][sq];
     }
 
@@ -919,6 +1042,11 @@ int eval_internal(const Position& pos)
     int bbp = pos.bishop_pair(Black);
 
     val += (wbp - bbp) * Value(BPairBm, BPairBe);
+
+    // Material imbalances
+
+    val += eval_imbalance<White>(pos);
+    val -= eval_imbalance<Black>(pos);
 
     // Mobility and King Safety
 
@@ -934,12 +1062,12 @@ int eval_internal(const Position& pos)
     val += eval_pattern(pos);
 
     // Major and minor pieces
- 
+
     val += eval_pieces<White>(pos);
     val -= eval_pieces<Black>(pos);
 
     if (pos.bb(Pawn)) {
-        assert(pos.pawn_key());
+        //assert(pos.pawn_key());
 
         val += eval_pawns(pos);
     }
@@ -959,11 +1087,8 @@ int eval_internal(const Position& pos)
     return score + TempoB;
 }
 
-int eval(const Position& pos, int ply)
+int eval(const Position& pos)
 {
-    if (ply > 0 && mstack.back() == MoveNull)
-        return -Evals[ply - 1] + 2 * TempoB;
-
 #if PROFILE >= PROFILE_SOME
     gstats.evals_count++;
 #if PROFILE >= PROFILE_ALL
@@ -987,33 +1112,37 @@ int eval(const Position& pos, int ply)
 #include <nlopt.hpp>
 #include <omp.h>
 
-static constexpr u64 TuneComplexity = 1 <<  0;
-static constexpr u64 TuneKingSafety = 1 <<  1;
-static constexpr u64 TuneBishopPair = 1 <<  2;
-static constexpr u64 TuneMobility   = 1 <<  3;
-static constexpr u64 TunePattern    = 1 <<  4;
-static constexpr u64 TunePawns      = 1 <<  5;
-static constexpr u64 TunePieces     = 1 <<  6;
-static constexpr u64 TunePinned     = 1 <<  7;
-static constexpr u64 TunePsqt       = 1 <<  8;
-static constexpr u64 TuneScale      = 1 <<  9;
-static constexpr u64 TuneTempo      = 1 << 10;
-static constexpr u64 TuneMaterial   = 1 << 11;
-static constexpr u64 TuneAll        = ~0;
+enum Tuning {
+    TuneComplexity = 1 <<  0,
+    TuneKingSafety = 1 <<  1,
+    TuneBishopPair = 1 <<  2,
+    TuneMobility   = 1 <<  3,
+    TunePattern    = 1 <<  4,
+    TunePawns      = 1 <<  5,
+    TunePieces     = 1 <<  6,
+    TunePinned     = 1 <<  7,
+    TunePsqt       = 1 <<  8,
+    TuneScale      = 1 <<  9,
+    TuneTempo      = 1 << 10,
+    TuneMaterial   = 1 << 11,
+    TuneImbalance  = 1 << 12,
+    TuneAll        = ~0
+};
 
 static constexpr u64 TuneCurrent    = 0
                                     //| TuneMaterial
-                                    | TuneKingSafety
-                                    | TuneBishopPair
-                                    | TuneTempo
-                                    | TuneMobility
-                                    | TunePattern
-                                    | TunePawns
-                                    | TunePieces
-                                    | TunePsqt
-                                    | TuneScale
-                                    | TuneComplexity
+                                    //| TuneKingSafety
+                                    //| TuneBishopPair
+                                    //| TuneTempo
+                                    //| TuneMobility
+                                    //| TunePattern
+                                    //| TunePawns
+                                    //| TunePieces
+                                    //| TunePsqt
+                                    //| TuneScale
+                                    //| TuneComplexity
                                     | TunePinned
+                                    //| TuneImbalance
                                     ;
 
 static double KOptimal = 0.788745;
@@ -1304,7 +1433,7 @@ double myvfunc(const vector<double>& x,
     static double maxf  = 1;
 
     const int dur = max(int(time(nullptr) - btime), 1);
-    
+
     for (size_t i = 0; i < x.size(); i++) {
         int n = clamp(int(x[i]), g_params[i].min, g_params[i].max);
 
@@ -1350,13 +1479,13 @@ double myvfunc(const vector<double>& x,
                << setw(8) << setfill(' ') << right << *param.pvalue << "; diff = "
                << setw(8) << setfill(' ') << diff << info << endl;
         }
-        
+
         if (TuneCurrent & TuneMobility)
             ss << print_3d<2, 4, 8>("MobB", MobB) << endl;
-        
+
         if (TuneCurrent & TunePsqt)
             ss << print_3d<2, 6, 32>("PSQTi", PSQTi) << endl;
-        
+
         if (TuneCurrent & TuneMaterial)
             ss << print_2d<2, 6>("MatValue", MatValue) << endl;
 
@@ -1364,7 +1493,8 @@ double myvfunc(const vector<double>& x,
             ss << print_1d<8>("PawnCandidateB", PawnCandidateB) << endl;
             ss << print_1d<8>("PawnConnectedB", PawnConnectedB) << endl;
             ss << print_3d<2, 3, 8>("PawnPassedB", PawnPassedB) << endl;
-            ss << print_2d<2, 6>("PawnAttackB", PawnAttackB) << endl;
+            ss << print_3d<2, 2, 6>("PawnAttackB", PawnAttackB) << endl;
+            ss << print_3d<2, 2, 6>("PawnAttackPushB", PawnAttackPushB) << endl;
         }
 
         if (TuneCurrent & TuneKingSafety) {
@@ -1372,9 +1502,18 @@ double myvfunc(const vector<double>& x,
             ss << print_2d<4, 8>("KingStormP", KingStormP) << endl;
             ss << print_2d<4, 8>("KingSafetyW", KingSafetyW) << endl;
         }
-        
+
         if (TuneCurrent & TunePieces)
             ss << print_2d<2, 6>("PiecePawnOffset", PiecePawnOffset) << endl;
+
+        if (TuneCurrent & TuneImbalance) {
+            ss << print_1d<2>("RookKnightImbB", RookKnightImbB) << endl;
+            ss << print_1d<2>("RookBishopImbB", RookBishopImbB) << endl;
+            ss << print_1d<2>("RookTwoMinorsImbB", RookTwoMinorsImbB) << endl;
+            ss << print_1d<2>("QueenTwoRooksImbB", QueenTwoRooksImbB) << endl;
+            ss << print_1d<2>("QueenRookKnightImbB", QueenRookKnightImbB) << endl;
+            ss << print_1d<2>("QueenRookBishopImbB", QueenRookBishopImbB) << endl;
+        }
 
         char buf[32];
 
@@ -1654,7 +1793,6 @@ void eval_tune(int argc, char* argv[])
         }
     }
   
-    // 41
     if (TuneCurrent & TuneKingSafety) {
         GPPB(Param(MP(KingSafetyA),  1,  97));
         GPPB(Param(MP(KingSafetyB),  2,  98));
@@ -1694,18 +1832,27 @@ void eval_tune(int argc, char* argv[])
         }
     }
     
-    // 12
     if (TuneCurrent & TunePinned) {
-        GPPB(Param(MP(NPinAbsPm), -150, 50));
-        GPPB(Param(MP(NPinAbsPe), -150, 50));
-        GPPB(Param(MP(BPinAbsPm), -150, 50));
-        GPPB(Param(MP(BPinAbsPe), -150, 50));
-        GPPB(Param(MP(RPinAbsPe), -500,  0));
-        GPPB(Param(MP(RPinRelPm), -150, 50));
-        GPPB(Param(MP(RPinRelPe), -150, 50));
+        GPPB(Param(MP(NPinByBAbsPm), -1000, 1000));
+        GPPB(Param(MP(NPinByBAbsPe), -1000, 1000));
+        GPPB(Param(MP(NPinByRAbsPm), -1000, 1000));
+        GPPB(Param(MP(NPinByRAbsPe), -1000, 1000));
+        GPPB(Param(MP(NPinByQAbsPm), -1000, 1000));
+        GPPB(Param(MP(NPinByQAbsPe), -1000, 1000));
+        GPPB(Param(MP(BPinByRAbsPm), -1000, 1000));
+        GPPB(Param(MP(BPinByRAbsPe), -1000, 1000));
+        GPPB(Param(MP(BPinByQAbsPm), -1000, 1000));
+        GPPB(Param(MP(BPinByQAbsPe), -1000, 1000));
+        GPPB(Param(MP(RPinByBAbsPm), -1000, 1000));
+        GPPB(Param(MP(RPinByBAbsPe), -1000, 1000));
+        GPPB(Param(MP(RPinByQAbsPm), -1000, 1000));
+        GPPB(Param(MP(RPinByQAbsPe), -1000, 1000));
+        GPPB(Param(MP(QPinByBRelPm), -1000, 1000));
+        GPPB(Param(MP(QPinByBRelPe), -1000, 1000));
+        GPPB(Param(MP(QPinByRRelPm), -1000, 1000));
+        GPPB(Param(MP(QPinByRRelPe), -1000, 1000));
     }
   
-    // 47
     if (TuneCurrent & TunePieces) {
         GPPB(Param(MP(MinorBehindPawnBm),     1,  50));
         GPPB(Param(MP(MinorBehindPawnBe),     1,  50));
@@ -1716,6 +1863,8 @@ void eval_tune(int argc, char* argv[])
 
         GPPB(Param(MP(BishopOutpostBm),       1,  50));
         GPPB(Param(MP(BishopOutpostBe),       1,  50));
+        GPPB(Param(MP(BishopPawnsPm),       -10,   0));
+        GPPB(Param(MP(BishopPawnsPe),       -10,   0));
 
         GPPB(Param(MP(RookClosedPm),        -75,  75));
         GPPB(Param(MP(RookClosedPe),        -75,  75));
@@ -1764,19 +1913,25 @@ void eval_tune(int argc, char* argv[])
         GPPB(Param(MP(PawnPassedGaurdedBm), 0, 50));
         GPPB(Param(MP(PawnPassedGaurdedBe), 0, 50));
 
+        GPPB(Param(MP(PawnPassedStopOffset), 0, 50));
+
         for (int phase : { PhaseMg, PhaseEg }) {
             for (int type = Knight; type <= Queen; type++) {
-                string name = format("PawnAttackB[%i][%i]", phase, type);
+                for (int i = 0; i < 2; i++) {
+                    string name1 = format("PawnAttackB[%i][%i][%i]", phase, i, type);
+                    string name2 = format("PawnAttackPushB[%i][%i][%i]", phase, i, type);
 
-                GPPB(Param(name, &PawnAttackB[phase][type], 1, 100));
+                    GPPB(Param(name1, &PawnAttackB[phase][i][type], 1, 200));
+                    GPPB(Param(name2, &PawnAttackPushB[phase][i][type], 1, 200));
+                }
             }
         }
-       
+
         for (int rank = Rank2; rank < Rank7; rank++) {
             string name = format("PawnCandidateB[%i]", rank);
 
             int ub[8] = { 0, 25, 25, 50, 100, 200, 0, 0 };
-            
+
             GPPB(Param(name, &PawnCandidateB[rank], 0, ub[rank]));
         }
 
@@ -1786,16 +1941,16 @@ void eval_tune(int argc, char* argv[])
                 // unstoppable passed pawn is assumed to be impossible when
                 // the other side has at least one piece
                 if (phase == PhaseMg && i == 1) continue;
-                    
+
                 for (int rank = Rank1; rank <= Rank8; rank++) {
                     int ub;
-           
+
                     // Rank indices 0 and 7 are reserved for king distance factors
                     if (rank == Rank1 || rank == Rank8)
                         ub = 25;
                     else
                         ub = (50 + 100 * phase) * rank;
-                    
+
                     string name = format("PawnPassedB[%i][%i][%i]", phase, i, rank);
 
                     GPPB(Param(name, &PawnPassedB[phase][i][rank], 0, ub));
@@ -1827,41 +1982,33 @@ void eval_tune(int argc, char* argv[])
         GPPB(Param(MP(ScalePOne),                 9, 127));
         GPPB(Param(MP(ScalePTwo),                10, 128));
     }
-    
+
     if (TuneCurrent & TuneTempo)
         GPPB(Param(MP(TempoB), 1, 50));
+
+    if (TuneCurrent & TuneImbalance) {
+        for (int phase : { PhaseMg, PhaseEg }) {
+            string name3 = format("RookKnightImbB[%i]",      phase);
+            string name4 = format("RookBishopImbB[%i]",      phase);
+            string name5 = format("RookTwoMinorsImbB[%i]",   phase);
+            string name6 = format("QueenTwoRooksImbB[%i]",   phase);
+            string name7 = format("QueenRookKnightImbB[%i]", phase);
+            string name8 = format("QueenRookBishopImbB[%i]", phase);
+
+            GPPB(Param(name3, &RookKnightImbB[phase],      -200, 200));
+            GPPB(Param(name4, &RookBishopImbB[phase],      -200, 200));
+            GPPB(Param(name5, &RookTwoMinorsImbB[phase],   -200, 200));
+            GPPB(Param(name6, &QueenTwoRooksImbB[phase],   -200, 200));
+            GPPB(Param(name7, &QueenRookKnightImbB[phase], -200, 200));
+            GPPB(Param(name8, &QueenRookBishopImbB[phase], -200, 200));
+        }
+    }
 
 #undef MP
 #undef MPS
 #undef GPPB
 
     if (tuner.debug) {
-#if 0
-        size_t count = 0;
-
-        for (auto &pos : g_pos) {
-            int cp;
-            double mse = eval_error(pos, KOptimal, &cp);
-
-            int np = popcount(pos.occ());
-
-            if (abs(pos.score1()) > 500) {
-                ++count;
-
-                cerr << int(pos.side()) << ','
-                     << pos.score1() << ','
-                     << pos.score2() << ','
-                     << cp << ','
-                     << mse << ','
-                     << np << ','
-                     << pos.phase(pos.side()) << ','
-                     << pos.to_fen() << endl;
-            }
-        }
-
-        cout << "count = " << count << endl;
-#endif
-
 #if 0
         const double err = eval_error(g_pos, KOptimal);
 

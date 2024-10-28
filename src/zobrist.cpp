@@ -264,8 +264,7 @@ u64 castle(u8 flags)
 
 u64 ep(int sq)
 {
-    // HACK
-    if (sq == square::SquareCount) return 0;
+    if (sq == square::None) return 0;
 
     int file = square::file(sq);
 

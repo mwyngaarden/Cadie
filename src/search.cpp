@@ -7,7 +7,6 @@
 #include <cmath>
 #include <cstring>
 #include "bench.h"
-#include "see.h"
 #include "search.h"
 #include "eval.h"
 #include "gen.h"
@@ -30,132 +29,22 @@ MoveStack       mstack;
 KeyStack        kstack;
 
 static History history;
-static u8 LMR[64][64];
-int Evals[PliesMax];
+static u8 LMReductions[64][64];
+static u8 LMPruning[2][9];
+static i16 Evals[PliesMax];
 
-static int qsearch(Position& pos, int alfa, int beta, const int ply, const int depth, PV& pv);
-static int  search(Position& pos, int alfa, int beta, const int ply, const int depth, PV& pv, Move skip_move = MoveNone);
+static int qsearch(Position& pos, int alfa, const int beta, const int ply, const int depth, PV& pv, bool is_pv);
+static int  search(Position& pos, int alfa,       int beta, const int ply, const int depth, PV& pv, Move skip_move = Move::None());
 
-static void search_init(Position pos);
 static int search_aspirate(Position pos, int depth, PV& pv, int score);
 static void search_iterate();
 
-static bool draw_rep(const Position& pos);
-static bool draw_fifty(const Position& pos);
-
-static string pv_string(PV& pv)
-{
-    ostringstream oss;
-
-    for (size_t i = 0; pv[i] != MoveNone; i++) {
-        if (i > 0) oss << ' ';
-
-        oss << pv[i].str();
-    }
-
-    return oss.str();
-}
-
+static string pv_string(PV& pv);
+static u8 calc_bound(int score, int alfa, int beta);
+static void pv_append(PV& dst, const PV& src);
+static int calc_reductions(const Node& node, int depth, Move m, Order& order, bool checks);
 [[maybe_unused]]
-static bool pv_is_valid(Position pos, const PV& pv)
-{
-    for (size_t i = 0; pv[i] != MoveNone; i++) {
-        MoveList moves;
-
-        gen_moves(moves, pos, GenMode::Legal);
-
-        if (moves.find(pv[i]) == MoveList::npos)
-            return false;
-
-        pos.make_move(pv[i]);
-
-        moves.clear();
-    }
-
-    return true;
-}
-
-u8 calc_bound(int score, int alfa, int beta)
-{
-    u8 bound = 0;
-
-    if (score < beta) bound |= BoundUpper;
-    if (score > alfa) bound |= BoundLower;
-
-    return bound;
-}
-
-static int calc_lmr(int d, int m)
-{
-    assert(d > 0 && m > 0);
-
-    return log2(d) * log2(m) * 0.3 + 0.5;
-}
-
-void search_init()
-{
-    for (int d = 1; d < 64; d++)
-        for (int m = 1; m < 64; m++)
-            LMR[d][m] = calc_lmr(d, m);
-}
-
-static void pv_append(PV& dst, const PV& src)
-{
-    for (int i = 0; i < PliesMax - 1; i++)
-        if ((dst[i + 1] = src[i]) == MoveNone)
-            break;
-}
-
-static int calc_reductions(const Node& node, const Move& m, Order& order, bool dangerous)
-{
-    assert(node.legals > 0);
-
-    if (   node.depth >= 3
-        && node.legals >= 2
-        && !dangerous)
-    {
-        int red = LMR[min(node.depth, 63)][min(node.legals - 1, 63)];
-        
-        if (node.pv_node) red -= red / 2;
-
-        int score = order.score();
-
-        red -= score >=  6 * 1024;
-        red += score <= -4 * 1024;
-
-        red += node.entry.move.is_tactical();
-
-        return max(red, 0);
-    }
-
-    else if (  !node.pv_node
-            && node.depth >= 3
-            && node.legals >= 3
-            && dangerous
-            && !node.pos.move_is_safe(m, order.see(node.pos, false)))
-        return 1;
-
-    return 0;
-}
-
-static int calc_extensions(const Node& node, const Move& m, Order& order, bool checks)
-{
-    if (order.singular())
-        return 1;
-
-    if (node.pv_node || node.depth <= 2) {
-        if (checks)
-            return 1;
-
-        if (m.is_queen_promo())
-            return 1;
-
-        if (node.pos.move_is_recap(m))
-            return 1;
-    }
-
-    return 0;
-}
+static bool pv_is_valid(Position pos, const PV& pv);
 
 int search(Position& pos, int alfa, int beta, const int ply, const int depth, PV& pv, Move skip_move)
 {
@@ -163,85 +52,93 @@ int search(Position& pos, int alfa, int beta, const int ply, const int depth, PV
     assert(alfa >= -ScoreMate && alfa < beta && beta <= ScoreMate);
     assert(depth <= DepthMax);
 
-    if (depth <= 0) {
-        assert(depth == 0);
-
-        return qsearch(pos, alfa, beta, ply, 0, pv);
-    }
-
-    ttable.prefetch(pos.key());
-    etable.prefetch(pos.key());
-
-    si.depth_sel = max(si.depth_sel, ply + 1);
+    if (depth <= 0)
+        return qsearch(pos, alfa, beta, ply, 0, pv, beta - alfa > 1);
 
     // Do we need to abort the search?
     si.checkup();
-  
-    Node node(pos, alfa, beta, ply, depth, skip_move);
 
-    pv[0] = MoveNone;
+    Node node(pos, alfa, beta);
 
-    int score;
+    if (node.pv_node)
+        si.sel_depth = max(si.sel_depth, ply + 1);
 
-    if (!node.root_node) {
-        if (pos.draw_mat_insuf() || draw_rep(pos) || draw_fifty(pos))
-            return ScoreDraw + 1 - (si.tnodes & 2);
+    pv[0] = Move::None();
+
+    if (ply && !skip_move) {
+        if (pos.draw())
+            return ScoreDraw;
 
         if (ply >= PliesMax)
-            return pos.checkers() ? ScoreDraw : eval(pos, ply);
+            return pos.checkers() ? ScoreDraw : eval(pos);
 
         // mate distance pruning
-        
+
         alfa = max(mated_in(ply), alfa);
         beta = min(mate_in(ply + 1), beta);
 
         if (alfa >= beta) return alfa;
     }
-    
-    if ((node.hit = ttable.get(node.entry, node.key, node.ply))) {
-        if (node.entry.depth >= depth && !node.pv_node) {
-            bool cut =   node.entry.bound == BoundExact
-                    || ((node.entry.bound & BoundLower) && node.entry.score >= beta)
-                    || ((node.entry.bound & BoundUpper) && node.entry.score <= alfa);
 
-            if (cut) return node.entry.score;
+    node.tthit = !skip_move && ttable.get(node.tte, pos.key(), ply);
+
+    if (node.tthit) {
+        if (node.tte.depth >= depth && !node.pv_node) {
+            bool cut =  node.tte.bound == BoundExact
+                    || (node.tte.bound == BoundLower && node.tte.score >= beta)
+                    || (node.tte.bound == BoundUpper && node.tte.score <= alfa);
+
+            if (cut) return node.tte.score;
         }
 
         if (   SingularExt
-            && !node.root_node
+            && ply
+            && ply < si.root_depth * 2
             && depth >= SEDepthMin
-            && !node.skip_move
-            && !pos.checkers()
-            && !score_is_mate(node.entry.score)
-            && (node.entry.bound & BoundLower)
-            && node.entry.depth >= depth - SEDepthOffset)
-            node.xtnd_move = node.entry.move;
-
-        node.eval = node.entry.eval;
-    }
-    else
-        node.eval = pos.checkers() ? mated_in(ply) : eval(pos, ply);
-
-    Evals[ply] = node.eval;
-
-    node.improving = ply < 2 || Evals[ply] > Evals[ply - 2];
-
-    if (node.root_node && si.best_move)
-        node.entry.move = si.best_move;
-
-    if (node.hit) {
-        bool adjust =   node.entry.bound == BoundExact
-                   || ((node.entry.bound & BoundLower) && node.eval < node.entry.score)
-                   || ((node.entry.bound & BoundUpper) && node.eval > node.entry.score);
-
-        if (adjust) node.eval = node.entry.score;
+            && score_is_eval(node.tte.score)
+            && (node.tte.bound & BoundLower)
+            && node.tte.depth >= depth - SEDepthOffset)
+            node.ext_move = node.tte.move;
     }
 
-    history.clear_killers(pos.side(), ply + 2);
+    if (pos.checkers())
+        Evals[ply] = node.eval = mated_in(ply);
+    else if (node.tthit) {
+        Evals[ply] = node.eval = node.tte.eval;
 
-    if (pos.checkers()) goto move_loop;
-   
-    if (!node.pv_node && !node.skip_move) {
+        node.eval = pos.draw_scale(node.eval);
+
+        bool adjust =  node.tte.bound == BoundExact
+                   || (node.tte.bound == BoundLower && node.eval < node.tte.score)
+                   || (node.tte.bound == BoundUpper && node.eval > node.tte.score);
+
+        if (adjust) node.eval = node.tte.score;
+    }
+    else {
+        if (skip_move)
+            node.eval = Evals[ply];
+        else {
+            if (ply <= 1 || mstack.back() != Move::Null())
+                node.eval = eval(pos);
+            else
+                node.eval = -Evals[ply - 1] + 2 * TempoB;
+
+            Evals[ply] = node.eval;
+        }
+
+        node.eval = pos.draw_scale(node.eval);
+    }
+
+    node.improving = Evals[ply] > (ply < 2 ? 0 : Evals[ply - 2]);
+
+    if (!ply)
+        node.tte.move = si.best_move;
+
+    history.reset_killers(pos.side(), ply + 2);
+
+    // try razoring when !checkers, !root, depth <= 1, eval <= alfa - RazorMargin
+    // try snmp when !checkers, !pv, score_is_eval(eval), eval >= beta + margin
+    if (!pos.checkers() && !node.pv_node && !skip_move) {
 
         if (   StaticNMP
             && depth <= StaticNMPDepthMax
@@ -249,158 +146,171 @@ int search(Position& pos, int alfa, int beta, const int ply, const int depth, PV
             && node.eval >= beta + (depth - node.improving) * StaticNMPFactor)
             return node.eval;
 
-        if (   Razoring
-            && depth <= 3
-            && node.eval + RazoringFactor * depth < beta)
-        {
-            score = qsearch(pos, alfa, beta, ply, 0, pv);
-
-            if (score < beta)
-                return score;
-            else if (depth == 1)
-                return beta;
-        }
-
         if (   NMPruning
             && depth >= NMPruningDepthMin
-            && mstack.back(0) != MoveNull
-            && mstack.back(1) != MoveNull
-            && !score_is_mate(beta)
+            && mstack.back(0) != Move::Null()
+            && mstack.back(1) != Move::Null()
+            && score_is_eval(beta)
             && node.eval >= beta
             && pos.pieces(pos.side()))
         {
             int R = 3 + depth / 3;
 
-            R = min(depth, R);
-       
-            UndoNull undo;
+            UndoInfo undo = pos.undo_info();
 
-            pos.make_null(undo);
-            score = -search(pos, -beta, -beta + 1, ply + 1, depth - R, node.pv);
+            pos.make_null();
+            int score = -search(pos, -beta, -beta + 1, ply + 1, depth - R, node.pv);
             pos.unmake_null(undo);
 
             if (score >= beta)
-                return score_is_mate(score) ? beta : score;
+                return !score_is_eval(score) ? beta : score;
+        }
+
+        int ubound = beta + ProbCutMargin;
+
+        if (   ProbCut
+            && depth >= ProbCutDepthMin
+            && score_is_eval(beta)
+            && !(node.tthit && node.tte.depth >= depth - 3 && node.tte.score < ubound))
+        {
+            Order order(pos, node.tte.move);
+
+            UndoInfo undo = pos.undo_info();
+
+            for (Move m = order.next(); m; m = order.next()) {
+                if (!pos.move_is_legal(m))
+                    continue;
+
+                pos.make_move(m);
+
+                ttable.prefetch(pos.key());
+                etable.prefetch(pos.key());
+
+                int score = -qsearch(pos, -ubound, -ubound + 1, ply + 1, 0, node.pv, false);
+
+                if (score >= ubound)
+                    score = -search(pos, -ubound, -ubound + 1, ply + 1, depth - 4, node.pv);
+
+                pos.unmake_move(undo);
+
+                if (score >= ubound)
+                    return score;
+            }
         }
     }
 
-    if (depth <= 4) {
-        score = node.eval + depth * FutilityFactor;
+    MoveList quiets;
 
-        if (score <= alfa) {
-            node.bs = score;
-            node.futile = true;
-        }
-    }
+    Order order(pos, history, node.tte.move, ply, depth);
 
-move_loop:
+    UndoInfo undo = pos.undo_info();
 
-    MoveList qmoves;
-
-    Order order(node, history);
-    UndoMove undo;
-    u64 pins = gen_pins(pos);
+    int see_quiet = -150 * (depth - 7) * (depth - 7);
+    int see_noisy = -150 * (depth - 3);
+    int lmp_limit = depth <= 8 ? LMPruning[node.improving][depth] : 0;
 
     for (Move m = order.next(); m; m = order.next()) {
         assert(alfa < beta);
 
-        if (!pos.move_is_legal(m, pins)) [[unlikely]]
+        if (!pos.move_is_legal(m))
             continue;
-        
-        ++node.legals;
 
-        if (m == node.skip_move)
+        node.legals++;
+
+        if (m == skip_move)
             continue;
-        
+
         bool checks     = pos.move_is_check(m);
         bool quiet      = !checks && !m.is_tactical();
         bool dangerous  = pos.checkers() || !quiet;
 
-        int& see = order.see(pos, false);
-
-        if (node.futile && (quiet || !pos.move_is_safe(m, see)))
-            continue;
-
-        if (!score_is_mate(node.bs)) {
-            if (depth <= 5 && !dangerous && node.legals >= (depth + node.improving) * 3)
+        if (node.best_score >= -4000 && order.score() < Order::ScoreCounter) {
+            if (ply && depth <= 8 && !dangerous && node.legals >= lmp_limit)
                 continue;
 
-            if (depth <= 6 && !dangerous && !pos.move_is_safe(m, see))
+            if (depth >= 8 && !dangerous && !pos.see(m, see_quiet))
                 continue;
-           
-            if (depth <= 4 && !quiet && !pos.move_is_safe(m, see))
+
+            if (depth <= 7 && !dangerous && !order.see())
+                continue;
+
+            if (depth >= 4 && !quiet && !pos.see(m, see_noisy))
+                continue;
+
+            if (depth <= 3 && !quiet && !order.see())
                 continue;
         }
 
-        int ext = calc_extensions(node, m, order, checks);
-        int red = calc_reductions(node, m, order, dangerous);
+        int next_depth = depth - 1;
 
-        assert(!ext || !red);
+        if (order.singular())
+            next_depth++;
+        else if (m == node.ext_move) {
+            int lbound = node.tte.score - 2 * depth;
 
-        if (ext == 0 && m == node.xtnd_move) {
-            int lbound = node.entry.score - 2 * depth;
-
-            score = search(pos, lbound - 1, lbound, ply, (depth - 1) / 2, node.pv, m);
+            int score = search(pos, lbound - 1, lbound, ply, (depth - 1) / 2, node.pv, m);
 
             if (score < lbound)
-                ext = 1;
+                next_depth++;
             else if (lbound >= beta)
                 return lbound;
         }
 
-        int ndepth = depth + ext - 1;
+        int red;
 
-        // Don't reduce to qs
-        if (red && ndepth - red <= 0)
-            red = ndepth - 1;
+        if (depth < 3 || node.legals < 2)
+            red = 0;
+        else {
+            red = calc_reductions(node, depth, m, order, checks);
+            red = clamp(red, 0, next_depth - 1);
+        }
 
         // UCI info
-        if (node.root_node) [[unlikely]] {
+        if (!ply) {
             si.curr_move     = m;
             si.curr_move_num = node.legals;
         }
-       
+
         if (!m.is_tactical())
-            qmoves.add(m);
+            quiets.add(m);
 
-        pos.make_move(m, undo);
+        pos.make_move(m, !checks);
 
-        if ((node.pv_node && node.legals > 1) || red) {
-            score = -search(pos, -alfa - 1, -alfa, ply + 1, ndepth - red, node.pv);
+        ttable.prefetch(pos.key());
+        etable.prefetch(pos.key());
 
-            if (score > alfa) {
-                if (node.root_node) si.fail_highs++;
-                score = -search(pos, -beta, -alfa, ply + 1, ndepth, node.pv);
-                if (node.root_node) si.fail_highs--;
-            }
-        }
-        else
-            score = -search(pos, -beta, -alfa, ply + 1, ndepth, node.pv);
+        int score, zws = (node.pv_node && node.legals > 1) || red;
 
-        pos.unmake_move(m, undo);
+        if (zws)
+            score = -search(pos, -alfa - 1, -alfa, ply + 1, next_depth - red, node.pv);
 
-        if (score > node.bs) {
-            node.bs = score;
+        if (!zws || score > alfa)
+            score = -search(pos, -beta, -alfa, ply + 1, next_depth, node.pv);
 
-            if (node.root_node && node.legals == 1)
-                si.fail_low = node.bs <= alfa;
+        pos.unmake_move(undo);
 
-            if (node.bs > alfa) {
-                alfa = node.bs;
+        if (score > node.best_score) {
+            node.best_score = score;
+
+            if (!ply && node.legals == 1)
+                si.fail_low = node.best_score <= alfa;
+
+            if (node.best_score > alfa) {
+                alfa = node.best_score;
                 node.best_move = m;
 
                 if (node.pv_node) {
                     pv[0] = m;
 
-                    pv_append(pv, node.pv); 
+                    pv_append(pv, node.pv);
 
-                    if (node.root_node && node.legals > 1 && depth > 1)
-                        si.update(depth, node.bs, pv, false);
+                    if (!ply && node.legals > 1 && depth > 1)
+                        si.update(depth, node.best_score, pv, false);
                 }
 
                 if (alfa >= beta) {
-                    if (!node.skip_move && !node.best_move.is_tactical())
-                        history.update(node, qmoves);
+                    if (!skip_move && !node.best_move.is_tactical())
+                        history.update(pos, ply, depth, node.best_move, quiets);
 
                     break;
                 }
@@ -410,131 +320,136 @@ move_loop:
 
     if (!node.legals)
         return pos.checkers() ? mated_in(ply) : ScoreDraw;
-    
-    if (node.bs <= -ScoreMate) {
-        assert(node.bs == -ScoreMate);
+
+    if (node.best_score <= -ScoreMate) {
+        assert(node.best_score == -ScoreMate);
         return max(alfa, mated_in(ply + 1));
     }
 
-    Entry& e = node.entry;
+    if (!skip_move) {
+        i16 eval = pos.checkers() ? -ScoreMate : Evals[ply];
+        u8 bound = calc_bound(node.best_score, node.orig_alfa, beta);
 
-    e.move  = node.best_move;
-    e.eval  = pos.checkers() ? -ScoreMate : Evals[ply];
-    e.score = score_to_tt(node.bs, ply);
-    e.depth = depth;
-    e.bound = calc_bound(node.bs, node.orig_alfa, beta);
+        ttable.set(pos.key(), node.best_move, node.best_score, eval, depth, bound, ply);
+    }
 
-    ttable.set(e, node.key);
-
-    return node.bs;
+    return node.best_score;
 }
 
-int qsearch(Position& pos, int alfa, int beta, const int ply, const int depth, PV& pv)
+int qsearch(Position& pos, int alfa, const int beta, const int ply, const int depth, PV& pv, bool is_pv)
 {
     assert(kstack.back() == pos.key());
     assert(depth <= 0);
-    assert(depth <  0 || !pos.checkers());
     assert(alfa >= -ScoreMate && alfa < beta && beta <= ScoreMate);
-
-    ttable.prefetch(pos.key());
-    etable.prefetch(pos.key());
+    assert(is_pv || (beta - alfa == 1));
 
     // Do we need to abort the search?
     si.checkup();
-   
-    Node node(pos, alfa, beta, ply, depth);
 
-    pv[0] = MoveNone;
+    Node node(pos, alfa, beta);
 
-    if (!node.root_node) {
-        if (pos.draw_mat_insuf() || draw_rep(pos) || draw_fifty(pos))
+    int adj_eval = -ScoreMate;
+
+    if (is_pv) {
+        pv[0] = Move::None();
+
+        si.sel_depth = max(si.sel_depth, ply + 1);
+    }
+
+    if (ply) {
+        if (pos.draw())
             return ScoreDraw;
 
         if (ply >= PliesMax)
-            return pos.checkers() ? ScoreDraw : eval(pos, ply);
+            return pos.checkers() ? ScoreDraw : eval(pos);
     }
 
-    node.hit = ttable.get(node.entry, node.key, node.ply);
+    node.tthit = ttable.get(node.tte, pos.key(), ply);
 
-    if (node.hit && node.entry.depth >= depth && !node.pv_node) {
-        bool cut =   node.entry.bound == BoundExact
-                || ((node.entry.bound & BoundLower) && node.entry.score >= beta)
-                || ((node.entry.bound & BoundUpper) && node.entry.score <= alfa);
+    if (node.tthit && node.tte.depth >= depth && !is_pv) {
+        bool cut =  node.tte.bound == BoundExact
+                || (node.tte.bound == BoundLower && node.tte.score >= beta)
+                || (node.tte.bound == BoundUpper && node.tte.score <= alfa);
 
-        if (cut) return node.entry.score;
+        if (cut) return node.tte.score;
     }
 
     if (pos.checkers())
-        node.eval = node.bs = mated_in(ply);
+        node.eval = adj_eval = mated_in(ply);
     else {
-        if (node.hit) {
-            node.eval = node.bs = node.entry.eval;
+        if (node.tthit) {
+            node.eval = node.tte.eval;
 
-            bool adjust =   node.entry.bound == BoundExact
-                       || ((node.entry.bound & BoundLower) && node.eval < node.entry.score)
-                       || ((node.entry.bound & BoundUpper) && node.eval > node.entry.score);
+            adj_eval = pos.draw_scale(node.eval);
 
-            if (adjust) node.bs = node.entry.score;
+            bool adjust =  node.tte.bound == BoundExact
+                       || (node.tte.bound == BoundLower && adj_eval < node.tte.score)
+                       || (node.tte.bound == BoundUpper && adj_eval > node.tte.score);
+
+            if (adjust) adj_eval = node.tte.score;
         }
-        else
-            node.eval = node.bs = eval(pos, ply);
+        else {
+            if (depth < 0 || mstack.back() != Move::Null())
+                node.eval = eval(pos);
+            else
+                node.eval = -Evals[ply - 1] + 2 * TempoB;
 
-        if (node.bs >= beta)
-            return node.bs;
+            adj_eval = pos.draw_scale(node.eval);
+        }
 
-        if (node.bs > alfa)
-            alfa = node.bs;
+        if (adj_eval >= beta)
+            return adj_eval;
+
+        if (adj_eval > alfa)
+            alfa = adj_eval;
     }
-    
+
+    node.best_score = adj_eval;
+
     size_t qevasions = 0;
 
-    Order order(node, history);
-    UndoMove undo;
-    u64 pins = gen_pins(pos);
+    Order order(pos, history, node.tte.move, ply, depth);
+
+    UndoInfo undo = pos.undo_info();
 
     for (Move m = order.next(); m; m = order.next()) {
         assert(alfa < beta);
-        
-        if (!pos.move_is_legal(m, pins))
+
+        if (!pos.move_is_legal(m))
             continue;
-        
-        ++node.legals;
 
-        if (node.bs > -ScoreMateMin) {
+        node.legals++;
 
-            if (depth == 0 && !m.is_tactical() && !pos.move_is_check(m))
-                continue;
+        if (node.best_score >= -4000 && qevasions >= 1)
+            break;
 
-            if (qevasions >= 1) break;
+        if (!pos.checkers() && depth <= DepthMin && !pos.move_is_recap(m))
+            continue;
 
-            int see = order.see(pos, true);
+        pos.make_move(m);
 
-            if (!see) {
-                if (depth < 0) break;
+        ttable.prefetch(pos.key());
+        etable.prefetch(pos.key());
 
-                continue;
-            }
-        }
+        int score = -qsearch(pos, -beta, -alfa, ply + 1, depth - 1, node.pv, is_pv);
 
-        pos.make_move(m, undo);
-        int score = -qsearch(pos, -beta, -alfa, ply + 1, depth - 1, node.pv);
-        pos.unmake_move(m, undo);
-        
+        pos.unmake_move(undo);
+
         qevasions += !m.is_tactical() && pos.checkers();
 
-        if (score > node.bs) {
-            node.bs = score;
+        if (score > node.best_score) {
+            node.best_score = score;
 
             if (score > alfa) {
                 alfa = score;
                 node.best_move = m;
 
-                if (node.pv_node) {
+                if (is_pv) {
                     pv[0] = m;
 
                     pv_append(pv, node.pv);
                 }
-                
+
                 if (alfa >= beta) break;
             }
         }
@@ -543,49 +458,51 @@ int qsearch(Position& pos, int alfa, int beta, const int ply, const int depth, P
     if (pos.checkers() && !node.legals)
         return mated_in(ply);
 
-    if (node.bs <= -ScoreMate) {
-        assert(node.bs == -ScoreMate);
+    if (node.best_score <= -ScoreMate) {
+        assert(node.best_score == -ScoreMate);
         return max(alfa, mated_in(ply + 1));
     }
 
     if (depth == 0) {
-        Entry& e = node.entry;
+        u8 bound = calc_bound(node.best_score, node.orig_alfa, beta);
 
-        e.move  = node.best_move;
-        e.eval  = node.eval;
-        e.score = score_to_tt(node.bs, ply);
-        e.depth = 0;
-        e.bound = calc_bound(node.bs, node.orig_alfa, beta);
-
-        ttable.set(e, node.key);
+        ttable.set(pos.key(), node.best_move, node.best_score, node.eval, 0, bound, ply);
     }
 
-    return node.bs;
+    return node.best_score;
 }
 
 static int search_aspirate(Position pos, int depth, PV& pv, int score)
 {
     assert(depth > 0);
-        
-    si.depth_sel = 0;
+
+    si.sel_depth  = 0;
+    si.root_depth = depth;
 
     if (depth <= 5)
-        return search(pos, -ScoreMate, ScoreMate, 0, depth, pv); 
+        return search(pos, -ScoreMate, ScoreMate, 0, depth, pv);
 
     int delta = AspMargin;
     int alfa  = max(score - delta, -ScoreMate);
     int beta  = min(score + delta,  ScoreMate);
 
     while (true) {
+        if (alfa < -4000) alfa = -ScoreMate;
+        if (beta >  4000) beta =  ScoreMate;
+
         score = search(pos, alfa, beta, 0, depth, pv);
 
         if (score <= alfa) {
             beta = (alfa + beta) / 2;
             alfa = max(alfa - delta, -ScoreMate);
+
+            depth = si.root_depth;
         } 
         else if (score >= beta) {
-            alfa = (alfa + beta) / 2;
             beta = min(beta + delta, ScoreMate);
+
+            if (score_is_eval(score))
+                depth = max(1, depth - 1);
         } 
         else
             return score;
@@ -594,56 +511,14 @@ static int search_aspirate(Position pos, int depth, PV& pv, int score)
     }
 }
 
-void search_init(Position pos)
-{
-    MoveList moves;
-    
-    gen_moves(moves, pos, GenMode::Legal);
-
-    if (moves.size() == 1) {
-        si.singular = true;
-        return;
-    }
-
-    if (!EasyMove || !sl.time_managed())
-        return;
-
-    MoveExtList smoves;
-    PV pv;
-
-    for (Move& m : moves) {
-        UndoMove undo;
-
-        pos.make_move(m, undo);
-        int score = -search(pos, -ScoreMate, ScoreMate, 0, 1, pv); 
-        pos.unmake_move(m, undo);
-        
-        smoves.add(m, score, ScoreNone);
-    }
-    
-    assert(pos.key() == si.pos.key());
-
-    smoves.sort();
-
-    MoveExt m0 = smoves[0];
-    MoveExt m1 = smoves[1];
-
-    int diff = m0.score - m1.score;
-
-    assert(diff >= 0);
-
-    Entry e;
-
-    if (diff >= EMMargin && ttable.get(e, pos.key(), 0) && e.move == m0.move)
-        si.easy_move = m0.move;
-}
-
 void search_iterate()
 {
-    search_init(si.pos);
+    MoveList moves;
 
-    si.initialized = true;
-    
+    gen_moves(moves, si.pos, GenMode::Legal);
+
+    si.singular = moves.size() == 1;
+
     PV pv;
 
     int score = 0;
@@ -667,15 +542,12 @@ void search_iterate()
             if (si.singular)
                 break;
 
-            if (si.score_drop)
-                continue;
+            double usage = si.time_usage(sl);
 
-            double share = EMShare / 100.0;
-
-            if (si.time_usage(sl) > share && si.best_move == si.easy_move && si.bm_updates == 0)
+            if (usage >= 0.7 && !si.score_drop && si.bm_stable >= 10)
                 break;
-            
-            if (si.time_usage(sl) >= 0.70)
+
+            if (usage >= 0.9 && !si.score_drop)
                 break;
         }
     }
@@ -689,7 +561,7 @@ void search_start()
 
     NMPruning           = opt_list.get("NMPruning").check_value();
     NMPruningDepthMin   = opt_list.get("NMPruningDepthMin").spin_value();
-    
+
     SingularExt         = opt_list.get("SingularExt").check_value();
     SEDepthMin          = opt_list.get("SEDepthMin").spin_value();
     SEDepthOffset       = opt_list.get("SEDepthOffset").spin_value();
@@ -697,25 +569,18 @@ void search_start()
     StaticNMP           = opt_list.get("StaticNMP").check_value();
     StaticNMPDepthMax   = opt_list.get("StaticNMPDepthMax").spin_value();
     StaticNMPFactor     = opt_list.get("StaticNMPFactor").spin_value();
-   
-    Razoring            = opt_list.get("Razoring").check_value();
-    RazoringFactor      = opt_list.get("RazoringFactor").spin_value();
-    
-    AspMargin           = opt_list.get("AspMargin").spin_value();
-    
-    FutilityFactor      = opt_list.get("FutilityFactor").spin_value();
 
-    EasyMove            = opt_list.get("EasyMove").check_value();
-    EMMargin            = opt_list.get("EMMargin").spin_value();
-    EMShare             = opt_list.get("EMShare").spin_value();
-    
-    GenState state = gen_state(si.pos);
+    ProbCut             = opt_list.get("ProbCut").check_value();
+    ProbCutDepthMin     = opt_list.get("ProbCutDepthMin").spin_value();
+    ProbCutMargin       = opt_list.get("ProbCutMargin").spin_value();
+
+    AspMargin           = opt_list.get("AspMargin").spin_value();
 
     // No reason to search if there are no legal moves
-    if (state != GenState::Normal) {
-        gstats.num += !gstats.exc;
+    if (GenState state = gen_state(si.pos); state != GenState::Normal) {
+        gstats.num += !gstats.exc_mated;
         gstats.stalemate += state == GenState::Stalemate;
-        gstats.checkmate += state != GenState::Stalemate;
+        gstats.checkmate += state == GenState::Checkmate;
 
         int score = state == GenState::Stalemate
                   ? ScoreDraw
@@ -740,23 +605,19 @@ void search_start()
         gstats.normal++;
         gstats.num++;
 
-        int dn = si.depth_max;
+        int dn = si.max_depth;
         assert(dn > 0);
 
         gstats.depth_min  = min(gstats.depth_min, dn);
         gstats.depth_max  = max(gstats.depth_max, dn);
         gstats.depth_sum += dn;
         
-        int ds = si.depth_sel;
-        assert(ds > 0);
+        int ds = si.sel_depth;
 
         gstats.seldepth_min  = min(gstats.seldepth_min, ds);
         gstats.seldepth_max  = max(gstats.seldepth_max, ds);
         gstats.seldepth_sum += ds;
 
-        gstats.bm_updates += si.bm_updates;
-        gstats.bm_stable += si.bm_stable;
-   
         i64 n = si.tnodes;
 
         gstats.nodes_sum += n;
@@ -770,55 +631,21 @@ void search_start()
 
         if (t > 0) {
             i64 s = n / (t / 1E+9);
-            
+
             gstats.nps_min = min(gstats.nps_min, s);
             gstats.nps_max = max(gstats.nps_max, s);
         }
     }
 }
 
-bool draw_fifty(const Position& pos)
-{
-    if (pos.half_moves() < 100)
-        return false;
-
-    if (!pos.checkers())
-        return true;
-
-    MoveList moves;
-
-    gen_moves(moves, pos, GenMode::Legal);
-
-    return !moves.empty();
-}
-
-bool draw_rep(const Position& pos)
-{
-    for (size_t i = 4; i <= size_t(pos.half_moves()) && i < kstack.size(); i += 2)
-        if (kstack.back(i) == kstack.back())
-            return true;
-
-    return false;
-}
-
 void search_reset()
 {
     memset(Evals, 0, sizeof(Evals));
 
-    history.clear();
+    history.reset();
 
     ttable.reset();
     etable.reset();
-}
-
-int mate_in(int ply)
-{
-    return ScoreMate - ply;
-}
-
-int mated_in(int ply)
-{
-    return ply - ScoreMate;
 }
 
 bool score_is_mate(int score)
@@ -828,19 +655,24 @@ bool score_is_mate(int score)
     return abs(score) >= ScoreMate - PliesMax;
 }
 
+bool score_is_eval(int score)
+{
+    assert(abs(score) <= ScoreMate);
+
+    return abs(score) <= 4000;
+}
+
 void SearchInfo::update(int depth, int score, PV& pv, bool complete)
 {
     assert(depth >= 1);
     assert(abs(score) < ScoreMate);
     assert(pv[0].is_valid());
 
-    if (!initialized) return;
-
     i64 dur = timer.elapsed_time(1);
 
     // Don't flood stdout if time limited
-    bool report = (depth > depth_max || pv[0] != best_move)
-               && (!sl.time_limited() || depth >= 6 || dur >= 100);
+    bool report = (depth > max_depth || pv[0] != best_move)
+               && (singular || !sl.time_limited() || depth >= 6 || dur >= 100);
 
     if (report) {
         ostringstream oss;
@@ -849,7 +681,7 @@ void SearchInfo::update(int depth, int score, PV& pv, bool complete)
 
         oss << "info" 
             << " depth "    << depth
-            << " seldepth " << depth_sel
+            << " seldepth " << sel_depth
             << " score "    << uci_score(score)
             << " time "     << dur
             << " nodes "    << tnodes
@@ -860,7 +692,7 @@ void SearchInfo::update(int depth, int score, PV& pv, bool complete)
         uci_send(oss.str().c_str());
     }
 
-    depth_max = depth;
+    max_depth = depth;
 
     if (pv[0] == best_move)
         bm_stable   += complete;
@@ -873,7 +705,7 @@ void SearchInfo::update(int depth, int score, PV& pv, bool complete)
 
     if (complete)
         score_prev = score;
-    
+
     fail_low = false;
 
     best_move = pv[0];
@@ -886,11 +718,11 @@ void SearchInfo::uci_bestmove() const
     ostringstream oss;
 
     oss << "info" 
-        << " depth "    << depth_max
-        << " seldepth " << depth_sel
+        << " depth "    << max_depth
+        << " seldepth " << sel_depth
         << " time "     << dur
         << " nodes "    << tnodes;
-    
+
     uci_send(oss.str().c_str());
 
     oss = ostringstream();
@@ -905,8 +737,8 @@ void SearchInfo::uci_info(i64 dur) const
     ostringstream oss;
 
     oss << "info" 
-        << " depth "            << depth_max
-        << " seldepth "         << depth_sel
+        << " depth "            << max_depth
+        << " seldepth "         << sel_depth
         << " time "             << dur
         << " nodes "            << tnodes
         << " nps "              << 1000 * tnodes / dur
@@ -914,33 +746,26 @@ void SearchInfo::uci_info(i64 dur) const
         << " currmove "         << curr_move.str()
         << " currmovenumber "   << curr_move_num;
 
-#if 0
-    oss << endl << "info string ethitrate " << etable.hitrate();
-#endif
-
     uci_send(oss.str().c_str());
 }
 
 // Depth limit is handled in search_iterate
 void SearchInfo::checkup()
 {
-    if (!si.initialized) [[unlikely]]
+    if (--cnodes >= 0)
         return;
 
-    if (--cnodes >= 0) [[likely]]
+    if (!best_move.is_valid())
         return;
 
-    if (!best_move.is_valid()) [[unlikely]]
-        return;
-
-    i64 cnodes_next = 250000;
+    i64 cnodes_next = 100000;
     i64 dur = timer.elapsed_time();
 
-    bool abort = StopRequest;
-    
+    bool abort = StopRequest.load(std::memory_order_relaxed);
+
     if (!abort && sl.nodes) {
         i64 diff = tnodes - sl.nodes;
-            
+
         cnodes_next = -diff / 2;
 
         if (diff >= 0)
@@ -948,72 +773,163 @@ void SearchInfo::checkup()
     }
 
     if (!abort && sl.time_limited()) {
-        i64 rem_time = 10000; // 10 seconds
-       
+        i64 rem_time = 1000; // 1 second
+
         if (sl.move_time) {
-            rem_time = min(rem_time, sl.move_time - dur);
+            rem_time = sl.move_time - dur;
 
             if (dur >= sl.move_time)
                 abort = true;
         }
 
         else if (sl.time_managed()) {
+            i64 otime = sl.opt_time;
             i64 xtime = sl.max_time;
-            i64 ptime = sl.panic_time;
 
-            double usage = double(dur) / xtime;
+            double usage = dur / double(otime);
 
-            rem_time = (dur >= xtime ? ptime : xtime) - dur;
+            rem_time = (dur >= otime ? xtime : otime) - dur;
 
-            // Panic time threshold
-            if (dur >= ptime)
+            // Maximum time threshold
+            if (dur >= xtime)
                 abort = true;
 
             else if (!fail_low) {
-
-                if (usage >= 2.0)
-                    abort = true;
-
-                else if (usage >= 1.5 && curr_move_num == 1)
-                    abort = true;
-
-                else if (!fail_highs && !score_drop) {
-
-                    if (usage >= 1.0)
-                        abort = true;
-
-                    if (usage >= 0.6) {
-
-                        if (bm_updates == 0)
-                            abort = true;
-
-                    }
-#if 0
-                    if (usage >= 0.8) { // TODO tweak
-
-                        if (bm_stable >= 10) // TODO tweak
-                            abort = true;
-                    }
-#endif
+                if (usage < 1.25 && (score_drop || curr_move_num != 1 || bm_stable == 0)) {
+                    // NOP
                 }
+
+                else if (usage >= 2.0)
+                    abort = true;
+
+                else if (  usage >= 0.5
+                        && !pos.checkers()
+                        && !score_drop
+                        && curr_move_num == 1
+                        && bm_updates == 0)
+                    abort = true;
+ 
+                else if (usage >= 1.0 && curr_move_num == 1)
+                    abort = true;
+ 
+                else if (usage >= 1.0 && !score_drop && bm_stable >= 10)
+                    abort = true;
+ 
+                else if (usage >= 1.25 && (!score_drop || bm_stable >= 10))
+                    abort = true;
             }
         }
 
-        i64 n = clamp(rem_time, i64(1), i64(10000)) * 25;
+        i64 n = clamp(rem_time, i64(1), i64(1000)) * 100;
 
         cnodes_next = min(cnodes_next, n);
     }
-   
-    if (abort) [[unlikely]] 
+
+    if (abort)
         throw 1;
-        
+
     cnodes = cnodes_next;
 
-    if (depth_max >= 6) {
-        if (dur > 5000 && dur - time_rep >= 1000) {
-            time_rep = dur;
+    if (max_depth >= 6) {
+        if (dur > 5000 && dur - rep_time >= 1000) {
+            rep_time = dur;
 
             uci_info(dur);
         }
     }
+}
+
+static string pv_string(PV& pv)
+{
+    ostringstream oss;
+
+    for (size_t i = 0; pv[i] != Move::None(); i++) {
+        if (i > 0) oss << ' ';
+
+        oss << pv[i].str();
+    }
+
+    return oss.str();
+}
+
+bool pv_is_valid(Position pos, const PV& pv)
+{
+    for (size_t i = 0; pv[i] != Move::None(); i++) {
+        MoveList moves;
+
+        gen_moves(moves, pos, GenMode::Legal);
+
+        if (moves.find(pv[i]) == MoveList::npos)
+            return false;
+
+        pos.make_move_fast(pv[i]);
+    }
+
+    return true;
+}
+
+u8 calc_bound(int score, int alfa, int beta)
+{
+    u8 bound = 0;
+
+    if (score > alfa) bound |= BoundLower;
+    if (score < beta) bound |= BoundUpper;
+
+    return bound;
+}
+
+void search_init()
+{
+    for (int d = 1; d < 64; d++)
+        for (int m = 1; m < 64; m++)
+            LMReductions[d][m] = log2(d) * log2(m) * 0.4;
+
+    for (int d = 1; d <= 8; d++) {
+        double x = 3.0 + pow(d, 1.5);
+
+        LMPruning[0][d] = x;
+        LMPruning[1][d] = x * 1.25;
+    }
+}
+
+void pv_append(PV& dst, const PV& src)
+{
+    for (int i = 0; i < PliesMax - 1; i++)
+        if ((dst[i + 1] = src[i]) == Move::None())
+            break;
+}
+
+int calc_reductions(const Node& node, int depth, Move m, Order& order, bool checks)
+{
+    assert(depth >= 3 && node.legals >= 2);
+
+    int red = 0;
+
+    if (!node.pos.checkers() && !m.is_tactical()) {
+        red += LMReductions[min(depth, 63)][min(node.legals - 1, 63)];
+
+        if (node.pv_node)
+            red -= red / 2;
+
+        int score = order.score();
+
+        red -= clamp(score / (5 * 1024), -1, 1);
+
+        // TODO only if +/= see ?
+        if (checks)
+            red -= 1 + node.pv_node;
+
+        red += node.tte.move.is_tactical();
+        red += !order.see();
+        red += !node.improving;
+    }
+
+    // TODO revamp
+    else if (!node.pv_node && !order.see()) {
+        red++;
+
+        red += !node.pos.checkers();
+    }
+
+    return red;
 }

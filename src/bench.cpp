@@ -62,7 +62,7 @@ void benchmark(int argc, char* argv[])
         }
         else if (k == "mates") {
             assert(args.size() == 1);
-            bench.exc = false;
+            bench.exc_mated = false;
         }
         else if (k == "nodes") {
             assert(args.size() == 2);
@@ -128,7 +128,7 @@ void benchmark_go(Bench &bench)
 
     Timer& timer = gstats.stimer;
 
-    gstats.exc = bench.exc;
+    gstats.exc_mated = bench.exc_mated;
 
     bool quiet = bench.barenodes || bench.baretime;
 
@@ -139,11 +139,9 @@ void benchmark_go(Bench &bench)
 
         search_reset();
 
-        si = SearchInfo(pos);
-
         mstack.clear();
-        mstack.add(MoveNone);
-        mstack.add(MoveNone);
+        mstack.add(Move::None());
+        mstack.add(Move::None());
 
         kstack.clear();
         kstack.add(pos.key());
@@ -154,6 +152,9 @@ void benchmark_go(Bench &bench)
         sl.nodes = bench.nodes;
         sl.move_time = bench.time;
 
+        si = SearchInfo(pos);
+
+        si.reset();
         si.timer.start();
 
         search_start();
@@ -172,9 +173,6 @@ void benchmark_go(Bench &bench)
     i64 tnodes          = gstats.nodes_sum;
     i64 num             = gstats.num;
     i64 gtime           = gstats.time_gen_ns;
-
-    i64 bmups           = gstats.bm_updates;
-    i64 bmstable        = gstats.bm_stable;
     
     i64 gcycpseudo      = gstats.cycles_gen[size_t(GenMode::Pseudo)];
     i64 gcyclegal       = gstats.cycles_gen[size_t(GenMode::Legal)];
@@ -213,11 +211,6 @@ void benchmark_go(Bench &bench)
          << endl
          << " moves max   = " << ralign<i64>(gstats.moves_max, 11) << endl
          << endl
-         << " bm updates  = " << ralign<i64>(bmups,                   11) << endl
-         << " bm u/n      = " << ralign<double>(1.0 * bmups / num,    11) << endl
-         << " bm stable   = " << ralign<i64>(bmstable,                11) << endl
-         << " bm s/n      = " << ralign<double>(1.0 * bmstable / num, 11) << endl
-         << endl
          << " nodes min   = " << ralign<i64>(gstats.nodes_min, 11) << endl
          << " nodes mean  = " << ralign<i64>(tnodes / num,     11) << endl
          << " nodes max   = " << ralign<i64>(gstats.nodes_max, 11) << endl
@@ -245,8 +238,7 @@ void benchmark_go(Bench &bench)
          << "time eval    = " << ralign(Timer::to_string(i64(etime), units_time), 14) << endl
          << "time gen     = " << ralign(Timer::to_string(gtime, units_time), 14) << endl
          << endl
-         << "tests check  = " << ralign<i64>(gstats.ctests, 11) << endl
-         << "tests see    = " << ralign<i64>(gstats.stests, 11) << endl
+         << "see tests    = " << ralign<i64>(gstats.stests, 11) << endl
          << endl
          << "et hitrate   = " << ralign<i64>(etable.hitrate(), 11) << endl
          << "evals        = " << ralign<i64>(tevals, 11) << endl

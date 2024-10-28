@@ -62,10 +62,9 @@ public:
             return std::to_string(spin_value_);
         case Combo:
             return combo_value_;
-        case Button:
-            assert(false);
         case String:
             return string_value_;
+        case Button:
         default:
             assert(false);
             return std::string();
@@ -114,7 +113,7 @@ public:
             }
             break;
         case String:
-            oss << string_def_;
+            oss << std::string(string_def_.empty() ? "<empty>" : string_def_);
             break;
         case Button:
         default:
@@ -164,7 +163,7 @@ public:
         case Combo:
             return combo_value_;
         case String:
-            return string_value_;
+            return string_value_.empty() ? "<empty>" : string_value_;
         case Button:
         default:
             return std::string();
@@ -203,6 +202,7 @@ public:
             if (opt.name() == name)
                 return opt;
 
+        // FIXME
         assert(false);
         return opts_[opts_.size()];
     }

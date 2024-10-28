@@ -5,15 +5,9 @@
 #include <cstdint>
 #include "list.h"
 
-constexpr char CADIE_VERSION[] = "1.8";
+constexpr char CADIE_VERSION[] = "2.0";
 constexpr char CADIE_DATE[] = __DATE__;
 constexpr char CADIE_TIME[] = __TIME__;
-
-#ifndef NDEBUG
-constexpr bool Debug = true;
-#else
-constexpr bool Debug = false;
-#endif
 
 #define PROFILE_NONE 0
 #define PROFILE_SOME 1
@@ -32,10 +26,10 @@ typedef int64_t i64;
 
 using KeyStack = List<u64, 1024>;
 
-constexpr int DepthMin =  -6;
-constexpr int DepthMax = 114;
-constexpr int PliesMax = DepthMax - DepthMin;
-constexpr int MovesMax = 128;
+constexpr int DepthMin =  -4;
+constexpr int DepthMax = 120;
+constexpr int PliesMax = DepthMax - DepthMin + 1;
+constexpr int MovesMax = 224;
 
 constexpr bool ply_is_ok(int ply) { return ply >= 0 && ply < PliesMax; }
 

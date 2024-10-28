@@ -6,6 +6,8 @@
 
 using namespace std;
 
+TT ttable(TTSizeMBDefault);
+
 int score_to_tt(int score, int ply)
 {
     if (score >= mate_in(PliesMax))
@@ -30,8 +32,6 @@ int score_from_tt(int score, int ply)
     return score;
 }
 
-TT ttable(TTSizeMBDefault);
-
 TT::TT(size_t mb)
 {
     assert(mb >= TTSizeMBMin && mb <= TTSizeMBMax);
@@ -51,13 +51,13 @@ void TT::init()
 bool TT::get(Entry& dst, u64 key, int ply)
 {
     gets_++;
-    
-    dst.lock = Entry::calc_lock(key);
-    dst.gen = gen_;
-    
-    Entry& src = entries_[key & mask_];
 
-    if (dst.lock == src.lock) {
+    const Entry& src = entries_[key & mask_];
+
+    Entry::Lock lock = Entry::make_lock(key);
+
+    // The non-zero bound check prevents collisions with uninitialized entries
+    if (src.lock == lock && src.bound) {
         hits_++;
 
         dst.move  = src.move;
@@ -74,21 +74,26 @@ bool TT::get(Entry& dst, u64 key, int ply)
     return false;
 }
 
-void TT::set(Entry& src, u64 key)
+void TT::set(u64 key, Move m, i16 score, i16 eval, i8 depth, u8 bound, int ply)
 {
-    assert(src.is_valid());
-    
     Entry * dst = &entries_[key & mask_];
 
-    src.lock = Entry::calc_lock(key);
-    src.gen = gen_;
+    Entry::Lock lock = Entry::make_lock(key);
 
-    bool overwrite = dst->lock == 0
-        || (src.bound == BoundExact)
-        || (dst->gen != src.gen)
-        || (dst->bound != BoundExact && src.depth >= dst->depth)
-        || (dst->lock == src.lock && src.depth + 2 >= dst->depth);
-    
-    if (overwrite) *dst = src;
+    bool write = (dst->lock == 0)
+              || (bound == BoundExact)
+              || (dst->gen != gen_)
+              || (dst->bound != BoundExact && depth >= dst->depth)
+              || (dst->lock == lock && depth + 3 > dst->depth);
+
+    if (write) {
+        if (m || dst->lock != lock) dst->move = m;
+
+        dst->lock   = lock;
+        dst->score  = score_to_tt(score, ply);
+        dst->eval   = eval;
+        dst->depth  = depth;
+        dst->gen    = gen_;
+        dst->bound  = bound;
+    }
 }
-

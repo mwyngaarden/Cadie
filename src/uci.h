@@ -33,9 +33,6 @@ struct GlobalStats {
 
     int moves_max       = 0;
 
-    int bm_updates      = 0;
-    int bm_stable       = 0;
-
     i64 nodes_min       = std::numeric_limits<i64>::max();
     i64 nodes_sum       = 0;
     i64 nodes_max       = std::numeric_limits<i64>::min();
@@ -50,10 +47,9 @@ struct GlobalStats {
     int stalemate       = 0;
     int checkmate       = 0;
 
-    bool exc            = true;
+    bool exc_mated      = true;
     std::size_t num     = 0;
 
-    std::size_t ctests  = 0;
     std::size_t stests  = 0;
 };
 
@@ -80,15 +76,10 @@ extern bool StaticNMP;
 extern int StaticNMPDepthMax;
 extern int StaticNMPFactor;
 
-extern bool Razoring;
-extern int RazoringFactor;
+extern bool ProbCut;
+extern int ProbCutDepthMin;
+extern int ProbCutMargin;
 
 extern int AspMargin;
-
-extern int FutilityFactor;
-
-extern bool EasyMove;
-extern int EMMargin;
-extern int EMShare;
 
 #endif
