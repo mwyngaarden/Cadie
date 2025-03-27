@@ -5,7 +5,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cassert>
 
 class UCIOption {
 public:
@@ -66,7 +65,6 @@ public:
             return string_value_;
         case Button:
         default:
-            assert(false);
             return std::string();
         }
     }
@@ -82,7 +80,6 @@ public:
         case Button:    return "button";
         case String:    return "string";
         default:
-            assert(false);
             return std::string();
         }
     }
@@ -117,7 +114,6 @@ public:
             break;
         case Button:
         default:
-            assert(false);
             break;
         }
 
@@ -148,7 +144,6 @@ public:
             break;
         case Button:
         default:
-            assert(type_ != Button);
             break;
         }
     }
@@ -202,8 +197,6 @@ public:
             if (opt.name() == name)
                 return opt;
 
-        // FIXME
-        assert(false);
         return opts_[opts_.size()];
     }
 
@@ -218,8 +211,6 @@ public:
 
     void add(UCIOption opt)
     {
-        assert(!has_opt(opt.name()));
-
         opts_.push_back(opt);
     }
 

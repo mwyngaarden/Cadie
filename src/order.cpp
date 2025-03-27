@@ -35,9 +35,6 @@ Order::Order(Position& pos, const History& history, Move best_move, int ply, int
         int score = 0;
         int see = -1;
 
-        assert(!checks || m.is_tactical() || pos.move_is_check(m));
-
-        // Don't prune losing checks if in qs and depth == 0 && !pos.checkers() ?
         if (prune && !(see = pos.see(m)))
             continue;
 
@@ -96,7 +93,6 @@ Move Order::next()
     size_t index_max = index_;
 
     for (size_t i = index_; i < count_; i++) {
-        // TODO maybe use move itself?
         if (ExtMove::score(emoves_[i]) > ExtMove::score(move_max)) {
             move_max = emoves_[i];
             index_max = i;

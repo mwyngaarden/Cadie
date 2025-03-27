@@ -13,25 +13,10 @@ struct GlobalStats {
     i64 time_init       = 0;
 
     Timer stimer;
-    
-    i64 time_eval_ns    = 0;
-    i64 cycles_eval     = 0;
-    
-    i64 time_gen_ns    = 0;
-
-    i64 calls_gen[std::size_t(GenMode::Count)]  = { 0 };
-    i64 cycles_gen[std::size_t(GenMode::Count)] = { 0 };
-
-    i64 evals_count     = 0;
 
     int depth_min       = std::numeric_limits<int>::max();
     int depth_max       = std::numeric_limits<int>::min();
     int depth_sum       = 0;
-    int seldepth_min    = std::numeric_limits<int>::max();
-    int seldepth_max    = std::numeric_limits<int>::min();
-    int seldepth_sum    = 0;
-
-    int moves_max       = 0;
 
     i64 nodes_min       = std::numeric_limits<i64>::max();
     i64 nodes_sum       = 0;
@@ -49,8 +34,6 @@ struct GlobalStats {
 
     bool exc_mated      = true;
     std::size_t num     = 0;
-
-    std::size_t stests  = 0;
 };
 
 extern GlobalStats gstats;
@@ -75,11 +58,5 @@ extern int SEDepthOffset;
 extern bool StaticNMP;
 extern int StaticNMPDepthMax;
 extern int StaticNMPFactor;
-
-extern bool ProbCut;
-extern int ProbCutDepthMin;
-extern int ProbCutMargin;
-
-extern int AspMargin;
 
 #endif

@@ -19,10 +19,8 @@ Cadie is a stand-alone UCI chess engine written in (mostly) platform independent
 
 ## Upcoming Features
 
-- Syzygy Endgame Tablebases
 - PolyGlot Opening Book Support
 - Fischer Random Chess - Chess960
-- Ponder
 - MultiPV
 
 ## Compiling

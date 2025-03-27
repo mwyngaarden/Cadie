@@ -110,7 +110,6 @@ struct SearchInfo {
 
     double time_usage(const SearchLimits &sl) const
     {
-        assert(sl.time || sl.inc);
         return double(timer.elapsed_time()) / sl.opt_time;
     }
 

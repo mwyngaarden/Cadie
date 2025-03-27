@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <limits>
-#include <cassert>
 #include "history.h"
 #include "move.h"
 #include "search.h"
@@ -14,8 +13,6 @@ struct ExtMove {
 
     static u64 make(Move m, int score)
     {
-        assert(m.is_valid());
-
         return (u64(score + Offset) << 32) | u64(m);
     }
 

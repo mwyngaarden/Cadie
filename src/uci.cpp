@@ -49,12 +49,6 @@ bool StaticNMP          =  true;
 int  StaticNMPDepthMax  =     7;
 int  StaticNMPFactor    =   100;
 
-bool ProbCut            =  true;
-int  ProbCutDepthMin    =     5;
-int  ProbCutMargin      =   175;
-
-int  AspMargin          =    10;
-
 int  UciOverhead        =    10;
 bool UciLog             = false;
 
@@ -63,10 +57,6 @@ UCIOptionList opt_list;
 void uci_init()
 {
     cout << "Cadie " << CADIE_VERSION << " (" << CADIE_DATE << ' ' << CADIE_TIME << ") by Martin Wyngaarden" << endl;
-
-#if PROFILE != PROFILE_NONE
-    cout << "PROFILE = " << PROFILE << endl;
-#endif
 
     opt_list.add(UCIOption("Hash", TTSizeMBMin, ttable.size_mb(), TTSizeMBMax));
     opt_list.add(UCIOption("Clear Hash"));
@@ -82,19 +72,11 @@ void uci_init()
     opt_list.add(UCIOption("StaticNMPDepthMax", 1, StaticNMPDepthMax, 10));
     opt_list.add(UCIOption("StaticNMPFactor", 1, StaticNMPFactor, 500));
 
-    opt_list.add(UCIOption("ProbCut", ProbCut));
-    opt_list.add(UCIOption("ProbCutDepthMin", 5, ProbCutDepthMin, 6));
-    opt_list.add(UCIOption("ProbCutMargin", 50, ProbCutMargin, 500));
-
-    opt_list.add(UCIOption("AspMargin", 5, AspMargin, 30));
-
     opt_list.add(UCIOption("UciOverhead", 1, UciOverhead, 2000));
     opt_list.add(UCIOption("UciLog", UciLog));
 
-    if (UciLog) {
+    if (UciLog)
         logfile.open(uci_log_filename(), ios::out | ios::app);
-        assert(logfile.is_open());
-    }
 }
 
 void uci_loop()
@@ -103,10 +85,6 @@ void uci_loop()
 
     uci_position("position startpos");
    
-#if PROFILE >= PROFILE_SOME
-    gstats.stimer.start();
-#endif
-
     for (string line; getline(cin, line); ) {
         if (UciLog)
             uci_log(line, Direction::In);
@@ -160,19 +138,11 @@ void uci_loop()
     }
 
     uci_stop();
-
-#if PROFILE >= PROFILE_SOME
-    gstats.stimer.stop();
-#endif
 }
 
 void uci_go(const string& s)
 {
-    assert(!Searching);
-
     Tokenizer fields(s);
-
-    assert(fields.size() > 0);
 
     sl = SearchLimits();
 
@@ -200,8 +170,6 @@ void uci_go(const string& s)
             sl.move_time = stoll(fields[++i]);
         else if (token == "infinite")
             sl.infinite = true;
-        else
-            assert(false);
     }
 
     sl.time = time[si.pos.side()];
@@ -221,7 +189,6 @@ void uci_go(const string& s)
                      ? min(stime * 0.85, total * 0.85 / max(1.0, mtg / 2.5))
                      : min(stime * 0.50, total * 0.10);
 
-        // TODO eventually test scaling for movestogo
         double scale = 0.75 + 0.25 * (si.pos.phase() / 24.0);
         double fopt  = sl.movestogo ?  1.75 : 2.25 * scale;
         double fmax  = sl.movestogo ? 10.50 : 9.00 * scale;
@@ -289,8 +256,6 @@ void uci_position(const string& s)
             fen += fields[index];
         }
     }
-    else
-        assert(false);
     
     vector<string> moves;
 
@@ -346,8 +311,6 @@ void uci_setoption(const string& s)
         opt.set_value(value);
 
         if (name == "Hash") {
-            assert(!Searching);
-
             ttable = TT(opt.spin_value());
             ttable.init();
         }
@@ -375,13 +338,8 @@ void uci_uci()
 
 void uci_stop()
 {
-    if (!Searching) {
-        assert(!sthread.joinable());
-        assert(!StopRequest);
+    if (!Searching)
         return;
-    }
-
-    assert(sthread.joinable());
 
     StopRequest = true;
 
@@ -407,8 +365,6 @@ void uci_dump()
 
 void uci_log(const string& s, Direction dir)
 {
-    assert(logfile.is_open());
-
     i64 elapsed = Timer::now() - gstats.time_init;
 
     ostringstream oss;

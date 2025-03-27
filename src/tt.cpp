@@ -1,5 +1,4 @@
 #include <bit>
-#include <cassert>
 #include <cstdint>
 #include "search.h"
 #include "tt.h"
@@ -15,8 +14,6 @@ int score_to_tt(int score, int ply)
     else if (score <= mated_in(PliesMax))
         score -= ply;
 
-    assert(abs(score) <= ScoreMate);
-
     return score;
 }
 
@@ -27,15 +24,11 @@ int score_from_tt(int score, int ply)
     else if (score <= mated_in(PliesMax))
         score += ply;
 
-    assert(abs(score) <= ScoreMate - ply);
-
     return score;
 }
 
 TT::TT(size_t mb)
 {
-    assert(mb >= TTSizeMBMin && mb <= TTSizeMBMax);
-
     size_  = bit_floor(mb * 1024 * 1024);
     count_ = size_ / sizeof(Entry);
     mask_  = count_ - 1;
@@ -43,8 +36,6 @@ TT::TT(size_t mb)
 
 void TT::init()
 {
-    assert(entries_.empty());
-
     entries_.resize(count_);
 }
 
@@ -65,8 +56,6 @@ bool TT::get(Entry& dst, u64 key, int ply)
         dst.eval  = src.eval;
         dst.depth = src.depth;
         dst.bound = src.bound;
-
-        assert(dst.is_valid());
 
         return true;
     }

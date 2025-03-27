@@ -19,7 +19,7 @@ public:
     void reset();
     void update(const Position& pos, int ply, int depth, Move best_move, const MoveList& quiets);
     void specials(const Position& pos, int ply, Move& killer1, Move& killer2, Move& counter) const;
-    void reset_killers(side_t side, int ply);
+    void reset_killers(Side sd, int ply);
 
     int score(const Position& pos, Move m) const;
 

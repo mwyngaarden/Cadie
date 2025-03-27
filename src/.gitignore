@@ -5,6 +5,7 @@ cadie*
 lib*
 *.bin
 *.book
+*.data
 *.obj
 *.out
 *.pgn

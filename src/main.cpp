@@ -24,9 +24,6 @@ static void help(string exe)
     cout << "Usage: " << exe << " [options]" << endl
          << "Options:" << endl
          << "  bench [depth=N] [file=path] [num=N] [hash=MB] [nodes=N] [random] [time=ms] [mates] [option.K=V]" << endl
-#ifdef TUNE
-         << "  tune  See tune.cpp" << endl
-#endif
          << "  perft [depth=N] [file=path] [num=N] [report=N]" << endl;
 }
 
@@ -48,11 +45,8 @@ int main(int argc, char* argv[])
             benchmark(argc - 2, argv + 2);
         else if (tokens[1] == "perft")
             perft(argc - 2, argv + 2);
-#ifdef TUNE
-        else if (tokens[1] == "tune")
-            eval_tune(argc - 2, argv + 2);
-#endif
-        else help(tokens[0]);
+        else
+            help(tokens[0]);
 
         return EXIT_SUCCESS;
     }

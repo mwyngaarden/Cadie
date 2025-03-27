@@ -27,8 +27,6 @@ using namespace std;
 struct FenInfo {
     FenInfo(const Tokenizer& fields)
     {
-        assert(fields.size() >= 2);
-
         fen = fields[0];
 
         for (size_t i = 1; i < fields.size(); i++)
@@ -56,32 +54,36 @@ struct PerftInfo {
 };
 
 
-static i64 perft(Position& pos, size_t depth, size_t height)
+static i64 perft(Position& pos, size_t depth)
 {
-    if (depth == 0) return 1;
+    UndoInfo undo = pos.undo_info();
 
     MoveList moves;
 
     i64 leaves = 0;
 
-    UndoInfo undo = pos.undo_info();
-
 #if 1
     gen_moves(moves, pos, GenMode::Legal);
 
-    for (const auto& m : moves) {
+    if (depth == 1) return moves.size();
+
+    for (auto m : moves) {
         pos.make_move(m);
-        leaves += perft(pos, depth - 1, height + 1);
+        leaves += perft(pos, depth - 1);
         pos.unmake_move(undo);
     }
 #else
     gen_moves(moves, pos, GenMode::Pseudo);
 
-    for (const auto& m : moves) {
+    for (auto m : moves) {
         if (pos.move_is_legal(m)) {
-            pos.make_move(m);
-            leaves += perft(pos, depth - 1, height + 1);
-            pos.unmake_move(undo);
+            if (depth == 1)
+                leaves++;
+            else {
+                pos.make_move(m);
+                leaves += perft(pos, depth - 1);
+                pos.unmake_move(undo);
+            }
         }
     }
 #endif
@@ -92,13 +94,11 @@ static i64 perft(Position& pos, size_t depth, size_t height)
 static void perft_input(PerftInfo& pinfo)
 {
     ifstream ifs(pinfo.path);
-    assert(ifs.is_open());
 
     for (string line; getline(ifs, line); ) {
         if (line.empty() || line[0] == '#') continue;
 
         Tokenizer fields(line, ',');
-        assert(fields.size() >= 7);
 
         pinfo.finfos.push_back(FenInfo(fields));
     }
@@ -118,7 +118,7 @@ static void perft_go(PerftInfo &pinfo)
         const i64 leaves_req = fi.leaves[pinfo.depth - 1];
 
         Timer timer(true);
-        i64 leaves = perft(pos, pinfo.depth, 0);
+        i64 leaves = perft(pos, pinfo.depth);
         timer.stop();
 
         const i64 micros = timer.elapsed_time<Timer::Micro>();
@@ -162,30 +162,24 @@ void perft(int argc, char* argv[])
     for (size_t i = 0; i < fields.size(); i++) {
         Tokenizer args(fields[i], '=');
 
-        assert(args.size() == 2);
-
         string k = args[0];
         string v = args[1];
 
         if (k == "depth") {
             size_t n = stoull(v);
-            assert(n >= 1 && n <= 6);
             pinfo.depth = n;
 
         }
         else if (k == "file") {
             filesystem::path p { v };
-            assert(filesystem::exists(p));
             pinfo.path = p;
         }
         else if (k == "num") {
             size_t n = stoull(v);
-            assert(n > 0);
             pinfo.num = n;
         }
         else if (k == "report") {
             size_t n = stoull(v);
-            assert(n > 0);
             pinfo.report = n;
         }
         else {

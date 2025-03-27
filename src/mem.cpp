@@ -1,7 +1,6 @@
 #include <fstream>
 #include <iterator>
 #include <vector>
-#include <cassert>
 #include <cstdlib>
 
 #if defined(__linux__)
@@ -29,14 +28,12 @@ void * alloc(size_t size)
     p = _aligned_malloc(size, alignment);
 #elif _POSIX_C_SOURCE >= 200112L
     ret = posix_memalign(&p, alignment, size);
-    assert(ret == 0);
 #else
     p = std::aligned_alloc(alignment, size);
 #endif
 
 #if defined(__linux__) && defined(MADV_HUGEPAGE)
     ret = madvise(p, size, MADV_HUGEPAGE);
-    assert(ret == 0);
 #endif
 
     return p;

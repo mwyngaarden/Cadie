@@ -1,4 +1,3 @@
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include "misc.h"
@@ -6,53 +5,29 @@
 using namespace std;
 
 
-bool piece256_is_ok(u8 piece)
-{
-    return P256ToP12[piece] != 12;
-}
-
-int to_piece12(side_t side, int type)
-{
-    assert(side_is_ok(side));
-    assert(piece_is_ok(type));
-
-    return (type << 1) | side;
-}
-
-u8 to_piece256(side_t side, int type)
-{
-    assert(side_is_ok(side));
-    assert(piece_is_ok(type));
-
-    return P12ToP256[to_piece12(side, type)];
-}
-
-u8 char_to_piece256(char c)
+Piece12 char_to_piece12(char c)
 {
     switch (c) {
-    case 'P': return WP256;
-    case 'N': return WN256;
-    case 'B': return WB256;
-    case 'R': return WR256;
-    case 'Q': return WQ256;
-    case 'K': return WK256;
-    case 'p': return BP256;
-    case 'n': return BN256;
-    case 'b': return BB256;
-    case 'r': return BR256;
-    case 'q': return BQ256;
-    case 'k': return BK256;
+    case 'P': return WP12;
+    case 'N': return WN12;
+    case 'B': return WB12;
+    case 'R': return WR12;
+    case 'Q': return WQ12;
+    case 'K': return WK12;
+    case 'p': return BP12;
+    case 'n': return BN12;
+    case 'b': return BB12;
+    case 'r': return BR12;
+    case 'q': return BQ12;
+    case 'k': return BK12;
     default:
-        assert(false);
-        return PieceInvalid256;
+        return None12;
     }
 }
 
-char piece256_to_char(u8 piece)
+char piece12_to_char(Piece12 pt12)
 {
-    assert(P256ToP12[piece] != 12);
-
     constexpr char ptoc[12] = { 'P', 'p', 'N', 'n', 'B', 'b', 'R', 'r', 'Q', 'q', 'K', 'k' };
 
-    return ptoc[P256ToP12[piece]];
+    return ptoc[pt12];
 }

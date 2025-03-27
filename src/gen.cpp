@@ -12,88 +12,36 @@
 using namespace std;
 
 
-static size_t gen_pseudo   (MoveList& moves, const Position& pos, bool tactical);
+static size_t gen_pseudos  (MoveList& moves, const Position& pos, GenMode mode);
 static size_t gen_evasions (MoveList& moves, const Position& pos);
 
-size_t gen_moves_local(MoveList& moves, const Position& pos, GenMode mode)
+static void   gen_pawn     (MoveList& moves, const Position& pos, u64 targets, bool tactical);
+static void   gen_promos   (MoveList& moves, const Position& pos, u64 targets, bool tactical);
+static void   gen_piece    (MoveList& moves, const Position& pos, u64 targets);
+
+void gen_pawn(MoveList& moves, const Position& pos, u64 targets, bool tactical)
 {
-    assert(!pos.checkers());
-    assert(moves.empty());
+    Side sd = pos.side();
+    Side xd = !pos.side();
 
-    gen_pseudo(moves, pos, mode == GenMode::Tactical);
+    int incr = square::incr(sd);
 
-    if (mode == GenMode::Legal) {
-        int ksq = pos.king();
-
-        for (size_t i = 0; i < moves.size(); i++) {
-            Move m = moves[i];
-
-            int orig = m.orig();
-
-            bool validate = bb::test(pos.pins(), orig) || orig == ksq || m.is_ep();
-
-            if (validate && !pos.move_is_legal(m))
-                moves.remove_at(i--);
-        }
-    }
-
-    return moves.size();
-}
-
-void gen_pawn(MoveList& moves, const Position& pos, bool tactical, u64 targets)
-{
-    side_t side = pos.side();
-
-    int incr = square::incr(side);
-
-    u64 occ = pos.occ();
-    u64 obb = pos.bb(side_t(!side));
-    u64 pbb = pos.bb(side, Pawn);
+    u64 occ   = pos.occ();
+    u64 xocc  = pos.bb(xd);
+    u64 pawns = pos.bb(sd, Pawn) & (sd == White ? ~bb::Rank7 : ~bb::Rank2);
 
     // Captures
 
-    for (u64 bb = pbb; bb; ) {
+    for (u64 bb = pawns; bb; ) {
         int psq = bb::pop(bb);
 
-        u64 patt = PawnAttacks[side][psq] & targets & obb;
+        u64 patt = PawnAttacks[sd][psq] & xocc & targets;
 
         while (patt) {
             int csq = bb::pop(patt);
 
-            Move m(psq, csq, pos.board(csq));
-           
-            if (bb::test(bb::PromoRanks, csq)) {
-                moves.add(m | Move::PromoQFlag);
-
-                if (!tactical) {
-                    moves.add(m | Move::PromoRFlag);
-                    moves.add(m | Move::PromoBFlag);
-                    moves.add(m | Move::PromoNFlag);
-                }
-            }
-            else
-                moves.add(m);
+            moves.add(Move(psq, csq, pos.square(csq)));
         }
-    }
-
-    // Single pushes
-
-    for (u64 bb = bb::PawnSingles(pbb, ~occ, side) & targets; bb; ) {
-        int psq = bb::pop(bb);
-
-        if (bb::test(bb::PromoRanks, psq)) {
-            Move m(psq - incr, psq);
-            
-            moves.add(m | Move::PromoQFlag);
-
-            if (!tactical) {
-                moves.add(m | Move::PromoRFlag);
-                moves.add(m | Move::PromoBFlag);
-                moves.add(m | Move::PromoNFlag);
-            }
-        }
-        else if (!tactical)
-            moves.add(Move(psq - incr, psq) | Move::SingleFlag);
     }
 
     // En passant
@@ -103,21 +51,30 @@ void gen_pawn(MoveList& moves, const Position& pos, bool tactical, u64 targets)
 
         int file = square::file(epdual);
 
-        if (file != FileA && bb::test(pbb, epdual - 1)) {
-            Move m(epdual - 1, ep_sq, make_pawn(!side));
+        if (file != FileA && bb::test(pawns, epdual - 1)) {
+            Move m(epdual - 1, ep_sq, WP12 + xd);
             moves.add(m | Move::EPFlag);
         }
 
-        if (file != FileH && bb::test(pbb, epdual + 1)) {
-            Move m(epdual + 1, ep_sq, make_pawn(!side));
+        if (file != FileH && bb::test(pawns, epdual + 1)) {
+            Move m(epdual + 1, ep_sq, WP12 + xd);
             moves.add(m | Move::EPFlag);
         }
     }
 
-    // Double pushes
-
     if (!tactical) {
-        for (u64 bb = bb::PawnDoubles(pbb, ~occ, side) & targets; bb; ) {
+
+        // Single pushes
+
+        for (u64 bb = bb::PawnSingles(sd, pawns, ~occ) & targets; bb; ) {
+            int psq = bb::pop(bb);
+
+            moves.add(Move(psq - incr, psq) | Move::SingleFlag);
+        }
+
+        // Double pushes
+
+        for (u64 bb = bb::PawnDoubles(sd, pawns, ~occ) & targets; bb; ) {
             int psq = bb::pop(bb);
 
             moves.add(Move(psq - 2 * incr, psq) | Move::DoubleFlag);
@@ -125,88 +82,168 @@ void gen_pawn(MoveList& moves, const Position& pos, bool tactical, u64 targets)
     }
 }
 
-size_t gen_pseudo(MoveList& moves, const Position& pos, bool tactical)
+void gen_promos(MoveList& moves, const Position& pos, u64 targets, bool tactical)
 {
-    assert(!pos.checkers());
+    Side sd = pos.side();
+    Side xd = !pos.side();
 
-    // Pawn
-
-    gen_pawn(moves, pos, tactical, bb::Full);
-
-    side_t side = pos.side();
-
-    int ksq = pos.king(side);
+    int incr = square::incr(sd);
 
     u64 occ = pos.occ();
-    u64 qbb = pos.bb(side, Queen);
+    u64 xocc = pos.bb(xd);
 
-    u64 targets = tactical ? pos.bb(side_t(!side)) : ~pos.bb(side_t(side));
+    u64 pawns = pos.bb(sd, Pawn) & (sd == White ? bb::Rank7 : bb::Rank2);
+
+    // Captures
+
+    for (u64 bb = pawns; bb; ) {
+        int psq = bb::pop(bb);
+
+        u64 patt = PawnAttacks[sd][psq] & xocc & targets;
+
+        while (patt) {
+            int csq = bb::pop(patt);
+
+            Move m(psq, csq, pos.square(csq));
+
+            moves.add(m | Move::PromoQFlag);
+
+            if (!tactical) {
+                moves.add(m | Move::PromoRFlag);
+                moves.add(m | Move::PromoBFlag);
+                moves.add(m | Move::PromoNFlag);
+            }
+        }
+    }
+
+    // Single pushes
+
+    for (u64 bb = bb::PawnSingles(sd, pawns, ~occ) & targets; bb; ) {
+        int psq = bb::pop(bb);
+
+        Move m(psq - incr, psq);
+
+        moves.add(m | Move::PromoQFlag);
+
+        if (!tactical) {
+            moves.add(m | Move::PromoRFlag);
+            moves.add(m | Move::PromoBFlag);
+            moves.add(m | Move::PromoNFlag);
+        }
+    }
+}
+
+void gen_piece(MoveList& moves, const Position& pos, u64 targets)
+{
+    Side sd = pos.side();
+
+    u64 occ     = pos.occ();
+    u64 knights = pos.bb(sd, Knight);
+    u64 bishops = pos.bb(sd, Bishop);
+    u64 rooks   = pos.bb(sd, Rook);
+    u64 queens  = pos.bb(sd, Queen);
 
     // Knight
 
-    for (u64 bb = pos.bb(side, Knight); bb; ) {
+    for (u64 bb = knights; bb; ) {
         int psq = bb::pop(bb);
 
-        u64 natt = bb::Leorik::Knight(psq, targets);
+        u64 att = KnightAttacks[psq] & targets;
 
-        while (natt) {
-            int csq = bb::pop(natt);
+        while (att) {
+            int csq = bb::pop(att);
 
-            moves.add(Move(psq, csq, pos.board(csq)));
+            moves.add(Move(psq, csq, pos.square(csq)));
         }
     }
 
     // Bishop and Queen
 
-    for (u64 bb = pos.bb(side, Bishop) | qbb; bb; ) {
+    for (u64 bb = bishops | queens; bb; ) {
         int psq = bb::pop(bb);
 
-        u64 batt = bb::Leorik::Bishop(psq, occ) & targets;
+        u64 att = bb::Leorik::Bishop(psq, occ) & targets;
 
-        while (batt) {
-            int csq = bb::pop(batt);
+        while (att) {
+            int csq = bb::pop(att);
 
-            moves.add(Move(psq, csq, pos.board(csq)));
+            moves.add(Move(psq, csq, pos.square(csq)));
         }
     }
 
     // Rook and Queen
 
-    for (u64 bb = pos.bb(side, Rook) | qbb; bb; ) {
+    for (u64 bb = rooks | queens; bb; ) {
         int psq = bb::pop(bb);
 
-        u64 ratt = bb::Leorik::Rook(psq, occ) & targets;
+        u64 att = bb::Leorik::Rook(psq, occ) & targets;
 
-        while (ratt) {
-            int csq = bb::pop(ratt);
+        while (att) {
+            int csq = bb::pop(att);
 
-            moves.add(Move(psq, csq, pos.board(csq)));
+            moves.add(Move(psq, csq, pos.square(csq)));
         }
     }
+}
+
+size_t gen_pseudos(MoveList& moves, const Position& pos, GenMode mode)
+{
+    bool tactical = mode == GenMode::Tactical;
+
+    Side sd = pos.side();
+    Side xd = !pos.side();
+
+    int king = pos.king(sd);
+
+    u64 occ = pos.occ();
+
+    u64 targets = tactical ? pos.bb(xd) : ~pos.bb(sd);
+
+    // Pawn
+
+    gen_pawn(moves, pos, bb::Full, tactical);
+    gen_promos(moves, pos, bb::Full, tactical);
+
+    // Knight/Bishop/Rook/Queen
+
+    gen_piece(moves, pos, targets);
 
     // King
 
-    for (u64 bb = bb::Leorik::King(ksq, targets); bb; ) {
+    for (u64 bb = KingAttacks[king] & targets; bb; ) {
         int csq = bb::pop(bb);
 
-        moves.add(Move(ksq, csq, pos.board(csq)));
+        moves.add(Move(king, csq, pos.square(csq)));
     }
 
     // Castling
 
     if (!tactical) {
         if (pos.can_castle_k()) {
-            u64 between = bb::bit(ksq + 1) | bb::bit(ksq + 2);
+            u64 between = bb::Between[king][king + 3];
 
             if ((between & occ) == 0)
-                moves.add(Move(ksq , ksq + 2) | Move::CastleFlag);
+                moves.add(Move(king, king + 2) | Move::CastleFlag);
         }
 
         if (pos.can_castle_q()) {
-            u64 between = bb::bit(ksq - 1) | bb::bit(ksq - 2) | bb::bit(ksq - 3);
+            u64 between = bb::Between[king][king - 4];
 
             if ((between & occ) == 0)
-                moves.add(Move(ksq, ksq - 2) | Move::CastleFlag);
+                moves.add(Move(king, king - 2) | Move::CastleFlag);
+        }
+    }
+
+    if (mode == GenMode::Legal) {
+        for (size_t i = 0; i < moves.size(); i++) {
+            Move m = moves[i];
+
+            int orig = m.orig();
+
+            bool validate = bb::test(pos.pinned(), orig) || orig == king || m.is_ep();
+
+            if (validate && !pos.move_is_legal(m))
+                moves.remove_at(i--);
         }
     }
 
@@ -215,34 +252,34 @@ size_t gen_pseudo(MoveList& moves, const Position& pos, bool tactical)
 
 size_t gen_evasions(MoveList& moves, const Position& pos)
 {
-    assert(pos.checkers());
+    Side sd = pos.side();
 
-    side_t side = pos.side();
+    Position tmp = pos;
 
-    const int ksq = pos.king();
-
-    // These are the same square if there is only a single checker
-
+    int king     = pos.king();
     int checker1 = pos.checker1();
-    int checker2 = pos.checker2();
 
-    u64 between = bb::Between[ksq][checker1];
+    u64 socc    = pos.bb(sd);
+    u64 sliders = pos.sliders();
+    u64 unsafe  = 0;
 
-    u64 occ = pos.occ();
-    u64 mbb = pos.bb(side);
-    u64 qbb = pos.bb(side, Queen);
+    if (bb::test(sliders, checker1))
+        unsafe |= bb::Line[king][checker1] ^ bb::bit(checker1);
 
-    if (checker1 != checker2) {
-        between |= bb::Between[ksq][checker2];
+    // Double check
 
-        u64 targets = ~(mbb | between);
+    if (!bb::single(pos.checkers())) {
+        int checker2 = pos.checker2();
 
-        Position tmp = pos;
+        if (bb::test(sliders, checker2))
+            unsafe |= bb::Line[king][checker2] ^ bb::bit(checker2);
 
-        for (u64 bb = bb::Leorik::King(ksq, targets); bb; ) {
+        u64 targets = ~(socc | unsafe);
+
+        for (u64 bb = KingAttacks[king] & targets; bb; ) {
             int sq = bb::pop(bb);
 
-            Move m(ksq, sq, pos.board(sq));
+            Move m(king, sq, pos.square(sq));
 
             if (tmp.move_is_sane(m))
                 moves.add(m);
@@ -253,68 +290,35 @@ size_t gen_evasions(MoveList& moves, const Position& pos)
 
     // King
 
-    for (u64 bb = bb::Leorik::King(ksq, ~(mbb | between)); bb; ) {
+    for (u64 bb = KingAttacks[king] & ~(socc | unsafe); bb; ) {
         int sq = bb::pop(bb);
 
-        moves.add(Move(ksq, sq, pos.board(sq)));
+        Move m(king, sq, pos.square(sq));
+
+        if (tmp.move_is_sane(m))
+            moves.add(m);
     }
 
+    u64 between = bb::Between[king][checker1];
     u64 targets = bb::bit(checker1) | between;
 
     // Pawn
 
-    gen_pawn(moves, pos, false, targets);
+    gen_pawn(moves, pos, targets, false);
+    gen_promos(moves, pos, targets, false);
 
-    // Knight
+    // Knight/Bishop/Rook/Queen
 
-    for (u64 bb = pos.bb(side, Knight); bb; ) {
-        int psq = bb::pop(bb);
+    gen_piece(moves, pos, targets);
 
-        u64 natt = bb::Leorik::Knight(psq, targets);
-
-        while (natt) {
-            int csq = bb::pop(natt);
-
-            moves.add(Move(psq, csq, pos.board(csq)));
-        }
-    }
-
-    // Bishop and Queen
-
-    for (u64 bb = pos.bb(side, Bishop) | qbb; bb; ) {
-        int psq = bb::pop(bb);
-
-        u64 batt = bb::Leorik::Bishop(psq, occ) & targets;
-
-        while (batt) {
-            int csq = bb::pop(batt);
-
-            moves.add(Move(psq, csq, pos.board(csq)));
-        }
-    }
-
-    // Rook and Queen
-
-    for (u64 bb = pos.bb(side, Rook) | qbb; bb; ) {
-        int psq = bb::pop(bb);
-
-        u64 ratt = bb::Leorik::Rook(psq, occ) & targets;
-
-        while (ratt) {
-            int csq = bb::pop(ratt);
-
-            moves.add(Move(psq, csq, pos.board(csq)));
-        }
-    }
-
-    Position tmp = pos;
+    // Validate
 
     for (size_t i = 0; i < moves.size(); i++) {
         Move m = moves[i];
 
         int orig = m.orig();
 
-        bool validate = bb::test(pos.pins(), orig) || orig == ksq || m.is_ep();
+        bool validate = bb::test(pos.pinned(), orig) || m.is_ep();
 
         if (validate && !tmp.move_is_sane(m))
             moves.remove_at(i--);
@@ -323,31 +327,32 @@ size_t gen_evasions(MoveList& moves, const Position& pos)
     return moves.size();
 }
 
-// TODO Only direct checks are considered. Eventually add discovered checks?
+// Only direct checks are considered. Eventually add discovered checks?
 size_t add_checks(MoveList& moves, const Position& pos)
 {
-    assert(!pos.checkers());
+    Side sd = pos.side();
+    Side xd = !pos.side();
 
-    side_t side = pos.side();
+    int incr = square::incr(sd);
+    int king = pos.king(xd);
 
-    int incr = square::incr(side);
-    int oksq = pos.king(!side);
+    u64 occ    = pos.occ();
+    u64 pawns  = pos.bb(sd, Pawn);
 
-    u64 occ = pos.occ();
-    u64 pbb = pos.bb(side, Pawn);
-    u64 qbb = pos.bb(side, Queen);
+    // Only Knights/Bishops on same color as King can give check
+    u64 color  = square::color(king) ? bb::Dark : bb::Light;
 
     // Pawns
 
-    u64 targets = PawnAttacks[!side][oksq];
+    u64 targets = PawnAttacks[xd][king];
 
-    for (u64 bb = bb::PawnSingles(pbb, ~occ, side) & targets; bb; ) {
+    for (u64 bb = bb::PawnSingles(sd, pawns, ~occ) & targets; bb; ) {
         int psq = bb::pop(bb);
 
         moves.add(Move(psq - incr, psq) | Move::SingleFlag);
     }
 
-    for (u64 bb = bb::PawnDoubles(pbb, ~occ, side) & targets; bb; ) {
+    for (u64 bb = bb::PawnDoubles(sd, pawns, ~occ) & targets; bb; ) {
         int psq = bb::pop(bb);
 
         moves.add(Move(psq - 2 * incr, psq) | Move::DoubleFlag);
@@ -355,32 +360,33 @@ size_t add_checks(MoveList& moves, const Position& pos)
 
     // Knights
 
-    targets = bb::Leorik::Knight(oksq, ~occ);
+    targets = KnightAttacks[king] & ~occ;
 
-    for (u64 bb = pos.bb(side, Knight); bb; ) {
+    for (u64 bb = pos.bb(sd, Knight) & color; bb; ) {
         int psq = bb::pop(bb);
 
-        u64 natt = bb::Leorik::Knight(psq, targets);
+        u64 att = KnightAttacks[psq] & targets;
 
-        while (natt) {
-            int csq = bb::pop(natt);
+        while (att) {
+            int csq = bb::pop(att);
 
             moves.add(Move(psq, csq));
         }
     }
 
-    u64 btargets = bb::Leorik::Bishop(oksq, occ) & ~occ;
-    u64 rtargets = bb::Leorik::Rook(oksq, occ) & ~occ;
+    u64 queens   = pos.bb(sd, Queen);
+    u64 btargets = bb::Leorik::Bishop(king, occ) & ~occ;
+    u64 rtargets = bb::Leorik::Rook(king, occ) & ~occ;
 
     // Bishop and Queen
 
-    for (u64 bb = pos.bb(side, Bishop) | qbb; bb; ) {
+    for (u64 bb = (pos.bb(sd, Bishop) & color) | queens; bb; ) {
         int psq = bb::pop(bb);
 
-        u64 batt = BishopAttacks[psq] & btargets;
+        u64 att = BishopAttacks[psq] & btargets;
 
-        while (batt) {
-            int csq = bb::pop(batt);
+        while (att) {
+            int csq = bb::pop(att);
 
             if ((bb::Between[psq][csq] & occ) == 0)
                 moves.add(Move(psq, csq));
@@ -389,13 +395,13 @@ size_t add_checks(MoveList& moves, const Position& pos)
 
     // Rook and Queen
 
-    for (u64 bb = pos.bb(side, Rook) | qbb; bb; ) {
+    for (u64 bb = pos.bb(sd, Rook) | queens; bb; ) {
         int psq = bb::pop(bb);
 
-        u64 ratt = RookAttacks[psq] & rtargets;
+        u64 att = RookAttacks[psq] & rtargets;
 
-        while (ratt) {
-            int csq = bb::pop(ratt);
+        while (att) {
+            int csq = bb::pop(att);
 
             if ((bb::Between[psq][csq] & occ) == 0)
                 moves.add(Move(psq, csq));
@@ -407,28 +413,9 @@ size_t add_checks(MoveList& moves, const Position& pos)
 
 size_t gen_moves(MoveList& moves, const Position& pos, GenMode mode)
 {
-    assert(moves.empty());
-
-#if PROFILE >= PROFILE_ALL
-    Timer timer(true);
-#endif
-
     size_t count = pos.checkers()
                  ? gen_evasions(moves, pos)
-                 : gen_moves_local(moves, pos, mode);
-
-#if PROFILE >= PROFILE_SOME
-    gstats.moves_max = max(gstats.moves_max, int(count));
-#endif
-#if PROFILE >= PROFILE_ALL
-    timer.stop();
-
-    if (pos.checkers()) mode = GenMode::Legal;
-
-    gstats.calls_gen[size_t(mode)]++;
-    gstats.cycles_gen[size_t(mode)] += timer.elapsed_cycles();
-    gstats.time_gen_ns += timer.elapsed_time<Timer::Nano>();
-#endif
+                 : gen_pseudos(moves, pos, mode);
 
     return count;
 }
@@ -439,7 +426,7 @@ GenState gen_state(const Position& pos)
 
     size_t count = pos.checkers()
                  ? gen_evasions(moves, pos)
-                 : gen_moves_local(moves, pos, GenMode::Legal);
+                 : gen_pseudos(moves, pos, GenMode::Legal);
 
     if (count)
         return GenState::Normal;
@@ -451,9 +438,7 @@ GenState gen_state(const Position& pos)
 
 int delta_incr(int orig, int dest)
 {
-    assert(orig != dest);
-    assert(sq64_is_ok(orig));
-    assert(sq64_is_ok(dest));
+    if (orig == dest) return 0;
 
     if (square::rank_eq(orig, dest)) return orig < dest ? 1 : -1;
     if (square::file_eq(orig, dest)) return orig < dest ? 8 : -8;

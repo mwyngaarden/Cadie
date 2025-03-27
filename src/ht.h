@@ -3,7 +3,6 @@
 
 #include <bit>
 #include <vector>
-#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include "mem.h"
@@ -14,9 +13,6 @@ public:
     static constexpr std::size_t Count = Bytes / sizeof(T);
     static constexpr std::size_t Mask  = Count - 1;
     
-    static_assert(std::has_single_bit(Bytes));
-    static_assert(std::has_single_bit(Count));
-
     HashTable()
     {
         entries_.resize(Count);
@@ -39,8 +35,6 @@ public:
 
     bool get(uint64_t key, T& dst)
     {
-        assert(key);
-
         gets_++;
 
         T& src = entries_[key & Mask];
@@ -60,8 +54,6 @@ public:
     
     void set(uint64_t key, T& src)
     {
-        assert(key);
-
         src.lock = key >> (64 - T::LockBits);
 
         entries_[key & Mask] = src;

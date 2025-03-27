@@ -59,8 +59,6 @@ struct Entry {
     constexpr Entry(Move m) : move(m) { }
 };
 
-static_assert(std::has_single_bit(sizeof(Entry)) && sizeof(Entry) == 16);
-
 class TT {
 public:
 

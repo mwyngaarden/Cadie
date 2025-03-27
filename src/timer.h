@@ -13,7 +13,6 @@
 #include <stack>
 #include <string>
 #include <vector>
-#include <cassert>
 #include <cstdint>
 #include <ctime>
 
@@ -33,7 +32,7 @@ public:
         start(b);
     }
     
-    static std::string to_string(i64 n, std::vector<std::string> v)
+    static std::string to_string(int64_t n, std::vector<std::string> v)
     {
         std::ostringstream oss;
 
@@ -68,12 +67,6 @@ public:
     {
         if (!b) return;
 
-#if PROFILE >= PROFILE_SOME
-        if (status_ == Status::Started) return;
-#endif
-        
-        assert(status_ != Status::Started);
-
         tp1_ = now_tp();
         cycles1_ = now_cycles<uint64_t>();
 
@@ -85,13 +78,9 @@ public:
         if (!b || status_ != Status::Started)
             return false;
 
-        assert(status_ == Status::Started);
-
         tp2_ = now_tp();
-        assert(tp2_ >= tp1_);
 
         cycles2_ = now_cycles<uint64_t>();
-        assert(cycles2_ >= cycles1_);
 
         status_ = Status::Stopped;
 
@@ -99,12 +88,9 @@ public:
     }
 
     template <class T = Milli>
-    i64 elapsed_time(i64 min = 0) const
+    int64_t elapsed_time(int64_t min = 0) const
     {
-        assert(status_ != None);
-
         Point p = status_ == Stopped ? tp2_ : now_tp();
-        assert(p >= tp1_);
 
         return std::max(std::chrono::duration_cast<T>(p - tp1_).count(), min);
     }
@@ -112,10 +98,7 @@ public:
     template <class T = Nano>
     T dur() const
     {
-        assert(status_ != None);
-
         Point p = status_ == Stopped ? tp2_ : now_tp();
-        assert(p >= tp1_);
 
         return std::chrono::duration_cast<T>(p - tp1_);
     }
@@ -123,10 +106,7 @@ public:
     template <class R = int64_t>
     R elapsed_cycles() const
     {
-        assert(status_ != Status::None);
-
         uint64_t cycles = status_ == Status::Stopped ? cycles2_ : now_cycles<uint64_t>();
-        assert(cycles >= cycles1_);
 
         return cycles - cycles1_;
     }
@@ -135,8 +115,6 @@ public:
     {
         if (!b) return;
 
-        assert(status_ != Status::None);
-
         ttime_   += dur();
         tcycles_ += elapsed_cycles<uint64_t>();
     }
@@ -144,14 +122,12 @@ public:
     template <class T = Nano>
     T accrued_time() const
     {
-        assert(status_ != None);
         return std::chrono::duration_cast<T>(ttime_);
     }
     
     template <class R = int64_t>
     R accrued_cycles() const
     {
-        assert(status_ != None);
         return tcycles_;
     }
 

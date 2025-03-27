@@ -2,7 +2,6 @@
 #define SQUARE_H
 
 #include <string>
-#include <cassert>
 #include <cstdint>
 #include "piece.h"
 
@@ -10,44 +9,14 @@
 enum : int { FileA, FileB, FileC, FileD, FileE, FileF, FileG, FileH };
 enum : int { Rank1, Rank2, Rank3, Rank4, Rank5, Rank6, Rank7, Rank8 };
 
-constexpr bool sq88_is_ok(int sq)
-{
-    return (sq & ~0x77) == 0;
-}
-
-constexpr bool sq64_is_ok(int sq)
-{
-    return sq >= 0 && sq < 64;
-}
-
-constexpr bool rank_is_ok(int rank)
-{
-    return rank >= Rank1 && rank <= Rank8;
-}
-
-constexpr bool file_is_ok(int file)
-{
-    return file >= FileA && file <= FileH;
-}
-
-constexpr int to_sq64(int sq)
+constexpr int to_sq(int sq)
 {
     return (sq + (sq & 7)) >> 1;
 }
 
-constexpr int to_sq88(int sq)
-{
-    return sq + (sq & ~7);
-}
-
-constexpr int to_sq64(int file, int rank)
+constexpr int to_sq(int file, int rank)
 {
     return (rank << 3) | file;
-}
-
-constexpr int to_sq88(int file, int rank)
-{
-    return (rank << 4) | file;
 }
 
 namespace square {
@@ -57,7 +26,6 @@ namespace square {
     std::string sq_to_san(int sq);
 
     int dist(int sq1, int sq2);
-    int dist_edge(int sq);
 
     enum {
         A1, B1, C1, D1, E1, F1, G1, H1,
@@ -76,9 +44,9 @@ namespace square {
         return sq >> 3;
     }
 
-    constexpr int rank(int sq, side_t side)
+    constexpr int rank(int sq, Side sd)
     {
-        return rank(sq) ^ (7 * side);
+        return rank(sq) ^ (7 * sd);
     }
 
     constexpr bool rank_eq(int sq1, int sq2)
@@ -126,24 +94,31 @@ namespace square {
         return sq ^ 8;
     }
 
-    constexpr int incr(side_t side)
+    constexpr int incr(Side sd)
     {
-        return 8 - 16 * side;
+        return sd == White ? 8 : -8;
     }
 
-    constexpr int pawn_promo(side_t side, int sq)
+    constexpr int pawn_promo(Side sd, int sq)
     {
-        return ((side - 1) & 56) + (sq & 7);
+        return ((sd - 1) & 56) + (sq & 7);
     }
 
-    constexpr int relative(side_t side, int sq)
+    constexpr int relative(Side sd, int sq)
     {
-        return sq ^ (side * 56);
+        return sq ^ (56 * sd);
     }
 
     constexpr int make(int file, int rank)
     {
         return (rank << 3) | file;
+    }
+
+    constexpr int dist_edge(int sq)
+    {
+        int f = file(sq);
+
+        return f <= FileD ? f : FileH - f;
     }
 }
 

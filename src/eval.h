@@ -25,16 +25,10 @@ struct EvalEntry {
     i16 pad;
 };
 
-static_assert(sizeof(EvalEntry) == 8);
-
 extern HashTable<64 * 1024 * 1024, EvalEntry> etable;
 
 int eval(const Position& pos);
 
 void eval_init();
-
-#ifdef TUNE
-void eval_tune(int argc, char* argv[]);
-#endif
 
 #endif

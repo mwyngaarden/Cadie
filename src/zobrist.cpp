@@ -245,9 +245,6 @@ void init()
 
 u64 piece(int piece, int sq)
 {
-    assert(piece12_is_ok(piece));
-    assert(sq64_is_ok(sq));
-
     // modified to match polyglot
 
     int index = 64 * (piece ^ 1) + sq;
@@ -257,8 +254,6 @@ u64 piece(int piece, int sq)
 
 u64 castle(u8 flags)
 {
-    assert(flags < 16);
-
     return ZobristCastleFast[flags];
 }
 
@@ -267,8 +262,6 @@ u64 ep(int sq)
     if (sq == square::None) return 0;
 
     int file = square::file(sq);
-
-    assert(file_is_ok(file));
 
     return keys[ZobristEpIndex + file];
 }

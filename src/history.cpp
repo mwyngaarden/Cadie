@@ -19,17 +19,13 @@ void History::reset()
 
 void History::update(const Position& pos, int ply, int depth, Move best_move, const MoveList& quiets)
 {
-    assert(!best_move.is_tactical());
-
     depth = min(depth, 10);
 
     int bonus = 4 * (depth * depth + 40 * depth - 30);
 
     if (Move pm = pos.prev_move(); pm.is_valid()) {
         int dest = pm.dest();
-        int piece = pos.board<12>(dest);
-
-        assert(piece12_is_ok(piece));
+        int piece = pos.square(dest);
 
         // Counter moves
 
@@ -46,54 +42,49 @@ void History::update(const Position& pos, int ply, int depth, Move best_move, co
         }
     }
 
-    side_t side = pos.side();
+    Side sd = pos.side();
 
     // Killer moves
     
-    if (killers_[side][ply][0] != best_move) {
-        killers_[side][ply][1] = killers_[side][ply][0];
-        killers_[side][ply][0] = best_move;
+    if (killers_[sd][ply][0] != best_move) {
+        killers_[sd][ply][1] = killers_[sd][ply][0];
+        killers_[sd][ply][0] = best_move;
     }
 
     // Quiet heuristic
 
     if (quiets.size() > 1 || depth > 1) {
-        update(&quiets_[best_move.index(side)], bonus);
+        update(&quiets_[best_move.index(sd)], bonus);
 
         for (Move m : quiets)
             if (m != best_move)
-                update(&quiets_[m.index(side)], -bonus);
+                update(&quiets_[m.index(sd)], -bonus);
     }
 }
 
 void History::specials(const Position& pos, int ply, Move& killer1, Move& killer2, Move& counter) const
 {
-    side_t side = pos.side();
+    Side sd = pos.side();
 
-    killer1 = killers_[side][ply][0];
-    killer2 = killers_[side][ply][1];
+    killer1 = killers_[sd][ply][0];
+    killer2 = killers_[sd][ply][1];
 
     if (Move pm = pos.prev_move(); pm.is_valid()) {
         int dest = pm.dest();
-        int piece = pos.board<12>(dest);
-
-        assert(piece12_is_ok(piece));
+        int piece = pos.square(dest);
 
         counter = counters_[pm.is_capture()][piece][dest];
     }
 }
 
-void History::reset_killers(side_t side, int ply)
+void History::reset_killers(Side sd, int ply)
 {
-    killers_[side][ply][0] = Move::None();
-    killers_[side][ply][1] = Move::None();
+    killers_[sd][ply][0] = Move::None();
+    killers_[sd][ply][1] = Move::None();
 }
 
 i16 * History::cont_ptr(const Position& pos, Move m)
 {
-    assert(pos.prev_move().is_valid());
-    assert(!m.is_tactical());
-
     Move pm = pos.prev_move();
 
     int morig =  m.orig();
@@ -101,16 +92,14 @@ i16 * History::cont_ptr(const Position& pos, Move m)
     int odest = pm.dest();
     bool cap  = pm.is_capture();
 
-    int mtype6 = pos.board<6>(morig);
-    int otype12 = pos.board<12>(odest);
+    int mtype6 = pos.square(morig) / 2;
+    int otype12 = pos.square(odest);
 
     return &cont_[cap][otype12][odest][mtype6][mdest];
 }
 
 int History::score(const Position& pos, Move m) const
 {
-    assert(!m.is_tactical());
-
     int score = quiets_[m.index(pos.side())];
 
     if (Move pm = pos.prev_move(); pm.is_valid()) {
@@ -118,8 +107,8 @@ int History::score(const Position& pos, Move m) const
         int mdest =  m.dest();
         int odest = pm.dest();
 
-        int mtype6 = pos.board<6>(morig);
-        int otype12 = pos.board<12>(odest);
+        int mtype6 = pos.square(morig) / 2;
+        int otype12 = pos.square(odest);
 
         score += cont_[pm.is_capture()][otype12][odest][mtype6][mdest];
     }
@@ -129,7 +118,5 @@ int History::score(const Position& pos, Move m) const
 
 void History::update(i16 * p, int bonus)
 {
-    assert(p != nullptr);
-
-    *p += bonus - *p * abs(bonus) / 16384;
+    *p += bonus - *p * abs(bonus) / HistoryMax;
 }

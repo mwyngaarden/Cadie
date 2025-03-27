@@ -8,25 +8,6 @@
 #include <cstdlib>
 #include "pos.h"
 
-struct Bench {
-    std::size_t num     = 30;
-    std::size_t time    =  0;
-    std::size_t depth   = 13;
-    std::size_t nodes   =  0;
-    std::size_t hash    =  8;
-
-    bool exc_mated  = true;
-    bool rand       = false;
-    bool barenodes  = false;
-    bool baretime   = false;
-
-    std::map<std::string, std::string> opts;
-
-    std::filesystem::path path { "bench.epd" };
-
-    std::vector<Position> positions;
-};
-
 void benchmark(int argc, char* argv[]);
 
 #endif

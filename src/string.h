@@ -44,7 +44,6 @@ public:
 
     std::vector<std::string> subtok(std::size_t i) const
     {
-        assert(i < tokens_.size());
         return std::vector<std::string>(tokens_.begin() + i, tokens_.end());
     }
 

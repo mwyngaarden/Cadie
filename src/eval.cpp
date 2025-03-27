@@ -1,10 +1,3 @@
-#include <bit>
-#include <fstream>
-#include <iomanip>
-#include <limits>
-#include <random>
-#include <vector>
-#include <cassert>
 #include <cmath>
 #include <cstdarg>
 #include "attacks.h"
@@ -12,17 +5,19 @@
 #include "eval.h"
 #include "gen.h"
 #include "ht.h"
-#include "pawn.h"
 #include "search.h"
 
 using namespace std;
 
-
-enum { FileClosed, FileSemiOpen, FileOpen };
+// Globals
 
 HashTable<64 * 1024 * 1024, EvalEntry> etable;
 
-Value PSQTv[12][64];
+// Typedefs/Enums
+
+enum { FileSemiOpen, FileOpen, FileClosed };
+
+// Constants
 
 constexpr int MatValue[2][6] = {
     {  60, 246, 259, 288,  570, 0 },
@@ -36,474 +31,788 @@ constexpr int LOG[32] = {
     7, 7, 7, 7, 7, 7, 7, 7
 };
 
-int BPairBm                         =       2;
-int BPairBe                         =      73;
+// Structures/Classes
 
-int RBlockedPm                      =     -42;
-int RBlockedPe                      =     -33;
+struct Attacks {
+    u64 ks_zone;
+    u64 ks_weak;
 
-int NQAttBm                         =      50;
-int BQAttBm                         =      53;
-int BQAttBe                         =      89;
-int RQAttBm                         =      73;
-int NQDefBm                         =      -2;
-int NQDefBe                         =      20;
-int BQDefBm                         =       5;
-int BQDefBe                         =      12;
-int RRSameFileBm                    =      14;
-int RRSameFileBe                    =      -2;
-int RRSameRankBm                    =       3;
-int RRSameRankBe                    =       1;
-int RQSameFileBm                    =       3;
-int RQSameFileBe                    =      28;
-int RQSameRankBm                    =       5;
-int RQSameRankBe                    =       7;
+    int ks_attackers = 0;
+    int ks_weight = 0;
 
-int KingSafetyA                     =       5;
-int KingSafetyB                     =      13;
-int KingSafetyC                     =      21;
-int KingSafetyD                     =      25;
+    u64 ks_natts;
+    u64 ks_batts;
+    u64 ks_ratts;
 
-int NPinByBAbsPm                    =     -68;
-int NPinByBAbsPe                    =    -116;
-int NPinByRAbsPm                    =     -39;
-int NPinByRAbsPe                    =     -29;
-int NPinByQAbsPm                    =     -42;
-int NPinByQAbsPe                    =       6;
-int BPinByRAbsPm                    =     -32;
-int BPinByRAbsPe                    =     -44;
-int BPinByQAbsPm                    =     -32;
-int BPinByQAbsPe                    =       5;
-int RPinByBAbsPm                    =    -100;
-int RPinByBAbsPe                    =    -400;
-int RPinByQAbsPm                    =     -26;
-int RPinByQAbsPe                    =     -68;
-int QPinByBRelPm                    =    -125;
-int QPinByBRelPe                    =    -280;
-int QPinByRRelPm                    =     -97;
-int QPinByRRelPe                    =    -289;
+    u64 lte[6] = { };
+    u64 fat = 0;
+    u64 all = 0;
 
-int MinorBehindPawnBm               =       8;
+    u64 queen_attacks = 0;
+
+    u64 outposts = 0;
+
+    int files[8];
+
+    u64 mob_area[6] = { };
+};
+
+struct AttackInfo {
+    u64 orig[64] = { };
+    u64 passed = 0;
+
+    Attacks attacks[2];
+
+    Attacks& operator()(Side sd) { return attacks[sd]; }
+    const Attacks& operator()(Side sd) const { return attacks[sd]; }
+};
+
+// Function protos
+
+template <Side SD> static Value eval_attacks(const Position& pos, const AttackInfo& ai);
+template <Side SD> static Value eval_king   (const Position& pos, const AttackInfo& ai);
+template <Side SD> static Value eval_pieces (const Position& pos,       AttackInfo& ai);
+template <Side SD> static Value eval_imbal  (const Position& pos);
+template <Side SD> static Value eval_passed (const Position& pos, int orig, const AttackInfo& ai);
+
+template <Side SD> static int eval_king     (const Position& pos);
+template <Side SD> static int eval_shelter  (const Position& pos, int king);
+template <Side SD> static int eval_storm    (const Position& pos, int king);
+
+static int eval_scale    (const Position& pos, int score, const AttackInfo& ai);
+static Value eval_compl  (const Position& pos, int score);
+static Value eval_pattern(const Position& pos);
+
+// Static variables
+
+static u8 SqRelative32[2][64];
+
+// Evaluation parameters
+
+int RookBlockedPm                   =     -53;
+int RookBlockedPe                   =     -29;
+int NQAttBm                         =      35;
+int NQAttBe                         =      25;
+int BQAttBm                         =      61;
+int BQAttBe                         =      71;
+int RQAttBm                         =      66;
+int RQAttBe                         =      23;
+int KnightForkBm                    =      27;
+int KnightForkBe                    =      39;
+int KnightForkSafeB                 =       3;
+int CenterControlBm                 =       3;
+int CenterControlBe                 =       4;
+int KingPawnlessFlankPm             =      37;
+int KingPawnlessFlankPe             =     -48;
+int NKPinByBPm                      =     -72;
+int NKPinByBPe                      =    -133;
+int NKPinByRPm                      =     -58;
+int NKPinByRPe                      =     -51;
+int NKPinByQPm                      =     -44;
+int NKPinByQPe                      =     -24;
+int BKPinByRPm                      =     -51;
+int BKPinByRPe                      =     -64;
+int BKPinByQPm                      =     -31;
+int BKPinByQPe                      =     -31;
+int RKPinByBPm                      =    -149;
+int RKPinByBPe                      =    -332;
+int RKPinByQPm                      =     -33;
+int RKPinByQPe                      =     -80;
+int QKPinByBPm                      =    -126;
+int QKPinByBPe                      =    -346;
+int QKPinByRPm                      =    -119;
+int QKPinByRPe                      =    -291;
+int NQPinPm                         =     -39;
+int NQPinPe                         =    -118;
+int BQPinPm                         =     -47;
+int BQPinPe                         =    -115;
+int RQPinPm                         =    -146;
+int RQPinPe                         =    -187;
+int MinorBehindPawnBm               =       7;
 int MinorBehindPawnBe               =       6;
-int KnightOutpostBm                 =      20;
-int KnightOutpostBe                 =      15;
-int KnightDistDivPm                 =       2;
-int KnightDistDivPe                 =       2;
-int BishopOutpostBm                 =      21;
-int BishopOutpostBe                 =      12;
-int BishopPawnsPm                   =      -1;
-int BishopPawnsPe                   =      -3;
-int RookClosedPm                    =      15;
-int RookClosedPe                    =      35;
-int RookOpenAdjKingBm               =      61;
-int RookOpenAdjKingBe               =      36;
-int RookOpenBm                      =      38;
-int RookOpenBe                      =      42;
-int RookOpenSameKingBm              =     157;
-int RookOpenSameKingBe              =      33;
-int RookSemiAdjKingBm               =      32;
-int RookSemiAdjKingBe               =      29;
-int RookSemiBm                      =      19;
-int RookSemiBe                      =      61;
-int RookSemiSameKingBm              =      69;
-int RookSemiSameKingBe              =       3;
-int RookSeventhRankBm               =     -20;
-int RookSeventhRankBe               =      19;
-int QueenSeventhRankBm              =     -47;
-int QueenSeventhRankBe              =      19;
+int KnightOutpostBm                 =      17;
+int KnightOutpostBe                 =      18;
+int KnightOutpostNearBm             =      12;
+int KnightOutpostNearBe             =       4;
+int KnightDistMulPm                 =     -14;
+int KnightDistMulPe                 =      -5;
+int BishopOutpostBm                 =      22;
+int BishopOutpostBe                 =      15;
+int BishopOutpostNearBm             =      11;
+int BishopOutpostNearBe             =       2;
+int RookClosedPm                    =       2;
+int RookClosedPe                    =      39;
+int RookOpenAdjKingBm               =      50;
+int RookOpenAdjKingBe               =      46;
+int RookOpenBm                      =      26;
+int RookOpenBe                      =      52;
+int RookOpenSameKingBm              =     116;
+int RookOpenSameKingBe              =      22;
+int RookSemiAdjKingBm               =      19;
+int RookSemiAdjKingBe               =      43;
+int RookSemiBm                      =       6;
+int RookSemiBe                      =      74;
+int RookSemiSameKingBm              =      58;
+int RookSemiSameKingBe              =      21;
+int RRSameFileBm                    =      14;
+int RRSameFileBe                    =      -1;
+int RQSameFileBm                    =       4;
+int RQSameFileBe                    =      37;
+int PawnBackOpenPm                  =     -15;
+int PawnBackOpenPe                  =     -12;
+int PawnBackwardPm                  =      -2;
+int PawnBackwardPe                  =     -13;
+int PawnDoubledPm                   =      -4;
+int PawnDoubledPe                   =     -13;
+int PawnIsoOpenPm                   =      -8;
+int PawnIsoOpenPe                   =     -18;
+int PawnIsolatedPm                  =       2;
+int PawnIsolatedPe                  =     -17;
+int PawnConnectedPB                 =      10;
+int PawnPassedGaurdedBm             =      16;
+int PawnPassedGaurdedBe             =      24;
+int PawnPassedStopOffset            =      14;
+int TempoB                          =      28;
+int BishopPairBm                    =      19;
+int BishopPairBe                    =      71;
+int BishopPawnsPm                   =      -4;
+int BishopPawnsPe                   =      -6;
 
-int PawnBackOpenPm                  =     -18;
-int PawnBackOpenPe                  =     -10;
-int PawnBackwardPm                  =      -1;
-int PawnBackwardPe                  =     -15;
-int PawnDoubledPm                   =      -9;
-int PawnDoubledPe                   =      -6;
-int PawnIsoOpenPm                   =     -14;
-int PawnIsoOpenPe                   =     -17;
-int PawnIsolatedPm                  =       0;
-int PawnIsolatedPe                  =     -20;
-int PawnConnectedPB                 =       2;
-int PawnPassedGaurdedBm             =      15;
-int PawnPassedGaurdedBe             =      16;
-int PawnPassedStopOffset            =      12;
-
-int ComplexityPawnsTotal            =       5;
-int ComplexityPawnsFlanked          =      55;
-int ComplexityPawnsEndgame          =     141;
-int ComplexityAdjustment            =     -99;
-
-int ScaleOcbBishopsOnly             =      58;
-int ScaleOcbOneKnight               =     102;
-int ScaleOcbOneRook                 =     115;
-int ScaleLoneQueen                  =     109;
-int ScaleLargePawnAdv               =     146;
-int ScalePNone                      =      47;
-int ScalePOne                       =     119;
-int ScalePTwo                       =     137;
-int TempoB                          =      24;
-
-int MobB[2][4][8] = {
+int MobB[2][6][8] = {
     {
-        {-25,-8,-1,5,12,21,0,0},
-        {-12,-3,4,11,18,21,47,0},
-        {-9,-4,0,3,7,11,22,0},
-        {6,8,9,13,20,27,35,84}
+        {0,0,0,0,0,0,0,0},
+        {-27,-7,1,8,15,22,0,0},
+        {-4,3,9,16,20,19,51,0},
+        {-13,-12,-9,-7,-4,-1,8,0},
+        {-38,-34,-31,-27,-23,-18,-8,-17},
+        {0,0,0,0,0,0,0,0}
     },
     {
-        {40,78,97,117,132,126,0,0},
-        {33,57,68,89,108,114,103,0},
-        {84,104,104,115,133,153,153,0},
-        {276,234,259,282,298,317,341,318}
+        {0,0,0,0,0,0,0,0},
+        {65,98,119,136,151,146,0,0},
+        {69,93,109,126,144,150,124,0},
+        {81,107,114,126,141,155,157,0},
+        {253,283,303,317,332,346,353,359},
+        {0,0,0,0,0,0,0,0}
     }
 };
 
-int PSQTi[2][6][32] = {
-    {
-        {0,0,0,0,59,62,55,55,58,55,55,57,60,59,57,61,67,65,55,73,73,79,86,99,44,42,76,96,0,0,0,0},
-        {192,223,224,235,227,222,238,241,229,242,243,252,246,261,257,254,268,247,267,260,245,258,276,271,243,223,274,267,136,179,142,219},
-        {261,269,248,246,260,263,266,253,255,262,262,258,258,257,260,272,242,261,267,271,257,253,266,261,226,241,239,238,211,209,158,162},
-        {277,283,288,293,274,277,282,283,272,282,272,277,271,279,271,277,280,285,287,295,291,307,303,316,311,304,319,311,305,308,274,282},
-        {561,570,565,570,570,577,577,576,573,574,571,566,568,572,561,561,561,563,555,550,564,564,563,540,594,583,591,556,578,583,590,572},
-        {3,0,-14,-44,21,22,2,0,14,14,19,-1,-16,9,4,-21,-8,7,-8,-28,-2,33,3,-55,-10,104,32,83,-4,110,87,49}
-    },
-    {
-        {0,0,0,0,127,132,145,138,125,124,128,128,127,127,123,118,137,132,122,111,153,147,129,103,159,144,117,92,0,0,0,0},
-        {330,320,334,339,328,345,338,346,334,349,351,369,352,357,373,379,347,360,373,380,339,348,370,369,334,356,348,361,322,338,365,352},
-        {366,363,364,368,358,365,366,374,369,378,384,391,369,377,390,393,375,381,381,395,372,388,388,382,377,386,390,388,384,391,398,400},
-        {625,627,629,624,612,622,624,624,629,633,640,636,647,655,661,654,657,666,666,662,661,659,665,658,654,658,659,659,667,670,682,674},
-        {1182,1166,1172,1183,1178,1175,1182,1186,1195,1208,1220,1220,1218,1230,1248,1251,1230,1260,1269,1284,1224,1250,1279,1297,1234,1254,1264,1294,1239,1247,1240,1250},
-        {-39,-19,-14,-18,-15,-7,0,-3,-16,-5,1,8,-11,9,18,24,1,38,40,37,20,63,62,60,8,36,53,17,-107,-34,-18,-9}
-    }
-};
+int PawnCandidateB[8] = {0,0,12,19,29,131,0,0};
 
-int PawnCandidateB[8] = {0,-6,10,16,27,138,0,0};
-
-int PawnConnectedB[8] = {0,0,1,5,14,28,34,0};
+int PawnConnectedB[8] = {0,0,2,6,16,28,32,0};
 
 int PawnPassedB[2][3][8] = {
     {
-        {5,0,0,0,26,58,144,0},
+        {3,0,0,0,26,56,163,-1},
         {0,0,0,0,0,0,0,0},
-        {7,11,10,9,25,65,132,0}
+        {2,-3,-5,-9,12,49,147,0}
     },
     {
-        {16,0,12,51,81,121,208,21},
-        {3,56,52,186,342,548,711,12},
-        {15,4,18,65,118,221,376,19}
+        {14,0,3,42,71,106,200,20},
+        {-3,54,49,181,335,532,712,9},
+        {14,2,13,66,122,232,400,17}
     }
 };
 
-int PawnAttackB[2][2][6] = {
-    {
-        {0,44,65,64,52,0},
-        {0,50,59,51,42,0}
-    },
-    {
-        {0,57,69,32,78,0},
-        {0,58,91,105,97,0}
-    }
-};
-
-int PawnAttackPushB[2][2][6] = {
-    {
-        {0,6,3,8,6,0},
-        {0,7,10,5,11,0}
-    },
-    {
-        {0,10,1,13,1,0},
-        {0,24,8,31,13,0}
-    }
-};
+int ScalePawn[4] = {51,59,65,68};
 
 int KingShelterP[4][8] = {
-    {0,0,0,-11,-32,-17,-21,-15},
-    {0,0,-11,-31,-40,-18,-48,-36},
-    {0,0,-20,-24,-29,-11,-5,-34},
-    {0,0,-24,-25,-32,-23,-5,-31}
+    {0,0,1,-7,-11,-13,-38,-16},
+    {0,0,-10,-35,-39,-31,-60,-30},
+    {0,0,-18,-22,-25,-29,-47,-27},
+    {0,0,-16,-20,-22,-27,-29,-21}
 };
 
 int KingStormP[4][8] = {
-    {0,0,-26,-14,-5,0,0,0},
-    {0,0,-29,-8,-3,0,0,0},
-    {0,0,-53,-27,-1,0,0,0},
-    {0,0,-38,-30,-7,0,0,0}
+    {0,0,-8,3,0,0,0,0},
+    {0,0,-18,-4,-7,0,0,0},
+    {0,0,-29,-17,-4,0,0,0},
+    {0,0,-20,-17,-8,0,0,0}
 };
 
-int KingSafetyW[4][8] = {
-    {0,221,252,108,115,0,0,0},
-    {0,-110,357,127,65,72,70,73},
-    {0,329,329,248,109,67,9,9},
-    {0,0,910,391,169,48,-5,-50}
+int KingSafetyW[6][8] = {
+    {0,0,4,0,0,0,0,0},
+    {0,10,15,14,9,0,0,0},
+    {0,0,16,11,8,9,9,0},
+    {0,17,13,14,12,9,8,7},
+    {0,0,22,14,8,5,4,0},
+    {0,0,0,0,0,0,0,0}
 };
 
 int PiecePawnOffset[2][6] = {
-    {0,1,-1,-3,0,0},
-    {0,0,-9,-7,0,0}
+    {0,4,1,-7,-1,0},
+    {0,2,-2,-2,-12,0}
 };
 
-int RookKnightImbB[2] = {11,32};
-int RookBishopImbB[2] = {7,14};
-int RookTwoMinorsImbB[2] = {-42,-21};
-int QueenTwoRooksImbB[2] = {91,-1};
-int QueenRookKnightImbB[2] = {50,-16};
-int QueenRookBishopImbB[2] = {39,-10};
+int RookMinorImbB[2] = {73,60};
 
-template <side_t Side> static int piece_on_file     (const Position& pos, int orig);
-template <side_t Side> static bool minor_on_outpost (const Position& pos, int orig);
-template <side_t Side> static Value eval_pieces     (const Position& pos);
-template <side_t Side> static Value eval_imbalance  (const Position& pos);
+int RookTwoMinorsImbB[2] = {0,22};
 
-static int eval_shelter (const Position& pos, side_t side, int ksq);
-static int eval_storm   (const Position& pos, side_t side, int ksq);
-static int eval_scale   (const Position& pos, int score);
+int QueenTwoRooksImbB[2] = {156,-81};
 
-static Value eval_complexity(const Position& pos, int score);
+int QueenRookMinorImbB[2] = {137,39};
 
-static Value reset_psqt(int piece, int sq)
+int CheckDistantB[2][6] = {
+    {0,69,9,40,18,0},
+    {0,6,34,17,62,0}
+};
+
+int CheckContactB[2][6] = {
+    {0,0,46,40,99,0},
+    {0,0,22,26,-4,0}
+};
+
+int PawnAttB[2][2][6] = {
+    {
+        {0,64,70,62,59,0},
+        {0,66,63,54,56,0}
+    },
+    {
+        {0,46,59,59,88,0},
+        {0,52,76,114,99,0}
+    }
+};
+
+int PawnAttPushB[2][2][6] = {
+    {
+        {0,9,9,13,12,0},
+        {0,16,16,13,14,0}
+    },
+    {
+        {0,6,-7,16,-1,0},
+        {0,7,12,34,16,0}
+    }
+};
+
+int PieceAttHangingB[2][2][6] = {
+    {
+        {-2,25,18,28,11,0},
+        {15,71,77,159,-17,0}
+    },
+    {
+        {32,30,38,21,-12,0},
+        {32,70,90,86,619,0}
+    }
+};
+
+int KingAttB[2][6] = {
+    {74,78,111,98,0,0},
+    {58,33,34,17,0,0}
+};
+
+int PSQT[2][6][32] = {
+    {
+        {0,0,0,0,58,65,55,57,55,51,52,54,60,58,57,60,69,67,61,74,79,86,98,98,55,65,95,106,0,0,0,0},
+        {179,221,223,228,226,227,237,239,231,244,244,248,248,256,262,253,264,254,274,259,242,252,267,257,243,228,269,258,169,198,182,218},
+        {260,264,243,250,259,263,267,255,255,265,267,261,258,262,267,273,248,263,270,272,257,251,265,254,220,242,242,240,210,218,201,174},
+        {277,286,287,291,269,277,279,280,264,277,266,272,268,277,270,273,279,288,289,295,284,304,295,308,293,293,304,301,296,299,267,273},
+        {567,572,571,575,568,578,576,576,572,575,573,566,573,577,570,558,573,570,574,559,571,567,565,565,553,542,560,542,547,563,562,529},
+        {3,0,-13,-55,24,23,-5,-15,9,9,9,-15,-14,-1,-9,-31,-12,8,-14,-44,7,50,15,-29,-20,67,48,8,31,95,124,53}
+    },
+    {
+        {0,0,0,0,133,133,146,140,131,129,132,132,133,130,125,120,143,134,125,112,161,154,140,122,146,135,112,97,0,0,0,0},
+        {346,334,347,354,343,354,346,358,342,358,361,378,362,365,382,387,360,370,378,389,347,357,374,375,342,364,355,371,293,340,367,365},
+        {376,375,384,387,366,377,380,389,384,390,397,407,384,391,406,405,392,399,398,408,393,403,404,399,393,398,402,401,397,403,407,416},
+        {627,628,627,622,620,625,624,623,632,635,640,636,649,657,661,653,660,669,665,663,668,666,668,661,677,681,676,676,677,678,684,679},
+        {1180,1170,1165,1185,1187,1178,1182,1187,1194,1210,1214,1215,1221,1231,1236,1245,1229,1256,1251,1266,1222,1254,1269,1271,1256,1276,1272,1288,1258,1261,1262,1285},
+        {-53,-24,-16,-17,-27,-16,-3,-2,-18,-8,5,16,-13,9,25,32,4,38,50,52,17,49,60,60,-9,30,33,31,-131,-51,-41,-25}
+    }
+};
+
+AttackInfo eval_attack_info(const Position& pos)
 {
-    assert(piece12_is_ok(piece));
-    assert(sq64_is_ok(sq));
+    AttackInfo ai;
 
-    int file = sq & 7;
-    int rank = sq >> 3;
+    u64 occ = pos.occ();
 
-    file ^= 7 * (file >= 4);
-    rank ^= 7 * (piece & 1);
+    for (Side sd : { White, Black }) {
+        Attacks& attacks = ai.attacks[sd];
 
-    sq = 4 * rank + file;
+        int king = pos.king(sd);
 
-    Value val {
-        PSQTi[PhaseMg][piece >> 1][sq],
-        PSQTi[PhaseEg][piece >> 1][sq]
-    };
+        u64 spawns = pos.bb(sd, Pawn);
+        u64 xpawns = pos.bb(!sd, Pawn);
 
-    if (piece & 1) val = -val;
+        attacks.ks_zone  = bb::KingZone[king];
+        attacks.ks_natts = KnightAttacks[king];
+        attacks.ks_batts = bb::Leorik::Bishop(king, occ);
+        attacks.ks_ratts = bb::Leorik::Rook(king, occ);
 
-    return val;
+        attacks.all = bb::PawnAttacks(sd, spawns);
+        attacks.lte[Pawn] = attacks.all;
+
+        // Knight
+
+        attacks.lte[Knight] = attacks.lte[Pawn];
+
+        for (u64 bb = pos.bb(sd, Knight); bb; ) {
+            int sq = bb::pop(bb);
+
+            u64 att = KnightAttacks[sq];
+
+            ai.orig[sq] = att;
+            attacks.lte[Knight] |= att;
+            attacks.fat |= att & attacks.all;
+            attacks.all |= att;
+        }
+
+        // Bishop
+
+        attacks.lte[Bishop] = attacks.lte[Knight];
+
+        for (u64 bb = pos.bb(sd, Bishop); bb; ) {
+            int sq = bb::pop(bb);
+
+            u64 att = bb::Leorik::Bishop(sq, occ);
+
+            ai.orig[sq] = att;
+            attacks.lte[Bishop] |= att;
+            attacks.fat |= att & attacks.all;
+            attacks.all |= att;
+        }
+
+        // Rook
+
+        attacks.lte[Rook] = attacks.lte[Bishop];
+
+        for (u64 bb = pos.bb(sd, Rook); bb; ) {
+            int sq = bb::pop(bb);
+
+            u64 att = bb::Leorik::Rook(sq, occ);
+
+            ai.orig[sq] = att;
+            attacks.lte[Rook] |= att;
+            attacks.fat |= att & attacks.all;
+            attacks.all |= att;
+        }
+
+        // Queen
+
+        attacks.lte[Queen] = attacks.lte[Rook];
+
+        for (u64 bb = pos.bb(sd, Queen); bb; ) {
+            int sq = bb::pop(bb);
+
+            u64 att = bb::Leorik::Queen(sq, occ);
+
+            ai.orig[sq] = att;
+            attacks.lte[Queen] |= att;
+            attacks.fat |= att & attacks.all;
+            attacks.all |= att;
+
+            attacks.queen_attacks |= att;
+        }
+
+        // King
+
+        attacks.lte[King] = attacks.lte[Queen];
+
+        {
+            u64 att = KingAttacks[king];
+
+            ai.orig[king] = att;
+            attacks.lte[King] |= att;
+            attacks.fat |= att & attacks.all;
+            attacks.all |= att;
+        }
+
+        attacks.lte[Knight] |= attacks.lte[Bishop];
+
+        for (int i = 0; i < 8; i++) {
+            u64 file = bb::Files[i];
+
+            attacks.files[i] = file & spawns ? FileClosed
+                             : file & xpawns ? FileSemiOpen
+                             : FileOpen;
+        }
+
+        attacks.outposts = bb::Outposts[sd] & attacks.lte[Pawn] & ~bb::PawnAttacksSpan(!sd, xpawns);
+        attacks.ks_weak = attacks.lte[King] & ~attacks.lte[Queen];
+    }
+
+    for (Side sd : { White, Black }) {
+        Side xd = !sd;
+
+        u64 socc = pos.bb(sd);
+
+        ai.attacks[sd].mob_area[Knight] = ~(socc | ai.attacks[xd].lte[Pawn]);
+        ai.attacks[sd].mob_area[Bishop] = ~(socc | ai.attacks[xd].lte[Pawn]);
+        ai.attacks[sd].mob_area[Rook]   = ~(socc | ai.attacks[xd].lte[Bishop]);
+        ai.attacks[sd].mob_area[Queen]  = ~(socc | ai.attacks[xd].lte[Rook]);
+    }
+
+    return ai;
 }
 
-void psqt_recalc()
+u8 sq_rel32(Side sd, int sq)
 {
-    for (int phase : { PhaseMg, PhaseEg }) {
-        for (int type = Pawn; type <= King; type++) {
+    int file = square::file(sq);
+    int rank = square::rank(sq);
 
-            int val = MatValue[phase][type];
-        
-            for (int sq = 0; sq < 32; sq++) {
-                if (type == Pawn && (sq <= 3 || sq >= 28)) continue;
+    file ^= 7 * (file >= 4);
+    rank ^= 7 * sd;
 
-                PSQTi[phase][type][sq] = val;
-            }
-        }
-    }
+    return 4 * rank + file;
 }
 
 void eval_init()
 {
-    for (int piece = WP12; piece <= BK12; piece++)
-        for (int sq = 0; sq < 64; sq++)
-            PSQTv[piece][sq] = reset_psqt(piece, sq);
+    for (Side sd : { White, Black })
+        for (int i = 0; i < 64; i++)
+            SqRelative32[sd][i] = sq_rel32(sd, i);
 }
 
-template <size_t I>
-string print_1d(string name, const int (&arr)[I])
+Value eval_psqt(Side sd, Piece pt, int sq)
 {
-    stringstream ss;
+    sq = SqRelative32[sd][sq];
 
-    ss << "int " << name << '[' << I << "] = {";
+    return { PSQT[PhaseMg][pt][sq], PSQT[PhaseEg][pt][sq] };
+}
 
-    for (size_t i = 0; i < I; i++) {
-        if (i) ss << ',';
+// Pawn evaluation
 
-        ss << arr[i];
+template <Side SD>
+bool unstoppable_passer(const Position& pos, int orig)
+{
+    constexpr Side XD = !SD;
+    constexpr int incr = square::incr(SD);
+
+    int king = pos.king(XD);
+    int rank = square::rank(orig, SD);
+
+    if (pos.bb(SD) & bb::PawnSpan[SD][orig])
+        return false;
+
+    if (rank == Rank2) {
+        orig += incr;
+        rank++;
     }
 
-    ss << "};" << endl;
+    int prom = square::pawn_promo(SD, orig);
+    int dist = bb::Dist[orig][prom];
 
-    return ss.str();
+    if (pos.side() == XD) dist++;
+
+    return bb::Dist[king][prom] > dist;
 }
 
-template <size_t I, size_t J>
-string print_2d(string name, const int (&arr)[I][J])
+template <Side SD>
+bool king_passer(const Position& pos, int orig)
 {
-    stringstream ss;
+    int king = pos.king(SD);
+    int file = square::file(orig);
 
-    ss << "int " << name << '[' << I << "][" << J << "] = {" << endl;
+    int prom = square::pawn_promo(SD, orig);
 
-    for (size_t i = 0; i < I; i++) {
-        ss << "    {";
+    if (   bb::Dist[king][prom] <= 1
+        && bb::Dist[king][orig] <= 1
+        && (square::file(king) != file || (file != FileA && file != FileH)))
+        return true;
 
-        for (size_t j = 0; j < J; j++) {
-            if (j) ss << ',';
+    return false;
+}
 
-            ss << arr[i][j];
+template <Side SD>
+Value eval_passed(const Position& pos, int orig, const AttackInfo& ai)
+{
+    constexpr Side XD = !SD;
+    constexpr int incr = square::incr(SD);
+
+    int sking   = pos.king(SD);
+    int xking   = pos.king(XD);
+    int dest    = orig + incr;
+    int skdist  = bb::Dist[dest][sking];
+    int xkdist  = bb::Dist[dest][xking];
+    int rank    = square::rank(orig, SD);
+
+    Value val;
+
+    int idx = 0;
+
+    if (!pos.pieces(XD) && (unstoppable_passer<SD>(pos, orig) || king_passer<SD>(pos, orig)))
+        idx = 1;
+    else if (pos.empty(dest) && !bb::test(ai(XD).all, dest))
+        idx = 2;
+
+    if (idx != 1) {
+        u64 occ    = pos.occ();
+        u64 majors = pos.majors(SD);
+        u64 rspan  = bb::PawnSpan[XD][orig];
+
+        for (u64 bb = rspan & pos.bb(SD, Rook); bb; ) {
+            int sq = bb::pop(bb);
+
+            u64 between = bb::Between[sq][orig] & occ;
+
+            if ((between & ~majors) == 0)
+                val += { PawnPassedGaurdedBm, PawnPassedGaurdedBe };
         }
 
-        ss << '}';
-        if (i != I - 1) ss << ',';
-        ss << endl;
+        int psq   = square::pawn_promo(SD, orig);
+        bool mdef = bb::test(ai(SD).all, psq);
+        bool oatt = bb::test(ai(XD).all, psq);
+
+        if (mdef && !oatt)
+            val.eg += PawnPassedStopOffset;
+        else if (!mdef && oatt)
+            val.eg -= PawnPassedStopOffset;
     }
 
-    ss << "};" << endl;
+    int mkdist_mg = PawnPassedB[0][idx][0];
+    int okdist_mg = PawnPassedB[0][idx][7];
+    int mkdist_eg = PawnPassedB[1][idx][0];
+    int okdist_eg = PawnPassedB[1][idx][7];
 
-    return ss.str();
+    int kdist_bm = okdist_mg * xkdist - mkdist_mg * skdist;
+    int kdist_be = okdist_eg * xkdist - mkdist_eg * skdist;
+
+    val += { PawnPassedB[0][idx][rank] + kdist_bm, PawnPassedB[1][idx][rank] + kdist_be };
+
+    return val;
 }
 
-template <size_t I, size_t J, size_t K>
-string print_3d(string name, const int (&arr)[I][J][K])
+template <Side SD>
+Value eval_pawns(const Position& pos, AttackInfo& ai)
 {
-    stringstream ss;
+    constexpr Side XD = !SD;
+    constexpr int incr = square::incr(SD);
 
-    ss << "int " << name << '[' << I << "][" << J << "][" << K << "] = {" << endl;
+    Value val;
 
-    for (size_t i = 0; i < I; i++) {
-        ss << "    {" << endl;
+    int xking = pos.king(XD);
 
-        for (size_t j = 0; j < J; j++) {
-            ss << "        {";
+    u64 spawns = pos.pawns(SD);
+    u64 xpawns = pos.pawns(XD);
 
-            for (size_t k = 0; k < K; k++) {
-                if (k) ss << ',';
+    for (u64 bb = spawns; bb; ) {
+        int orig = bb::pop(bb);
 
-                ss << arr[i][j][k];
+        val += eval_psqt(SD, Pawn, orig);
+
+        // King Safety for XD
+
+        if (PawnAttacks[SD][orig] & ai(XD).ks_zone) {
+            ai(XD).ks_attackers++;
+            ai(XD).ks_weight += KingSafetyW[Pawn][bb::Dist[xking][orig]];
+        }
+
+        u64 adjbb       = bb::FilesAdj[square::file(orig)];
+        u64 span        = bb::PawnSpan[SD][orig];
+        u64 span_adj    = bb::PawnSpanAdj[SD][orig];
+        u64 rspan_adj   = bb::PawnSpanAdj[XD][orig];
+
+        int rank = square::rank(orig, SD);
+
+        bool backward   = false;
+        bool isolated   = false;
+        bool passed     = false;
+        bool opposed    = false;
+
+        bool open = !(span & (spawns | xpawns));
+
+        if (open) {
+            passed = !(xpawns & span_adj);
+
+            if (passed) {
+                ai.passed |= bb::bit(orig);
+
+                val += eval_passed<SD>(pos, orig, ai);
             }
+        }
+        else
+            opposed = xpawns & span;
 
-            ss << '}';
-            if (j != J - 1) ss << ',';
-            ss << endl;
+        int phalanx = bb::count(spawns & adjbb & bb::Ranks64[orig]);
+        int support = bb::count(spawns & PawnAttacks[XD][orig]);
+        int levers  = bb::count(xpawns & PawnAttacks[SD][orig]);
+
+        bool doubled = spawns & bb::PawnSpan[XD][orig];
+        bool blocked = !pos.empty(orig + incr);
+
+        if (support == 0 && phalanx == 0) {
+            isolated = !(spawns & adjbb);
+
+            if (!isolated) {
+                u64 leversp = xpawns & PawnAttacks[SD][orig + incr];
+
+                backward = !(spawns & rspan_adj) && (leversp || bb::test(xpawns, orig + incr));
+            }
         }
 
-        ss << "    }";
-        if (i != I - 1) ss << ',';
-        ss << endl;
+        // Candidate
+
+        if (open && !passed) {
+            if (support >= levers) {
+                int mp = bb::count(spawns & rspan_adj) + phalanx;
+                int op = bb::count(xpawns & span_adj);
+
+                if (mp >= op)
+                    val.eg += PawnCandidateB[rank];
+            }
+        }
+
+        // Bonuses
+
+        if (phalanx || support) {
+            int v = PawnConnectedB[rank] * (2 + !!phalanx - opposed) + PawnConnectedPB * support;
+
+            val += { v, v * (rank - 2) / 4 };
+        }
+
+        for (u64 att = PawnAttacks[SD][orig] & pos.pieces(XD); att; ) {
+            int sq = bb::pop(att);
+            Piece pt = pos.square(sq) / 2;
+
+            val += { PawnAttB[0][!!support][pt], PawnAttB[1][!!support][pt] };
+        }
+
+        if (!blocked) {
+            for (u64 att = PawnAttacks[SD][orig + incr] & pos.pieces(XD); att; ) {
+                int sq = bb::pop(att);
+                Piece pt = pos.square(sq) / 2;
+
+                val += { PawnAttPushB[0][!!phalanx][pt], PawnAttPushB[1][!!phalanx][pt] };
+            }
+        }
+
+        // Penalties
+
+        if (doubled)
+            val += { PawnDoubledPm, PawnDoubledPe };
+
+        if (isolated)
+            val += open ? Value(PawnIsoOpenPm, PawnIsoOpenPe) : Value(PawnIsolatedPm, PawnIsolatedPe);
+        else if (backward)
+            val += open ? Value(PawnBackOpenPm, PawnBackOpenPe) : Value(PawnBackwardPm, PawnBackwardPe);
     }
 
-    ss << "};" << endl;
-
-    return ss.str();
+    return val;
 }
 
-template <side_t Side>
-int piece_on_file(const Position& pos, int orig)
+template <Side SD>
+int eval_shelter(const Position& pos, int king)
 {
-    u64 mpbb = pos.bb(Side, Pawn);
-    u64 opbb = pos.bb(!Side, Pawn);
+    constexpr Side XD = !SD;
 
-    u64 fbb  = bb::Files[square::file(orig)];
-
-    if (mpbb & fbb) return FileClosed;
-    if (opbb & fbb) return FileSemiOpen;
-
-    return FileOpen;
-}
-
-int eval_shelter(const Position& pos, side_t side, int ksq)
-{
-    int kfile = square::file(ksq);
-    int krank = square::rank(ksq);
+    int kfile = square::file(king);
+    int krank = square::rank(king);
 
     // Adjust king position if on edge of board
    
     kfile = clamp(kfile, int(FileB), int(FileG));
-    ksq = square::make(kfile, krank);
+    king = square::make(kfile, krank);
 
     int penalty = 0;
 
-    u64 obb = pos.bb(side_t(!side));
-    u64 pbb = pos.bb(side, Pawn);
-    
-    for (int orig : { ksq-1, ksq, ksq+1 }) {
+    u64 xocc   = pos.bb(XD);
+    u64 spawns = pos.pawns(SD);
+
+    for (int orig : { king-1, king, king+1 }) {
         int edge = square::dist_edge(orig);
 
-        u64 bb = bb::PawnSpan[side][orig] & (obb | pbb);
-        
+        u64 bb = bb::PawnSpan[SD][orig] & (xocc | spawns);
+
         int rank = Rank8;
 
-        if (bb & pbb) {
-            int sq = side == White ? bb::lsb(bb) : bb::msb(bb);
+        if (bb & spawns) {
+            int sq = SD == White ? bb::lsb(bb) : bb::msb(bb);
 
-            rank = bb::test(obb, sq) ? Rank8 : square::rank(sq, side);
+            if (!bb::test(xocc, sq))
+                rank = square::rank(sq, SD);
         }
-        
+
         penalty += KingShelterP[edge][rank];
     }
 
     return penalty;
 }
 
-int eval_storm(const Position& pos, side_t side, int ksq)
+template <Side SD>
+int eval_storm(const Position& pos, int king)
 {
-    int kfile = square::file(ksq);
-    int krank = square::rank(ksq);
+    constexpr Side XD = !SD;
+
+    int kfile = square::file(king);
+    int krank = square::rank(king);
 
     // Adjust king position if on edge of board
    
     kfile = clamp(kfile, int(FileB), int(FileG));
-    ksq = square::make(kfile, krank);
+    king = square::make(kfile, krank);
 
     int penalty = 0;
 
-    u64 pbb = pos.bb(side_t(!side), Pawn);
+    u64 xpawns = pos.pawns(XD);
    
-    for (int orig : { ksq-1, ksq, ksq+1 }) {
+    for (int orig : { king-1, king, king+1 }) {
         int edge = square::dist_edge(orig);
 
-        u64 bb = bb::PawnSpan[side][orig] & pbb;
+        u64 bb = bb::PawnSpan[SD][orig] & xpawns;
 
-        int rank = !bb ? Rank1 : square::rank(side == White ? bb::lsb(bb) : bb::msb(bb), side);
-    
+        int rank = Rank1;
+
+        if (bb) {
+            int sq = SD == White ? bb::lsb(bb) : bb::msb(bb);
+
+            rank = square::rank(sq, SD);
+        }
+
         penalty += KingStormP[edge][rank];
     }
     
     return penalty;
 }
 
-
-int eval_king(const Position& pos, side_t side)
+template <Side SD>
+int eval_king(const Position& pos)
 {
-    int ksq = pos.king(side);
+    int king = pos.king(SD);
 
-    int shelter = eval_shelter(pos, side, ksq) + eval_storm(pos, side, ksq);
+    int safety = eval_shelter<SD>(pos, king) + eval_storm<SD>(pos, king);
 
-    if (pos.can_castle_k(side)) {
-        int sq = side == White ? square::G1 : square::G8;
-        int sh = eval_shelter(pos, side, sq) + eval_storm(pos, side, sq);
+    if (pos.can_castle_k(SD)) {
+        king = SD == White ? square::G1 : square::G8;
 
-        shelter = max(shelter, sh);
+        int score = eval_shelter<SD>(pos, king) + eval_storm<SD>(pos, king);
+
+        safety = max(safety, score);
     }
     
-    if (pos.can_castle_q(side)) {
-        int sq = side == White ? square::C1 : square::C8;
-        int sh = eval_shelter(pos, side, sq) + eval_storm(pos, side, sq);
+    if (pos.can_castle_q(SD)) {
+        king = SD == White ? square::C1 : square::C8;
 
-        shelter = max(shelter, sh);
+        int score = eval_shelter<SD>(pos, king) + eval_storm<SD>(pos, king);
+
+        safety = max(safety, score);
     }
 
-    return shelter;
+    return safety;
 }
 
-// a la Ethereal
-Value eval_complexity(const Position& pos, int score)
+Value eval_compl(const Position& pos, int score)
 {
-    u64 pbb = pos.bb(Pawn);
+    u64 pawns = pos.pawns();
 
-    int sign    = (score > 0) - (score < 0);
-    int pawns   = popcount(pbb);
-    bool pieces = pos.pieces();
-    bool flanks = (pbb & bb::QueenSide) && (pbb & bb::KingSide);
+    int wking = pos.king(White);
+    int bking = pos.king(Black);
 
-    int c = ComplexityPawnsTotal    * pawns
-          + ComplexityPawnsFlanked  * flanks
-          + ComplexityPawnsEndgame  * !pieces
-          + ComplexityAdjustment;
+    int outflanking = abs(square::file(wking) - square::file(bking)) + square::rank(wking) - square::rank(bking);
+    bool flanked = (pawns & bb::QueenSide) && (pawns & bb::KingSide);
+    bool drawish = outflanking < 0 && !flanked;
 
-    int v = sign * max(c, -abs(score));
+    int c =   6 * bb::count(pawns)
+          +  10 * flanked
+          +   2 * outflanking
+          + 135 * !pos.pieces()
+          -  63 * drawish
+          -  66;
 
-    return Value(0, v);
+    int v = ((score > 0) - (score < 0)) * max(c, -abs(score));
+
+    return { 0, v };
 }
 
-// a la Ethereal
-int eval_scale(const Position& pos, int score)
+int eval_scale(const Position& pos, int score, const AttackInfo& ai)
 {
     u64 white   = pos.bb(White);
     u64 black   = pos.bb(Black);
@@ -512,1585 +821,593 @@ int eval_scale(const Position& pos, int score)
     u64 bishops = pos.bb(Bishop);
     u64 rooks   = pos.bb(Rook);
     u64 queens  = pos.bb(Queen);
-    u64 pieces  = knights | bishops | rooks;
+    u64 minors  = knights | bishops;
+    u64 pieces  = knights | bishops | rooks; // no queens
+
+    bool ocb = pos.ocb();
+
+    Side sd = score >= 0 ? White : Black;
+    Side xd = !sd;
+
+    u64 hi = sd == White ? white : black;
+    u64 lo = sd == White ? black : white;
+
+    int hpawns  = bb::count(hi & pawns);
+    int hphase  = pos.phase(sd);
+    int hpassed = bb::count(hi & ai.passed);
+    int lpawns  = bb::count(lo & pawns);
+    int lphase  = pos.phase(xd);
+
+    if (hpawns == 0) {
+        if (hphase <= 1)
+            return 0;
+
+        if (hphase == 2 && bb::multi(hi & knights) && lpawns == 0)
+            return 0;
+
+        if (hphase - lphase <= 1)
+            return 0;
+    }
+
+    else if (hpawns == 1) {
+        int sq = bb::lsb(hi & pawns);
+        bool blocked = bb::test(bb::PawnSpan[sd][sq], pos.king(xd));
+
+        if (hphase <= 1 && (lo & minors))
+            return 28;
+
+        if (hphase == 2 && bb::multi(hi & knights) && lpawns == 0 && (lo & minors))
+            return 24;
+
+        if (hphase == lphase && blocked)
+            return 8;
+
+        if (hphase == lphase && (lo & minors))
+            return 15;
+    }
 
     // Opposite colored bishops
 
-    if (bb::single(white & bishops) && bb::single(black & bishops) && bb::single(bishops & bb::Light)) {
-        if (!(rooks | queens) && bb::single(white & knights) && bb::single(black & knights))
-            return ScaleOcbOneKnight;
+    if (ocb) {
+        bool two_bishops = bb::count(bishops) == 2;
 
-        if (!(knights | queens) && bb::single(white & rooks) && bb::single(black & rooks))
-            return ScaleOcbOneRook;
+        if (two_bishops && !queens) {
+            if (!(knights | rooks))
+                return 6 + 14 * hpassed;
 
-        if (!(knights | rooks | queens))
-            return ScaleOcbBishopsOnly;
+            if (!rooks && bb::single(white & knights) && bb::single(black & knights))
+                return 52;
+
+            if (!knights && bb::single(white & rooks) && bb::single(black & rooks))
+                return 57;
+        }
+
+        return 54 + 3 * bb::count(hi & pieces);
     }
 
-    // TODO Need a heuristic for bishop and pawn ending with pawn on A/H file
+    if (bb::single(queens))
+        return 40 + 3 * bb::count((white & queens ? black : white) & minors);
 
-    u64 hi = score < 0 ? black : white;
-    u64 lo = score < 0 ? white : black;
-
-    int hpawns = popcount(hi & pawns);
-    int lpawns = popcount(lo & pawns);
-
-    if (bb::single(queens) && bb::multi(pieces) && pieces == (lo & pieces))
-        return ScaleLoneQueen;
-
-    if ((hi & (knights | bishops)) && bb::single(hi & ~pos.bb(King)))
-        return 0;
-
-    if (!queens && !bb::multi(white & pieces) && !bb::multi(black & pieces) && hpawns - lpawns > 2)
-        return ScaleLargePawnAdv;
-
-    if (hpawns == 0) return ScalePNone;
-    if (hpawns == 1) return ScalePOne;
-    if (hpawns == 2) return ScalePTwo;
-
-    return 128;
+    return ScalePawn[min(hpawns, 3)];
 }
 
-template <side_t Side>
-bool minor_on_outpost(const Position& pos, int orig)
-{
-    constexpr u64 subset = ~(bb::FileA | bb::FileH) & (Side == White ? bb::Rank4 | bb::Rank5 | bb::Rank6 : bb::Rank3 | bb::Rank4 | bb::Rank5);
-    
-    return bb::test(subset, orig)
-        && (pos.bb(!Side, Pawn) & bb::PawnSpanAdj[Side][orig]) == 0
-        && (pos.bb(Side, Pawn) & PawnAttacks[!Side][orig]);
-}
+// King evaluation
 
-template <side_t Side>
-Value eval_pieces(const Position& pos)
+template <Side SD>
+Value eval_king(const Position& pos, const AttackInfo& ai)
 {
-    constexpr int incr = square::incr(Side);
-    constexpr u64 outposts = ~(bb::FileA | bb::FileH) & (bb::Rank4 | bb::Rank5 | (Side == White ? bb::Rank6 : bb::Rank3));
-    
+    constexpr Side XD = !SD;
+
+    const int ks_factors[5] = { 0, 10, 12, 15, 16 };
+
     Value val;
 
-    int mksq = pos.king(Side);
-    int oksq = pos.king(!Side);
+    if (pos.phase(XD) >= 5)
+        val.mg += eval_king<SD>(pos);
 
-    int krank = square::rank(oksq, Side);
+    int king = pos.king(SD);
+    int file = square::file(king);
 
-    u64 mpbb = pos.bb(Side, Pawn);
-    u64 opbb = pos.bb(!Side, Pawn);
+    u64 flank = file <= FileD ? bb::QueenSide : bb::KingSide;
+    u64 camp = SD == White ? bb::RanksForward[Black][Rank6] : bb::RanksForward[White][Rank3];
+    int def = bb::count(ai(SD).all & flank & camp);
 
-    u64 rank7 = Side == White ? bb::Rank7 : bb::Rank2;
+    int attackers = min(ai(SD).ks_attackers, 4);
+    int weight = ai(SD).ks_weight;
 
-    int npawns = popcount(mpbb);
+    u64 weak =   ai(XD).all
+             &  ~ai(SD).fat
+             & (~ai(SD).all | KingAttacks[king] | ai(SD).queen_attacks);
 
-    for (u64 bb = pos.pieces(Side); bb; ) {
-        int orig = bb::pop(bb);
-        int type = pos.board<6>(orig);
+    int ks = weight * ks_factors[attackers]
+           - 371 * !pos.count(WQ12 + XD)
+           +  66 * bb::count(ai(SD).ks_zone & weak)
+           -  57 * bool(bb::KnightAttacks(pos.bb(SD, Knight)) & KingAttacks[king])
+           -  30 * def
+           - 105 * val.mg / 32
+           + 533;
 
-        int file     = square::file(orig);
-        int rank_rel = square::rank(orig, Side);
+    val.mg -= ks * ks / 4096;
 
-        if (type != Queen) {
-            int m_mg = PiecePawnOffset[PhaseMg][type];
-            int m_eg = PiecePawnOffset[PhaseEg][type];
+    // PSQT
 
-            val.mg += m_mg * (npawns - 4);
-            val.eg += m_eg * (npawns - 4);
-        }
+    val += eval_psqt(SD, King, king);
 
-        if (type == Knight) {
-            if (bb::test(outposts, orig) && !(opbb & bb::PawnSpanAdj[Side][orig]) && (mpbb & PawnAttacks[!Side][orig]))
-                val += Value(KnightOutpostBm, KnightOutpostBe);
+    // King on pawnless flank
 
-            if (rank_rel < Rank7 && bb::test(mpbb, orig + incr))
-                val += Value(MinorBehindPawnBm, MinorBehindPawnBe);
+    if ((pos.bb(SD, Pawn) & flank) == 0)
+        val += { KingPawnlessFlankPm, KingPawnlessFlankPe };
 
-            int dist = square::dist(orig, mksq) * square::dist(orig, oksq);
-
-            val.mg += -dist / KnightDistDivPm;
-            val.eg += -dist / KnightDistDivPe;
-        }
-
-        else if (type == Bishop) {
-            if (bb::test(outposts, orig) && !(opbb & bb::PawnSpanAdj[Side][orig]) && (mpbb & PawnAttacks[!Side][orig]))
-                val += Value(BishopOutpostBm, BishopOutpostBe);
-
-            if (rank_rel < Rank7 && bb::test(mpbb, orig + incr))
-                val += Value(MinorBehindPawnBm, MinorBehindPawnBe);
-
-            u64 mask = square::color(orig) ? bb::Dark : bb::Light;
-
-            val += Value(BishopPawnsPm, BishopPawnsPe) * popcount(mpbb & mask);
-        }
-
-        else if (type == Rook) {
-            int kfile    = square::file(oksq);
-            int kfdiff   = abs(file - kfile);
-            int semiopen = piece_on_file<Side>(pos, orig);
-
-            if (rank_rel == Rank7 && (krank == Rank8 || (opbb & rank7)))
-                val += Value(RookSeventhRankBm, RookSeventhRankBe);
-
-            if (semiopen == FileClosed)
-                val += Value(RookClosedPm, RookClosedPe);
-            else if (kfdiff == 0) {
-                val.mg += semiopen == FileSemiOpen ? RookSemiSameKingBm : RookOpenSameKingBm;
-                val.eg += semiopen == FileSemiOpen ? RookSemiSameKingBe : RookOpenSameKingBe;
-            }
-            else if (kfdiff == 1) {
-                val.mg += semiopen == FileSemiOpen ? RookSemiAdjKingBm : RookOpenAdjKingBm;
-                val.eg += semiopen == FileSemiOpen ? RookSemiAdjKingBe : RookOpenAdjKingBe;
-            }
-            else {
-                val.mg += semiopen == FileSemiOpen ? RookSemiBm : RookOpenBm;
-                val.eg += semiopen == FileSemiOpen ? RookSemiBe : RookOpenBe;
-            }
-        }
-
-        else if (type == Queen) {
-            if (rank_rel == Rank7 && (krank == Rank8 || (opbb & rank7))) {
-                val.mg += QueenSeventhRankBm;
-                val.eg += QueenSeventhRankBe;
-            }
-        }
-    }
-    
     return val;
 }
 
-// TODO refactor
-template <side_t Side>
-Value eval_imbalance(const Position& pos)
+// Piece evaluation
+
+template <Side SD>
+Value eval_pieces(const Position& pos, AttackInfo& ai)
+{
+    constexpr Side XD = !SD;
+    constexpr int incr = square::incr(SD);
+
+    Value val;
+
+    int sking = pos.king(SD);
+    int xking = pos.king(XD);
+
+    int xkfile = square::file(xking);
+
+    u64 spawns  = pos.bb(SD, Pawn);
+    u64 srooks  = pos.bb(SD, Rook);
+    u64 squeens = pos.bb(SD, Queen);
+    u64 xqueens = pos.bb(XD, Queen);
+
+    int npawns = pos.count(WP12 + SD);
+
+    u64 xkzone = ai(XD).ks_zone;
+    u64 xatt = ai(XD).all;
+
+    u64 safe_checks[6] = {
+        0,
+        ai(XD).ks_natts & ~xatt,
+        ai(XD).ks_batts & ~xatt,
+        ai(XD).ks_ratts & ~xatt,
+        (ai(XD).ks_batts | ai(XD).ks_ratts) & ~xatt,
+        0
+    };
+
+    // Center control
+
+    u64 control = bb::Center16 & ai(SD).fat & ~ai(XD).fat;
+
+    val += Value(CenterControlBm, CenterControlBe) * bb::count(control);
+
+    // Piece loop
+
+    for (u64 bb = pos.pieces(SD); bb; ) {
+        int orig = bb::pop(bb);
+        Piece pt = pos.square(orig) / 2;
+
+        // PSQT
+
+        val += eval_psqt(SD, pt, orig);
+
+        u64 mask = ai.orig[orig];
+
+        // Mobility
+
+        u64 targets = ai(SD).mob_area[pt];
+        u64 atts = mask & targets;
+        int mob = bb::count(atts);
+
+        val += { MobB[0][pt][LOG[mob]], MobB[1][pt][LOG[mob]] };
+
+        // King Safety for XD
+
+        if (atts & xkzone) {
+            ai(XD).ks_attackers++;
+            ai(XD).ks_weight += KingSafetyW[pt][bb::Dist[xking][orig]];
+        }
+
+        // Checks
+
+        if (mask & safe_checks[pt])
+            val += { CheckDistantB[0][pt], CheckDistantB[1][pt] };
+
+
+        int file = square::file(orig);
+        int rank = square::rank(orig, SD);
+
+        val += Value(PiecePawnOffset[0][pt], PiecePawnOffset[1][pt]) * (npawns - 4);
+
+        if (pt == Knight) {
+            if (bb::test(ai(SD).outposts, orig))
+                val += { KnightOutpostBm, KnightOutpostBe };
+
+            else if (ai(SD).outposts & mask)
+                val += { KnightOutpostNearBm, KnightOutpostNearBe };
+
+            if (rank <= Rank6 && bb::test(spawns, orig + incr))
+                val += { MinorBehindPawnBm, MinorBehindPawnBe };
+
+            int penalty = bb::Dist[orig][sking] * bb::Dist[orig][xking];
+
+            val += { KnightDistMulPm * penalty / 16, KnightDistMulPe * penalty / 16 };
+
+            if (mask & xqueens)
+                val += { NQAttBm, NQAttBe };
+
+            int safe = !bb::test(ai(XD).all, orig) ? KnightForkSafeB : 1;
+
+            if (bb::multi(mask & pos.pieces(XD)))
+                val += Value(KnightForkBm, KnightForkBe) * safe;
+        }
+
+        else if (pt == Bishop) {
+            if (bb::test(ai(SD).outposts, orig))
+                val += { BishopOutpostBm, BishopOutpostBe };
+
+            else if (ai(SD).outposts & mask)
+                val += { BishopOutpostNearBm, BishopOutpostNearBe };
+
+            if (rank <= Rank6 && bb::test(spawns, orig + incr))
+                val += { MinorBehindPawnBm, MinorBehindPawnBe };
+
+            u64 color = square::color(orig) ? bb::Dark : bb::Light;
+
+            val += Value(BishopPawnsPm, BishopPawnsPe) * bb::count(spawns & color);
+
+            if (mask & xqueens)
+                val += { BQAttBm, BQAttBe };
+
+            if (mask & ai(SD).fat & (ai(XD).ks_weak & BishopAttacks[xking]))
+                val += { CheckContactB[0][Bishop], CheckContactB[1][Bishop] };
+        }
+
+        else if (pt == Rook) {
+            int fkind = ai(SD).files[file];
+            int fdiff = abs(file - xkfile);
+
+            if (fkind == FileClosed)
+                val += { RookClosedPm, RookClosedPe };
+            else {
+                bool semiopen = fkind == FileSemiOpen;
+
+                if (fdiff == 0)
+                    val += semiopen ? Value(RookSemiSameKingBm, RookSemiSameKingBe)
+                                    : Value(RookOpenSameKingBm, RookOpenSameKingBe);
+                else if (fdiff == 1)
+                    val += semiopen ? Value(RookSemiAdjKingBm, RookSemiAdjKingBe)
+                                    : Value(RookOpenAdjKingBm, RookOpenAdjKingBe);
+                else
+                    val += semiopen ? Value(RookSemiBm, RookSemiBe)
+                                    : Value(RookOpenBm, RookOpenBe);
+            }
+
+            if (mask & xqueens)
+                val += { RQAttBm, RQAttBe };
+
+            u64 fmask = bb::Files64[orig] & mask;
+
+            if (fmask & srooks)  val += { RRSameFileBm, RRSameFileBe };
+            if (fmask & squeens) val += { RQSameFileBm, RQSameFileBe };
+
+            if (mask & ai(SD).fat & (ai(XD).ks_weak & RookAttacks[xking]))
+                val += { CheckContactB[0][Rook], CheckContactB[1][Rook] };
+        }
+
+        else { // Queen
+            if (mask & ai(SD).fat & ai(XD).ks_weak)
+                val += { CheckContactB[0][Queen], CheckContactB[1][Queen] };
+        }
+    }
+
+    return val;
+}
+
+template <Side SD>
+Value eval_imbal(const Position& pos)
 {
     Value val;
 
-    int mp, mn, mb, mr, mq;
-    int op, on, ob, orr, oq;
+    auto [sn, sb, sr, sq, xn, xb, xr, xq] = pos.counts<SD>();
 
-    if (Side == White)
-        pos.counts(mp, mn, mb, mr, mq, op, on, ob, orr, oq);
-    else
-        pos.counts(op, on, ob, orr, oq, mp, mn, mb, mr, mq);
-
-    int nd = mn - on;
-    int bd = mb - ob;
-    int rd = mr - orr;
-    int qd = mq - oq;
+    int rdiff = sr - xr;
+    int qdiff = sq - xq;
+    int mdiff = (sn + sb) - (xn + xb);
 
     // Up rook
 
-    if (rd == 1 && qd == 0) {
-        if (nd == -1 && bd == 0) {
-            val.mg += RookKnightImbB[PhaseMg];
-            val.eg += RookKnightImbB[PhaseEg];
-        }
+    if (rdiff == 1 && qdiff == 0) {
+        if (mdiff == -1)
+            val += { RookMinorImbB[0], RookMinorImbB[1] };
 
-        else if (nd == 0 && bd == -1) {
-            val.mg += RookBishopImbB[PhaseMg];
-            val.eg += RookBishopImbB[PhaseEg];
-        }
-
-        else if ((mn + mb) - (on + ob) == -2) {
-            val.mg += RookTwoMinorsImbB[PhaseMg];
-            val.eg += RookTwoMinorsImbB[PhaseEg];
-        }
+        else if (mdiff == -2)
+            val += { RookTwoMinorsImbB[0], RookTwoMinorsImbB[1] };
     }
 
     // Up queen
 
-    else if (qd == 1) {
-        if (rd == -2 && nd == 0 && bd == 0) {
-            val.mg += QueenTwoRooksImbB[PhaseMg];
-            val.eg += QueenTwoRooksImbB[PhaseEg];
-        }
+    else if (qdiff == 1) {
+        if (rdiff == -1 && mdiff == -1)
+            val += { QueenRookMinorImbB[0], QueenRookMinorImbB[1] };
 
-        else if (rd == -1 && nd == -1 && bd == 0) {
-            val.mg += QueenRookKnightImbB[PhaseMg];
-            val.eg += QueenRookKnightImbB[PhaseEg];
-        }
-
-        else if (rd == -1 && nd == 0 && bd == -1) {
-            val.mg += QueenRookBishopImbB[PhaseMg];
-            val.eg += QueenRookBishopImbB[PhaseEg];
-        }
+        else if (rdiff == -2 && mdiff == 0)
+            val += { QueenTwoRooksImbB[0], QueenTwoRooksImbB[1] };
     }
 
     return val;
-}
-
-Value eval_mob_ks(const Position& pos)
-{
-    Value sval[2];
-
-    int ks_factors[4] = {
-        KingSafetyA,
-        KingSafetyB,
-        KingSafetyC,
-        KingSafetyD
-    };
-
-    u64 occ = pos.occ();
-
-    for (side_t side : { White, Black }) {
-        u64 mrbb = pos.bb(!side, Rook);
-        u64 oqbb = pos.bb(side, Queen);
-        u64 mqbb = pos.bb(!side, Queen);
-
-        u64 targets = ~(pos.bb(side_t(!side)) | bb::PawnAttacks(pos.bb(side, Pawn), side));
-
-        int ksq = pos.king(side);
-        int ks_weight = 0;
-        int ks_attackers = 0;
-        
-        u64 kzone = KingZone[ksq];
-
-        for (u64 bb = pos.bb(!side, Knight); bb; ) {
-            int sq = bb::pop(bb);
-
-            u64 amask = bb::Leorik::Knight(sq);
-            u64 att = amask & targets;
-        
-            int mob = popcount(att);
-
-            sval[!side].mg += MobB[PhaseMg][Knight-1][LOG[mob]];
-            sval[!side].eg += MobB[PhaseEg][Knight-1][LOG[mob]];
-            
-            if (amask & oqbb)
-                sval[!side].mg += NQAttBm;
-            
-            if (amask & mqbb) {
-                sval[!side].mg += NQDefBm;
-                sval[!side].eg += NQDefBe;
-            }
-
-            if (att & kzone) {
-                ks_weight += KingSafetyW[0][square::dist(ksq, sq)];
-                ++ks_attackers;
-            }
-        }
-    
-        for (u64 bb = pos.bb(!side, Bishop); bb; ) {
-            int sq = bb::pop(bb);
-
-            u64 amask = bb::Leorik::Bishop(sq, occ);
-            u64 att = amask & targets;
-
-            int mob = popcount(att);
-
-            sval[!side].mg += MobB[PhaseMg][Bishop-1][LOG[mob]];
-            sval[!side].eg += MobB[PhaseEg][Bishop-1][LOG[mob]];
-
-            if (amask & oqbb) {
-                sval[!side].mg += BQAttBm;
-                sval[!side].eg += BQAttBe;
-            }
-            
-            if (amask & mqbb) {
-                sval[!side].mg += BQDefBm;
-                sval[!side].eg += BQDefBe;
-            }
-            
-            if (att & kzone) {
-                ks_weight += KingSafetyW[1][square::dist(ksq, sq)];
-                ++ks_attackers;
-            }
-        }
-       
-        for (u64 bb = mrbb; bb; ) {
-            int sq = bb::pop(bb);
-
-            u64 amask = bb::Leorik::Rook(sq, occ);
-            u64 att = amask & targets;
-
-            int mob = popcount(att);
-
-            sval[!side].mg += MobB[PhaseMg][Rook-1][LOG[mob]];
-            sval[!side].eg += MobB[PhaseEg][Rook-1][LOG[mob]];
-
-            if (amask & oqbb)
-                sval[!side].mg += RQAttBm;
-
-            u64 fmask = bb::Files[square::file(sq)];
-            u64 rmask = bb::Ranks[square::rank(sq)];
-
-            if (fmask & amask & mrbb) {
-                sval[!side].mg += RRSameFileBm;
-                sval[!side].eg += RRSameFileBe;
-            }
-            
-            if (rmask & amask & mrbb) {
-                sval[!side].mg += RRSameRankBm;
-                sval[!side].eg += RRSameRankBe;
-            }
-           
-            if (fmask & amask & mqbb) {
-                sval[!side].mg += RQSameFileBm;
-                sval[!side].eg += RQSameFileBe;
-            }
-            
-            if (rmask & amask & mqbb) {
-                sval[!side].mg += RQSameRankBm;
-                sval[!side].eg += RQSameRankBe;
-            }
-
-            if (att & kzone) {
-                ks_weight += KingSafetyW[2][square::dist(ksq, sq)];
-                ++ks_attackers;
-            }
-        }
-
-        for (u64 bb = mqbb; bb; ) {
-            int sq = bb::pop(bb);
-
-            u64 att = bb::Leorik::Queen(sq, occ) & targets;
-
-            int mob = popcount(att);
-
-            sval[!side].mg += MobB[PhaseMg][Queen-1][LOG[mob]];
-            sval[!side].eg += MobB[PhaseEg][Queen-1][LOG[mob]];
-
-            if (att & kzone) {
-                ks_weight += KingSafetyW[3][square::dist(ksq, sq)];
-                ++ks_attackers;
-            }
-        }
-
-        if (pos.phase(!side) >= 4) {
-            if (ks_attackers > 0) {
-                ks_attackers = min(ks_attackers - 1, 3);
-
-                sval[side].mg -= (ks_weight * ks_factors[ks_attackers] + 50) / 100;
-            }
-
-            sval[side].mg += eval_king(pos, side);
-        }
-    }
-
-    return sval[White] - sval[Black];
 }
 
 Value eval_pattern(const Position& pos)
 {
+    using namespace square;
+
     Value val;
 
-    u64 brbb = pos.bb(Black, Rook);
-    u64 bkbb = pos.bb(Black, King);
-    u64 wrbb = pos.bb(White, Rook);
-    u64 wkbb = pos.bb(White, King);
+    u64 br = pos.bb(Black, Rook);
+    u64 bk = pos.bb(Black, King);
+    u64 wr = pos.bb(White, Rook);
+    u64 wk = pos.bb(White, King);
 
     // White
 
-    constexpr u64 wqs_rmask = bb::bit(square::A1) | bb::bit(square::A2) | bb::bit(square::B1);
-    constexpr u64 wqs_kmask = bb::bit(square::B1) | bb::bit(square::C1);
-    constexpr u64 wks_rmask = bb::bit(square::H1) | bb::bit(square::H2) | bb::bit(square::G1);
-    constexpr u64 wks_kmask = bb::bit(square::F1) | bb::bit(square::G1);
+    constexpr u64 wqs_rmask = bb::bit(A1, A2, B1);
+    constexpr u64 wqs_kmask = bb::bit(B1, C1);
+    constexpr u64 wks_rmask = bb::bit(H1, H2, G1);
+    constexpr u64 wks_kmask = bb::bit(F1, G1);
 
-    if ((wrbb & wqs_rmask) && (wqs_kmask & wkbb)) val += Value(RBlockedPm, RBlockedPe);
-    if ((wrbb & wks_rmask) && (wks_kmask & wkbb)) val += Value(RBlockedPm, RBlockedPe);
+    if ((wr & wqs_rmask) && (wqs_kmask & wk)) val += { RookBlockedPm, RookBlockedPe };
+    if ((wr & wks_rmask) && (wks_kmask & wk)) val += { RookBlockedPm, RookBlockedPe };
 
     // Black
 
-    constexpr u64 bqs_rmask = bb::bit(square::A7) | bb::bit(square::A8) | bb::bit(square::B8);
-    constexpr u64 bqs_kmask = bb::bit(square::B8) | bb::bit(square::C8);
-    constexpr u64 bks_rmask = bb::bit(square::H7) | bb::bit(square::H8) | bb::bit(square::G8);
-    constexpr u64 bks_kmask = bb::bit(square::F8) | bb::bit(square::G8);
+    constexpr u64 bqs_rmask = bb::bit(A7, A8, B8);
+    constexpr u64 bqs_kmask = bb::bit(B8, C8);
+    constexpr u64 bks_rmask = bb::bit(H7, H8, G8);
+    constexpr u64 bks_kmask = bb::bit(F8, G8);
 
-    if ((brbb & bqs_rmask) && (bqs_kmask & bkbb)) val -= Value(RBlockedPm, RBlockedPe);
-    if ((brbb & bks_rmask) && (bks_kmask & bkbb)) val -= Value(RBlockedPm, RBlockedPe);
+    if ((br & bqs_rmask) && (bqs_kmask & bk)) val -= { RookBlockedPm, RookBlockedPe };
+    if ((br & bks_rmask) && (bks_kmask & bk)) val -= { RookBlockedPm, RookBlockedPe };
 
     return val;
 }
 
-// TODO refactor with pos.pins()
-template <side_t Side>
-Value eval_pins(const Position& pos)
+template <Side SD>
+Value eval_abs_pins(const Position& pos)
 {
+    constexpr Side XD = !SD;
+
     Value val;
 
-    u64 occ = pos.occ();
-    u64 mnbb = pos.bb(Side, Knight);
-    u64 mbbb = pos.bb(Side, Bishop);
-    u64 mrbb = pos.bb(Side, Rook);
-    u64 mqbb = pos.bb(Side, Queen);
+    u64 occ      = pos.occ();
+    u64 spawns   = pos.pawns(SD);
+    u64 xbishops = pos.bb(XD, Bishop, Queen);
+    u64 xrooks   = pos.bb(XD, Rook, Queen);
 
-    u64 obbb = pos.bb(!Side, Bishop);
-    u64 orbb = pos.bb(!Side, Rook);
-    u64 oqbb = pos.bb(!Side, Queen);
+    u64 pinners = pos.pinners();
 
-    u64 blockers = ~(mnbb | mbbb | mrbb | mqbb);
+    int king = pos.king(SD);
 
-    int ksq = pos.king(Side);
-
-    for (u64 bb = BishopAttacks[ksq] & (obbb | oqbb); bb; ) {
+    for (u64 bb = BishopAttacks[king] & xbishops & pinners; bb; ) {
         int sq = bb::pop(bb);
 
-        u64 between = bb::Between[ksq][sq] & occ;
+        u64 between = bb::Between[king][sq] & occ;
 
-        if ((between & blockers) || !bb::single(between))
-            continue;
+        if (between & spawns) continue;
 
-        int pinner = bb::test(obbb, sq) ? Bishop : Queen;
+        Piece pinned = pos.square(bb::lsb(between)) / 2;
+        Piece pinner = pos.square(sq) / 2;
 
-        // Absolute pins
+        if (pinned == Knight) {
+            if (pinner == Bishop)
+                val += { NKPinByBPm, NKPinByBPe };
 
-        if (between & mnbb) {
-            if (pinner == Bishop) {
-                val.mg += NPinByBAbsPm;
-                val.eg += NPinByBAbsPe;
-            }
-
-            else if (pinner == Queen) {
-                val.mg += NPinByQAbsPm;
-                val.eg += NPinByQAbsPe;
-            }
+            else if (pinner == Queen)
+                val += { NKPinByQPm, NKPinByQPe };
         }
 
-        else if (between & mrbb) {
-            if (pinner == Bishop) {
-                val.mg += RPinByBAbsPm;
-                val.eg += RPinByBAbsPe;
-            }
+        else if (pinned == Rook) {
+            if (pinner == Bishop)
+                val += { RKPinByBPm, RKPinByBPe };
 
-            else if (pinner == Queen) {
-                val.mg += RPinByQAbsPm;
-                val.eg += RPinByQAbsPe;
-            }
+            else if (pinner == Queen)
+                val += { RKPinByQPm, RKPinByQPe };
         }
 
-        // Relative pins
-
-        else if (between & mqbb) {
-            if (pinner == Bishop) {
-                val.mg += QPinByBRelPm;
-                val.eg += QPinByBRelPe;
-            }
+        else if (pinned == Queen) {
+            if (pinner == Bishop)
+                val += { QKPinByBPm, QKPinByBPe };
         }
     }
     
-    for (u64 bb = RookAttacks[ksq] & (orbb | oqbb); bb; ) {
+    for (u64 bb = RookAttacks[king] & xrooks & pinners; bb; ) {
         int sq = bb::pop(bb);
 
-        u64 between = bb::Between[ksq][sq] & occ;
+        u64 between = bb::Between[king][sq] & occ;
 
-        if ((between & blockers) || !bb::single(between))
-            continue;
+        if (between & spawns) continue;
 
-        int pinner = bb::test(orbb, sq) ? Rook : Queen;
+        Piece pinned = pos.square(bb::lsb(between)) / 2;
+        Piece pinner = pos.square(sq) / 2;
 
-        // Absolute pins
+        if (pinned == Knight) {
+            if (pinner == Rook)
+                val += { NKPinByRPm, NKPinByRPe };
 
-        if (between & mnbb) {
-            if (pinner == Rook) {
-                val.mg += NPinByRAbsPm;
-                val.eg += NPinByRAbsPe;
-            }
-
-            else if (pinner == Queen) {
-                val.mg += NPinByQAbsPm;
-                val.eg += NPinByQAbsPe;
-            }
+            else if (pinner == Queen)
+                val += { NKPinByQPm, NKPinByQPe };
         }
 
-        else if (between & mbbb) {
-            if (pinner == Rook) {
-                val.mg += BPinByRAbsPm;
-                val.eg += BPinByRAbsPe;
-            }
+        else if (pinned == Bishop) {
+            if (pinner == Rook)
+                val += { BKPinByRPm, BKPinByRPe };
 
-            else if (pinner == Queen) {
-                val.mg += BPinByQAbsPm;
-                val.eg += BPinByQAbsPe;
-            }
+            else if (pinner == Queen)
+                val += { BKPinByQPm, BKPinByQPe };
         }
 
-        // Relative pins
-
-        else if (between & mqbb) {
-            if (pinner == Rook) {
-                val.mg += QPinByRRelPm;
-                val.eg += QPinByRRelPe;
-            }
+        else if (pinned == Queen) {
+            if (pinner == Rook)
+                val += { QKPinByRPm, QKPinByRPe };
         }
     }
 
     return val;
 }
 
-int eval_internal(const Position& pos)
+template <Side SD>
+Value eval_rel_pins(const Position& pos)
 {
-    assert(!pos.checkers());
+    constexpr Side XD = !SD;
 
-#ifndef TUNE
+    Value val;
+
+    u64 occ     = pos.occ();
+    u64 pieces  = pos.bb(SD, Knight, Bishop, Rook);
+    u64 queens  = pos.bb(SD, Queen);
+    u64 bishops = pos.bb(XD, Bishop);
+    u64 rooks   = pos.bb(XD, Rook);
+
+    for (u64 bb = queens; bb; ) {
+        int qsq = bb::pop(bb);
+
+        u64 batt = BishopAttacks[qsq] & bishops;
+
+        while (batt) {
+            int bsq = bb::pop(batt);
+
+            u64 between = bb::Between[qsq][bsq] & occ;
+
+            if ((between & pieces) == 0 || !bb::single(between)) continue;
+
+            Piece pinned = pos.square(bb::lsb(between)) / 2;
+
+            if (pinned == Knight)
+                val += { NQPinPm, NQPinPe };
+
+            else if (pinned == Rook)
+                val += { RQPinPm, RQPinPe };
+        }
+
+        u64 ratt = RookAttacks[qsq] & rooks;
+
+        while (ratt) {
+            int rsq = bb::pop(ratt);
+
+            u64 between = bb::Between[qsq][rsq] & occ;
+
+            if ((between & pieces) == 0 || !bb::single(between)) continue;
+
+            Piece pinned = pos.square(bb::lsb(between)) / 2;
+
+            if (pinned == Knight)
+                val += { NQPinPm, NQPinPe };
+
+            else if (pinned == Bishop)
+                val += { BQPinPm, BQPinPe };
+        }
+    }
+
+    return val;
+}
+
+template <Side SD>
+Value eval_attacks(const Position& pos, const AttackInfo& ai)
+{
+    constexpr Side XD = !SD;
+
+    Value val;
+
+    int king = pos.king(SD);
+
+    u64 katt = KingAttacks[king];
+    u64 xocc = pos.bb(XD);
+    u64 xatt = ai(XD).all;
+    u64 weak = xocc & ~xatt;
+
+    for (u64 bb = weak & katt; bb; ) {
+        int sq = bb::pop(bb);
+        Piece pt = pos.square(sq) / 2;
+
+        val += { KingAttB[0][pt], KingAttB[1][pt] };
+    }
+
+    for (u64 bb = weak & ~katt & ai(SD).lte[Queen]; bb; ) {
+        int sq = bb::pop(bb);
+        Piece pt = pos.square(sq) / 2;
+        bool fat = bb::test(ai(SD).fat, sq);
+
+        val += { PieceAttHangingB[0][fat][pt], PieceAttHangingB[1][fat][pt] };
+    }
+
+    return val;
+}
+
+template <Side SD>
+Value eval_side(const Position& pos, AttackInfo& ai)
+{
+    constexpr Side XD = !SD;
+
+    Value val;
+
+    val += eval_attacks<SD>(pos, ai);
+    val += eval_pawns<SD>(pos, ai);
+
+    if (pos.pinned(SD) & pos.pieces())
+        val += eval_abs_pins<SD>(pos);
+
+    if (pos.bb(SD, Queen) && pos.bb(SD, Knight, Bishop, Rook) && pos.bb(XD, Bishop, Rook))
+        val += eval_rel_pins<SD>(pos);
+
+    val += eval_imbal<SD>(pos);
+    val += eval_pieces<SD>(pos, ai);
+
+    return val;
+}
+
+int eval(const Position& pos)
+{
     EvalEntry eentry;
 
     if (etable.get(pos.key(), eentry))
         return eentry.score + TempoB;
-#endif
+
+    AttackInfo ai = eval_attack_info(pos);
 
     Value val;
-
-    // PSQT
-
-    for (u64 bb = pos.occ(); bb; ) {
-        int sq = bb::pop(bb);
-        int p12 = pos.board<12>(sq);
-
-        val += PSQTv[p12][sq];
-    }
 
     // Bishop pair
 
     int wbp = pos.bishop_pair(White);
     int bbp = pos.bishop_pair(Black);
 
-    val += (wbp - bbp) * Value(BPairBm, BPairBe);
+    val += (wbp - bbp) * Value(BishopPairBm, BishopPairBe);
 
-    // Material imbalances
+    // Side
 
-    val += eval_imbalance<White>(pos);
-    val -= eval_imbalance<Black>(pos);
+    val += eval_side<White>(pos, ai);
+    val -= eval_side<Black>(pos, ai);
 
-    // Mobility and King Safety
-
-    val += eval_mob_ks(pos);
-
-    // Pinned pieces
-
-    val += eval_pins<White>(pos);
-    val -= eval_pins<Black>(pos);
-
-    // Patterns
+    // Pattern
 
     val += eval_pattern(pos);
 
-    // Major and minor pieces
+    // King safety
 
-    val += eval_pieces<White>(pos);
-    val -= eval_pieces<Black>(pos);
+    val += eval_king<White>(pos, ai);
+    val -= eval_king<Black>(pos, ai);
 
-    if (pos.bb(Pawn)) {
-        //assert(pos.pawn_key());
+    // Complexity
 
-        val += eval_pawns(pos);
-    }
+    val += eval_compl(pos, val.eg);
 
-    val += eval_complexity(pos, val.eg);
-
-    int score = val.lerp(pos.phase(), eval_scale(pos, val.eg));
+    int score = val.lerp(pos.phase(), eval_scale(pos, val.eg, ai));
 
     if (pos.side() == Black) score = -score;
 
-#ifndef TUNE
     eentry.score = score;
 
     etable.set(pos.key(), eentry);
-#endif
     
     return score + TempoB;
 }
-
-int eval(const Position& pos)
-{
-#if PROFILE >= PROFILE_SOME
-    gstats.evals_count++;
-#if PROFILE >= PROFILE_ALL
-    Timer timer(true);
-#endif
-#endif
-
-    int e = eval_internal(pos);
-   
-#if PROFILE >= PROFILE_ALL
-    timer.stop();
-    gstats.time_eval_ns += timer.elapsed_time<Timer::Nano>();
-    gstats.cycles_eval += timer.elapsed_cycles();
-#endif
-
-    return e;
-}
-
-#ifdef TUNE
-
-#include <nlopt.hpp>
-#include <omp.h>
-
-enum Tuning {
-    TuneComplexity = 1 <<  0,
-    TuneKingSafety = 1 <<  1,
-    TuneBishopPair = 1 <<  2,
-    TuneMobility   = 1 <<  3,
-    TunePattern    = 1 <<  4,
-    TunePawns      = 1 <<  5,
-    TunePieces     = 1 <<  6,
-    TunePinned     = 1 <<  7,
-    TunePsqt       = 1 <<  8,
-    TuneScale      = 1 <<  9,
-    TuneTempo      = 1 << 10,
-    TuneMaterial   = 1 << 11,
-    TuneImbalance  = 1 << 12,
-    TuneAll        = ~0
-};
-
-static constexpr u64 TuneCurrent    = 0
-                                    //| TuneMaterial
-                                    //| TuneKingSafety
-                                    //| TuneBishopPair
-                                    //| TuneTempo
-                                    //| TuneMobility
-                                    //| TunePattern
-                                    //| TunePawns
-                                    //| TunePieces
-                                    //| TunePsqt
-                                    //| TuneScale
-                                    //| TuneComplexity
-                                    | TunePinned
-                                    //| TuneImbalance
-                                    ;
-
-static double KOptimal = 0.788745;
-
-mt19937_64 mt;
-
-struct Tuner {
-    double maxtime  = 0;
-    size_t seed     = 0;
-    size_t threads  = omp_get_max_threads();
-    double ratio    = 1;
-
-    bool bench      = false;
-    bool debug      = false;
-    bool kopt       = false;
-    bool local      = false;
-    bool opt        = false;
-    bool randinit   = false;
-
-    filesystem::path path { "tuner.bin" };
-    
-    string str() const
-    {
-        stringstream ss;
-
-        ss << "Tuner," << maxtime << ',' << seed << ',' << threads << ',' << ratio << ','
-           << bench << ',' << debug << ',' << kopt << ',' << local << ','
-           << opt << ',' << randinit;
-
-        return ss.str();
-    }
-};
-
-Tuner tuner;
-
-string format(const char format[], ...)
-{
-    va_list arg_list;
-    char buf[64];
-
-    va_start(arg_list, format);
-    vsprintf(buf, format, arg_list);
-    va_end(arg_list);
-
-    return buf;
-}
-
-struct Param {
-    string name;
-    int * pvalue;
-    int init;
-    int min;
-    int max;
-    int start;
-    
-    Param(string n, int * p, int min_, int max_)
-    {
-        name = n;
-        pvalue = p;
-
-        min = min_;
-        max = max_;
-
-        start = *p;
-
-        if (start < min || start > max) {
-            start = *p = clamp(start, min, max);
-
-            cerr << "Starting value for " << n << " is out of range!" << endl;
-
-            //exit(EXIT_FAILURE);
-        }
-
-        if (tuner.randinit) {
-            uniform_int_distribution<int> gen(min, max);
-            init = gen(mt);
-        }
-        else
-            init = *p;
-    }
-    
-    //Param(string n, int * p, int delta) : Param(n, p, *p - delta, *p + delta) { }
-
-    string str() const
-    {
-        stringstream ss;
-
-        ss << "Param," << name << ',' << min << ',' << start << ',' 
-           << max << ',' << *pvalue << ',' << init;
-
-        return ss.str();
-    }
-
-    int bound() const
-    {
-        int margin = std::max((max - min) / 20, 1);
-
-        if (*pvalue <= min + margin) return -1;
-        if (*pvalue >= max - margin) return  1;
-
-        return 0;
-    }
-};
-
-vector<Position> g_pos;
-vector<Param> g_params;
-vector<Param> g_params_orig;
-
-double sigmoid(int e, double K)
-{
-    return 1 / (1 + exp(-K * e / 400));
-}
-
-double eval_error(const Position& pos, double K, int * cp = nullptr)
-{
-    int e = eval(pos);
-
-    if (pos.side() == Black) e = -e;
-
-    if (cp) *cp = e;
-
-    return pow(sigmoid(pos.score1(), 1) - sigmoid(e, K), 2);
-}
-
-double eval_error(const vector<Position>& v, double K)
-{
-    double sse = 0;
-
-    omp_set_num_threads(tuner.threads);
-    
-    const size_t N = v.size() / tuner.threads;
-   
-    #pragma omp parallel
-    {
-        const size_t id = omp_get_thread_num();
-
-        double se = 0;
-
-        for (size_t i = id * N; i < (id + 1) * N; i++)
-            se += eval_error(v[i], K);
-
-        #pragma omp critical
-        sse += se;
-    }
-
-    for (size_t i = tuner.threads * N; i < v.size(); i++)
-        sse += eval_error(v[i], K);
-
-    return sse / v.size();
-}
-
-void eval_read_epd(vector<Position>& v)
-{
-    g_pos.reserve(size_t(5000000 * tuner.ratio));
-
-    cout << "Reading tuning file... " << flush;
-
-    string line;
-
-    ifstream ifs(tuner.path);
-
-    uniform_real_distribution<> dist(0.0, 1.0);
-
-    Timer timer(true);
-
-    while (getline(ifs, line)) {
-        assert(!line.empty());
-
-        if (tuner.ratio < 1.0 && dist(mt) > tuner.ratio) continue;
-#if 0
-        Tokenizer tokens(line, ',');
-
-        const string& fen = tokens[0];
-        const string& sc1 = tokens[1];
-        const string& sc2 = tokens[2];
-
-        int score1 = atoi(sc1.c_str());
-        int score2 = atoi(sc2.c_str());
-
-        v.emplace_back(fen, score1, score2);
-#else
-        size_t pos = line.find('[');
-        string fen = line.substr(0, pos - 1);
-        string score1 = line.substr(pos + 1, 3);
-        string score2 = line.substr(pos + 6);
-
-        int sc1 = score1 == "1.0" ? 2 : (score1 == "0.0" ? 0 : 1);
-        int sc2 = atoi(score2.c_str());
-
-        if (abs(sc2) >= 1000) continue;
-
-        Position pstn(fen, sc1, 0);
-
-        if (!pstn.checkers())
-            v.push_back(pstn);
-
-#endif
-    }
-
-    timer.stop();
-
-    double dur = timer.elapsed_time() / 1000.0;
-
-    cout << "OK"
-         << endl
-         << "Parsed " << v.size() << " positions in " 
-         << dur << " seconds, " 
-         << size_t(v.size() / dur / 1000) << " kps" 
-         << endl;
-
-#if 0
-    ofstream ofs("tuner.bin", ios::binary);
-
-    for (Position& pos : v) {
-        if (!pos.checkers()) {
-            PositionBin bin = pos.serialize();
-            ofs.write(bin.get(), sizeof(PositionBin));
-        }
-    }
-#endif
-}
-
-void eval_read_bin(vector<Position>& v)
-{
-    g_pos.reserve(size_t(5000000 * tuner.ratio));
-
-    cout << "Reading tuning file... " << flush;
-
-    auto vec = mem::read(tuner.path);
-
-    uniform_real_distribution<> dist(0.0, 1.0);
-
-    PositionBin bin;
-
-    Timer timer(true);
-
-    for (size_t i = 0; i < vec.size(); i += sizeof(PositionBin)) {
-        if (tuner.ratio < 1.0 && dist(mt) > tuner.ratio) continue;
-        
-        memcpy(&bin, &vec[i], sizeof(bin));
-
-        v.emplace_back(bin);
-    }
-
-    timer.stop();
-
-    double dur = timer.elapsed_time() / 1000.0;
-
-    cout << "OK"
-         << endl
-         << "Parsed " << v.size() << " positions in " 
-         << dur << " seconds, " 
-         << size_t(v.size() / dur / 1000) << " kps" 
-         << endl;
-
-#if 0
-    int counts4[16] = { };
-
-    for (u8 byte : vec) {
-        ++counts4[(byte >> 0) & 15];
-        ++counts4[(byte >> 4) & 15];
-    }
-    
-    for (int i = 0; i < 16; i++)
-        cout << "n," << i << ",counts4," << counts4[i] << endl;
-
-    cout << endl;
-
-    int counts8[256] = { };
-
-    for (u8 byte : vec)
-        ++counts8[byte];
-    
-    for (int i = 0; i < 256; i++)
-        cout << "n," << i << ",counts8," << counts8[i] << endl;
-
-    exit(EXIT_SUCCESS);
-#endif
-}
-
-double myvfunc(const vector<double>& x, 
-               [[maybe_unused]] vector<double>& grad, 
-               [[maybe_unused]] void * my_func_data)
-{
-    static int iter     = 1;
-    static int btime    = time(nullptr);
-    static double minf  = numeric_limits<double>::max();
-    static double maxf  = 1;
-
-    const int dur = max(int(time(nullptr) - btime), 1);
-
-    for (size_t i = 0; i < x.size(); i++) {
-        int n = clamp(int(x[i]), g_params[i].min, g_params[i].max);
-
-        *g_params[i].pvalue = n;
-    }
-
-    if ((TuneCurrent & TuneMaterial) && (TuneCurrent & TunePsqt)) {
-        cerr << "Cannot tune both material and psqt tables!" << endl;
-        exit(EXIT_FAILURE);
-    }
-
-    if (TuneCurrent & TuneMaterial) {
-        psqt_recalc();
-        eval_init();
-    }
-
-    if (TuneCurrent & TunePsqt)
-        eval_init();
-   
-    double f = eval_error(g_pos, KOptimal);
-
-    if (iter == 1) maxf = f;
-
-    if (f < minf) {
-        minf = f;
-
-        stringstream ss;
-
-        for (auto &param : g_params_orig) {
-            bool array = param.name.find('[') != string::npos;
-
-            int p1 = *param.pvalue;
-            int p2 = param.start;
-            int diff = p1 - p2;
-            int bound = param.bound();
-            string info;
-
-            if (bound) info = format(" %s : %i / %i", bound < 0 ? "----" : "++++", param.min, param.max);
-
-            if (!array || bound)
-            ss << "int "
-               << setw(32) << setfill(' ') << left << param.name << '='
-               << setw(8) << setfill(' ') << right << *param.pvalue << "; diff = "
-               << setw(8) << setfill(' ') << diff << info << endl;
-        }
-
-        if (TuneCurrent & TuneMobility)
-            ss << print_3d<2, 4, 8>("MobB", MobB) << endl;
-
-        if (TuneCurrent & TunePsqt)
-            ss << print_3d<2, 6, 32>("PSQTi", PSQTi) << endl;
-
-        if (TuneCurrent & TuneMaterial)
-            ss << print_2d<2, 6>("MatValue", MatValue) << endl;
-
-        if (TuneCurrent & TunePawns) {
-            ss << print_1d<8>("PawnCandidateB", PawnCandidateB) << endl;
-            ss << print_1d<8>("PawnConnectedB", PawnConnectedB) << endl;
-            ss << print_3d<2, 3, 8>("PawnPassedB", PawnPassedB) << endl;
-            ss << print_3d<2, 2, 6>("PawnAttackB", PawnAttackB) << endl;
-            ss << print_3d<2, 2, 6>("PawnAttackPushB", PawnAttackPushB) << endl;
-        }
-
-        if (TuneCurrent & TuneKingSafety) {
-            ss << print_2d<4, 8>("KingShelterP", KingShelterP) << endl;
-            ss << print_2d<4, 8>("KingStormP", KingStormP) << endl;
-            ss << print_2d<4, 8>("KingSafetyW", KingSafetyW) << endl;
-        }
-
-        if (TuneCurrent & TunePieces)
-            ss << print_2d<2, 6>("PiecePawnOffset", PiecePawnOffset) << endl;
-
-        if (TuneCurrent & TuneImbalance) {
-            ss << print_1d<2>("RookKnightImbB", RookKnightImbB) << endl;
-            ss << print_1d<2>("RookBishopImbB", RookBishopImbB) << endl;
-            ss << print_1d<2>("RookTwoMinorsImbB", RookTwoMinorsImbB) << endl;
-            ss << print_1d<2>("QueenTwoRooksImbB", QueenTwoRooksImbB) << endl;
-            ss << print_1d<2>("QueenRookKnightImbB", QueenRookKnightImbB) << endl;
-            ss << print_1d<2>("QueenRookBishopImbB", QueenRookBishopImbB) << endl;
-        }
-
-        char buf[32];
-
-        {
-            int n = dur;
-            int days = dur / 24 / 60 / 60;
-            n %= 24 * 60 * 60;
-            int hours = n / 60 / 60;
-            n %= 60 * 60;
-            int minutes = n / 60;
-            n %= 60;
-            int seconds = n;
-
-            snprintf(buf, sizeof(buf), "%i:%02i:%02i:%02i", days, hours, minutes, seconds);
-        }
-
-        ss << "mse=" << fixed << setprecision(7) << minf
-           << ",rmse=" << sqrt(minf)
-           << ",ai=" << maxf - minf
-           << ",ri=" << (maxf - minf) / maxf * 100
-           << ",i=" << iter
-           << ",t=" << dur
-           << ",d=" << buf
-           << ",is=" << setprecision(2) << double(iter) / dur
-           << ",si=" << setprecision(2) << dur / double(iter)
-           << ",p=" << x.size() << endl;
-
-        cout << ss.str();
-
-        fstream fs("opt.txt", ios::out | ios::app);
-        fs << ss.str();
-    }
-
-    iter++;
-
-    return f;
-}
-
-vector<double> tune_init(nlopt::opt& opt)
-{
-    vector<double> lb;
-    vector<double> x;
-    vector<double> ub;
-
-    for (auto &param : g_params) {
-        lb.push_back(param.min);
-        x.push_back(param.init);
-        ub.push_back(param.max);
-    }
-
-    opt.set_lower_bounds(lb);
-    opt.set_upper_bounds(ub);
-
-    opt.set_min_objective(myvfunc, nullptr);
-
-    return x;
-}
-
-// Golden-section search
-double eval_K(double lb, double ub, double tol, double& mse, size_t& iter)
-{
-    const double invphi  = (sqrt(5) - 1) / 2;
-    const double invphi2 = (3 - sqrt(5)) / 2;
-
-    double h = ub - lb;
-
-    double c = lb + invphi2 * h;
-    double yc = eval_error(g_pos, c);
-    double d = lb + invphi  * h;
-    double yd = eval_error(g_pos, d);
-
-    size_t n = std::ceil(log(tol / h) / log(invphi));
-    
-    iter = 2 + n;
-
-    for (size_t i = 0; i < n; i++) {
-        // yc > yd to find the maximum
-        if (yc < yd) {
-            ub = d;
-            d = c;
-            yd = yc;
-            h = invphi * h;
-            c = lb + invphi2 * h;
-            yc = eval_error(g_pos, c);
-        }
-        else {
-            lb = c;
-            c = d;
-            yc = yd;
-            h = invphi * h;
-            d = lb + invphi * h;
-            yd = eval_error(g_pos, d);
-        }
-    }
-
-    mse = (yc + yd) / 2;
-
-    return (yc < yd ? lb + d : ub + c) / 2;
-}
-
-void eval_tune(int argc, char* argv[])
-{
-    Tokenizer fields(argc, argv);
-
-    for (size_t i = 0; i < fields.size(); i++) {
-        Tokenizer args(fields[i], '=');
-        
-        string k = args.get(0);
-        string v = args.get(1, "");
-
-        if (k == "bench")
-            tuner.bench = true;
-        else if (k == "debug")
-            tuner.debug = true;
-        else if (k == "file")
-            tuner.path = v;
-        else if (k == "kopt")
-            tuner.kopt = true;
-        else if (k == "local")
-            tuner.local = true;
-        else if (k == "opt")
-            tuner.opt = true;
-        else if (k == "randinit")
-            tuner.randinit = true;
-        else if (k == "ratio")
-            tuner.ratio = stoull(v) / 100.0;
-        else if (k == "seed")
-            tuner.seed = stoull(v);
-        else if (k == "threads")
-            tuner.threads = stoull(v);
-        else if (k == "maxtime")
-            tuner.maxtime = stod(v);
-    }
-
-    if (tuner.seed)
-        mt = mt19937_64(tuner.seed);
-    else
-        mt = mt19937_64(random_device{}());
-            
-    if (!filesystem::exists(tuner.path)) {
-        cout << "Input file does not exist!" << endl;
-        exit(EXIT_FAILURE);
-    }
-
-    string ext = tuner.path.extension();
-
-    if (ext == ".epd")
-        eval_read_epd(g_pos);
-    else if (ext == ".bin")
-        eval_read_bin(g_pos);
-    else {
-        cerr << "Input file not recognized!" << endl;
-        exit(EXIT_FAILURE);
-    }
-
-
-    if (tuner.bench) {
-        Timer timer(true);
-        double error = eval_error(g_pos, KOptimal);
-        cout << error << ',' << sqrt(error) << endl;
-        timer.stop();
-
-        i64 dur = timer.elapsed_time();
-
-        cout << dur << " ms" << endl;
-        cout << g_pos.size() / dur << " ke/s" << endl;
-    }
-    
-    if (tuner.kopt) {
-        size_t iter;
-        double mse;
-        double K = eval_K(0, 5, 1e-5, mse, iter);
-
-        cout << "Current K = " << KOptimal
-             << ", Optimal K = " << K
-             << ", MSE = " << mse
-             << ", Iterations = " << iter << endl;
-
-        KOptimal = K;
-    }
-
-    if (!tuner.opt && !tuner.debug)
-        return;
-
-#define MP(var) MPS(var), &var
-#define MPS(var) #var
-#define GPPB g_params.push_back
-   
-#if 0
-    if (TuneCurrent & TuneMaterial) {
-        for (int phase : { PhaseMg, PhaseEg }) {
-            for (int type = Knight; type < King; type++) {
-                string name = format("MatValue[%i][%i]", phase, type);
-
-                int val = MatValue[phase][type];
-                int delta = val / 4;
-
-                int lb = val - delta;
-                int ub = val + delta;
-
-                GPPB(Param(name, &MatValue[phase][type], lb, ub));
-            }
-        }
-    }
-#endif
-
-    if (TuneCurrent & TunePsqt) {
-        for (int phase : { PhaseMg, PhaseEg }) {
-            for (int type = Pawn; type <= King; type++) {
-
-                int start = MatValue[phase][type];
-                int delta = type == King ? 200 : start / 4;
-            
-                for (int sq = 0; sq < 32; sq++) {
-                    if (type == Pawn && (sq <= 3 || sq >= 28)) continue;
-
-                    int lb = start - delta;
-                    int ub = start + delta;
-
-                    // Pawns on advanced ranks are worth much more
-                    if (type == Pawn && sq >= 16)
-                        ub += delta * 3;
-
-                    if (type != King)
-                        lb -= lb / 4;
-
-                    // Knights on corner squares are worth much less
-                    if (type == Knight && (sq == 0 || sq == 28))
-                        lb = 0;
-
-                    GPPB(Param(format("PSQTi[%i][%i][%i]", phase, type, sq), &PSQTi[phase][type][sq], lb, ub));
-                }
-            }
-        }
-    }
-    
-    if (TuneCurrent & TuneBishopPair) {
-        GPPB(Param(MP(BPairBm),  0,  50));
-        GPPB(Param(MP(BPairBe), 50, 100));
-    }
-
-    if (TuneCurrent & TunePattern) {
-        GPPB(Param(MP(RBlockedPm), -200, 0));
-        GPPB(Param(MP(RBlockedPe), -200, 0));
-    }
-   
-    if (TuneCurrent & TuneMobility) {
-        GPPB(Param(MP(NQAttBm),        0, 150));
-        GPPB(Param(MP(BQAttBm),        0, 150));
-        GPPB(Param(MP(BQAttBe),        0, 150));
-        GPPB(Param(MP(RQAttBm),      -10, 100));
-        GPPB(Param(MP(NQDefBm),      -10, 100));
-        GPPB(Param(MP(NQDefBe),      -10, 100));
-        GPPB(Param(MP(BQDefBm),      -10, 100));
-        GPPB(Param(MP(BQDefBe),      -10, 100));
-        GPPB(Param(MP(RRSameFileBm),  -5,  50));
-        GPPB(Param(MP(RRSameFileBe),  -5,  50));
-        GPPB(Param(MP(RRSameRankBm),  -5,  50));
-        GPPB(Param(MP(RRSameRankBe),  -5,  50));
-        GPPB(Param(MP(RQSameFileBm),  -5,  50));
-        GPPB(Param(MP(RQSameFileBe),  -5,  50));
-        GPPB(Param(MP(RQSameRankBm),  -5,  50));
-        GPPB(Param(MP(RQSameRankBe),  -5,  50));
-       
-        for (int phase : { PhaseMg, PhaseEg }) {
-            for (int type = Knight; type <= Queen; type++) {
-                int log[4] = { 6, 7, 7, 8 };
-
-                for (int i = 0; i < log[type - 1]; i++) {
-                    int delta = MatValue[phase][type] / (phase == PhaseMg ? 4 : 2);
-
-                    string name = format("MobB[%i][%i][%i]", phase, type - 1, i);
-            
-                    GPPB(Param(name, &MobB[phase][type - 1][i], -delta, delta));
-                }
-            }
-        }
-    }
-  
-    if (TuneCurrent & TuneKingSafety) {
-        GPPB(Param(MP(KingSafetyA),  1,  97));
-        GPPB(Param(MP(KingSafetyB),  2,  98));
-        GPPB(Param(MP(KingSafetyC),  3,  99));
-        GPPB(Param(MP(KingSafetyD),  4, 100));
-
-        for (int type = Knight; type <= Queen; type++) {
-            for (int dist = 0; dist < 8; dist++) {
-                if (KingSafetyW[type - 1][dist] == 0) continue;
-
-                int ub = type == Queen && dist == 2 ? 1000 : 500;
-
-                string name = format("KingSafetyW[%i][%i]", type - 1, dist);
-
-                GPPB(Param(name, &KingSafetyW[type - 1][dist], 1, ub));
-            }
-        }
-       
-        for (int i = 0; i <= 3; i++) {
-            for (int rank = Rank3; rank <= Rank5; rank++) {
-                string name = format("KingStormP[%i][%i]", i, rank);
-
-                int lb = -125 + 50 * (rank - 2);
-
-                GPPB(Param(name, &KingStormP[i][rank], lb, 0));
-            }
-        }
-        
-        for (int i = 0; i <= 3; i++) {
-            for (int rank = Rank3; rank <= Rank8; rank++) {
-                string name = format("KingShelterP[%i][%i]", i, rank);
-
-                int lb = -25 * (rank - 1);
-
-                GPPB(Param(name, &KingShelterP[i][rank], lb, 0));
-            }
-        }
-    }
-    
-    if (TuneCurrent & TunePinned) {
-        GPPB(Param(MP(NPinByBAbsPm), -1000, 1000));
-        GPPB(Param(MP(NPinByBAbsPe), -1000, 1000));
-        GPPB(Param(MP(NPinByRAbsPm), -1000, 1000));
-        GPPB(Param(MP(NPinByRAbsPe), -1000, 1000));
-        GPPB(Param(MP(NPinByQAbsPm), -1000, 1000));
-        GPPB(Param(MP(NPinByQAbsPe), -1000, 1000));
-        GPPB(Param(MP(BPinByRAbsPm), -1000, 1000));
-        GPPB(Param(MP(BPinByRAbsPe), -1000, 1000));
-        GPPB(Param(MP(BPinByQAbsPm), -1000, 1000));
-        GPPB(Param(MP(BPinByQAbsPe), -1000, 1000));
-        GPPB(Param(MP(RPinByBAbsPm), -1000, 1000));
-        GPPB(Param(MP(RPinByBAbsPe), -1000, 1000));
-        GPPB(Param(MP(RPinByQAbsPm), -1000, 1000));
-        GPPB(Param(MP(RPinByQAbsPe), -1000, 1000));
-        GPPB(Param(MP(QPinByBRelPm), -1000, 1000));
-        GPPB(Param(MP(QPinByBRelPe), -1000, 1000));
-        GPPB(Param(MP(QPinByRRelPm), -1000, 1000));
-        GPPB(Param(MP(QPinByRRelPe), -1000, 1000));
-    }
-  
-    if (TuneCurrent & TunePieces) {
-        GPPB(Param(MP(MinorBehindPawnBm),     1,  50));
-        GPPB(Param(MP(MinorBehindPawnBe),     1,  50));
-        GPPB(Param(MP(KnightOutpostBm),       1,  50));
-        GPPB(Param(MP(KnightOutpostBe),       1,  50));
-        GPPB(Param(MP(KnightDistDivPm),       1,  25));
-        GPPB(Param(MP(KnightDistDivPe),       1,  25));
-
-        GPPB(Param(MP(BishopOutpostBm),       1,  50));
-        GPPB(Param(MP(BishopOutpostBe),       1,  50));
-        GPPB(Param(MP(BishopPawnsPm),       -10,   0));
-        GPPB(Param(MP(BishopPawnsPe),       -10,   0));
-
-        GPPB(Param(MP(RookClosedPm),        -75,  75));
-        GPPB(Param(MP(RookClosedPe),        -75,  75));
-        GPPB(Param(MP(RookOpenAdjKingBm),   -10, 100));
-        GPPB(Param(MP(RookOpenAdjKingBe),   -10, 100));
-        GPPB(Param(MP(RookOpenBm),          -10, 100));
-        GPPB(Param(MP(RookOpenBe),          -10, 100));
-        GPPB(Param(MP(RookOpenSameKingBm),  -20, 200));
-        GPPB(Param(MP(RookOpenSameKingBe),  -20, 200));
-        GPPB(Param(MP(RookSemiAdjKingBm),   -10, 100));
-        GPPB(Param(MP(RookSemiAdjKingBe),   -10, 100));
-        GPPB(Param(MP(RookSemiBm),          -50, 100));
-        GPPB(Param(MP(RookSemiBe),          -50, 100));
-        GPPB(Param(MP(RookSemiSameKingBm),  -10, 100));
-        GPPB(Param(MP(RookSemiSameKingBe),  -10, 100));
-        GPPB(Param(MP(RookSeventhRankBm),   -50, 100));
-        GPPB(Param(MP(RookSeventhRankBe),   -50, 100));
-
-        GPPB(Param(MP(QueenSeventhRankBm), -100, 200));
-        GPPB(Param(MP(QueenSeventhRankBe), -100, 200));
-       
-        for (int phase : { PhaseMg, PhaseEg }) {
-            for (int type = Knight; type <= Rook; type++) {
-                string name = format("PiecePawnOffset[%i][%i]", phase, type);
-                
-                int delta = MatValue[phase][type] / 25;
-            
-                GPPB(Param(name, &PiecePawnOffset[phase][type], -delta, delta));
-            }
-        }
-    }
- 
-    if (TuneCurrent & TunePawns) {
-        GPPB(Param(MP(PawnBackOpenPm), -50,   0));
-        GPPB(Param(MP(PawnBackOpenPe), -50,   0));
-        GPPB(Param(MP(PawnBackwardPm), -50,   0));
-        GPPB(Param(MP(PawnBackwardPe), -50,   0));
-        GPPB(Param(MP(PawnDoubledPm),  -50,   0));
-        GPPB(Param(MP(PawnDoubledPe),  -50,   0));
-        GPPB(Param(MP(PawnIsoOpenPm),  -50,   0));
-        GPPB(Param(MP(PawnIsoOpenPe),  -50,   0));
-        GPPB(Param(MP(PawnIsolatedPm), -50,   0));
-        GPPB(Param(MP(PawnIsolatedPe), -50,   0));
-        GPPB(Param(MP(PawnConnectedPB),  1,  20));
-
-        GPPB(Param(MP(PawnPassedGaurdedBm), 0, 50));
-        GPPB(Param(MP(PawnPassedGaurdedBe), 0, 50));
-
-        GPPB(Param(MP(PawnPassedStopOffset), 0, 50));
-
-        for (int phase : { PhaseMg, PhaseEg }) {
-            for (int type = Knight; type <= Queen; type++) {
-                for (int i = 0; i < 2; i++) {
-                    string name1 = format("PawnAttackB[%i][%i][%i]", phase, i, type);
-                    string name2 = format("PawnAttackPushB[%i][%i][%i]", phase, i, type);
-
-                    GPPB(Param(name1, &PawnAttackB[phase][i][type], 1, 200));
-                    GPPB(Param(name2, &PawnAttackPushB[phase][i][type], 1, 200));
-                }
-            }
-        }
-
-        for (int rank = Rank2; rank < Rank7; rank++) {
-            string name = format("PawnCandidateB[%i]", rank);
-
-            int ub[8] = { 0, 25, 25, 50, 100, 200, 0, 0 };
-
-            GPPB(Param(name, &PawnCandidateB[rank], 0, ub[rank]));
-        }
-
-        for (int phase : { PhaseMg, PhaseEg }) {
-            for (int i = 0; i < 3; i++) {
-                // Passed pawned bonus is always 0 in this case since an 
-                // unstoppable passed pawn is assumed to be impossible when
-                // the other side has at least one piece
-                if (phase == PhaseMg && i == 1) continue;
-
-                for (int rank = Rank1; rank <= Rank8; rank++) {
-                    int ub;
-
-                    // Rank indices 0 and 7 are reserved for king distance factors
-                    if (rank == Rank1 || rank == Rank8)
-                        ub = 25;
-                    else
-                        ub = (50 + 100 * phase) * rank;
-
-                    string name = format("PawnPassedB[%i][%i][%i]", phase, i, rank);
-
-                    GPPB(Param(name, &PawnPassedB[phase][i][rank], 0, ub));
-                }
-            }
-        }
-
-        for (int rank = Rank2; rank < Rank8; rank++) {
-            string name = format("PawnConnectedB[%i]", rank);
-
-            GPPB(Param(name, &PawnConnectedB[rank], 0, 10 * rank));
-        }
-    }
-
-    if (TuneCurrent & TuneComplexity) {
-        GPPB(Param(MP(ComplexityPawnsTotal),      0,  16));
-        GPPB(Param(MP(ComplexityPawnsFlanked),    0, 150));
-        GPPB(Param(MP(ComplexityPawnsEndgame),    0, 250));
-        GPPB(Param(MP(ComplexityAdjustment),   -200, 200));
-    }
-
-    if (TuneCurrent & TuneScale) {
-        GPPB(Param(MP(ScaleOcbBishopsOnly),      16, 128));
-        GPPB(Param(MP(ScaleOcbOneKnight),        16, 128));
-        GPPB(Param(MP(ScaleOcbOneRook),          16, 128));
-        GPPB(Param(MP(ScaleLoneQueen),           64, 224));
-        GPPB(Param(MP(ScaleLargePawnAdv),        64, 224));
-        GPPB(Param(MP(ScalePNone),                8, 126));
-        GPPB(Param(MP(ScalePOne),                 9, 127));
-        GPPB(Param(MP(ScalePTwo),                10, 128));
-    }
-
-    if (TuneCurrent & TuneTempo)
-        GPPB(Param(MP(TempoB), 1, 50));
-
-    if (TuneCurrent & TuneImbalance) {
-        for (int phase : { PhaseMg, PhaseEg }) {
-            string name3 = format("RookKnightImbB[%i]",      phase);
-            string name4 = format("RookBishopImbB[%i]",      phase);
-            string name5 = format("RookTwoMinorsImbB[%i]",   phase);
-            string name6 = format("QueenTwoRooksImbB[%i]",   phase);
-            string name7 = format("QueenRookKnightImbB[%i]", phase);
-            string name8 = format("QueenRookBishopImbB[%i]", phase);
-
-            GPPB(Param(name3, &RookKnightImbB[phase],      -200, 200));
-            GPPB(Param(name4, &RookBishopImbB[phase],      -200, 200));
-            GPPB(Param(name5, &RookTwoMinorsImbB[phase],   -200, 200));
-            GPPB(Param(name6, &QueenTwoRooksImbB[phase],   -200, 200));
-            GPPB(Param(name7, &QueenRookKnightImbB[phase], -200, 200));
-            GPPB(Param(name8, &QueenRookBishopImbB[phase], -200, 200));
-        }
-    }
-
-#undef MP
-#undef MPS
-#undef GPPB
-
-    if (tuner.debug) {
-#if 0
-        const double err = eval_error(g_pos, KOptimal);
-
-        cout << err << endl;
-        
-        cout << "name,vmin,start,vmax,err0,err1,dx0,emx,emn,err2,dx1" << endl;
-        for (Param param : g_params) {
-            string name = param.name;
-
-            int vmin = param.min;
-            int vmax = param.max;
-            
-            *param.pvalue = vmin;
-            double err0 = eval_error(g_pos, KOptimal);
-
-            *param.pvalue = vmax;
-            double err1 = eval_error(g_pos, KOptimal);
-
-            *param.pvalue = param.start + 1;
-            double err2 = eval_error(g_pos, KOptimal);
-
-            *param.pvalue = param.start;
-            
-            double dx0 = abs((err1 - err0) / (vmax - vmin));
-            double dx1 = abs(err2 - err);
-                 
-            double emx = max(abs(err - err0), abs(err - err1));
-            double emn = min(abs(err - err0), abs(err - err1));
-
-            cout << name << ','
-                 << fixed << setprecision(10) 
-                 << vmin << ',' 
-                 << param.start << ',' 
-                 << vmax << ',' 
-                 << err0 << ',' 
-                 << err1 << ',' 
-                 << dx0  << ',' 
-                 << emx  << ','
-                 << emn  << ','
-                 << err2 << ',' 
-                 << dx1  << endl;
-        }
-#endif
-    }
-
-    if (!tuner.opt)
-        return;
-
-    cout << tuner.str() << endl;
-
-    for (Param param : g_params)
-        cout << param.str() << endl;
-
-    nlopt::opt opt(tuner.local ? nlopt::LN_SBPLX : nlopt::GN_CRS2_LM, g_params.size());
-    
-    if (tuner.maxtime)
-        opt.set_maxtime(60 * 60 * tuner.maxtime);
-    
-    g_params_orig = g_params;
-
-    // Random shuffle of parameters
-    shuffle(g_params.begin(), g_params.end(), mt);
-    
-    vector<double> x = tune_init(opt);
-
-    try {
-        double minf;
-
-        int btime = time(nullptr);
-        opt.optimize(x, minf);
-        int etime = time(nullptr);
-
-        cout << "opt complete" << endl;
-        cout << (etime - btime) << ',' << minf << endl;
-
-        for (size_t j = 0; j < g_params_orig.size(); j++)
-            cout << g_params_orig[j].name << " = " << int(round(x[j])) << endl;
-
-    }
-    catch (exception& e) {
-        cout << "nlopt failed: " << e.what() << endl;
-    }
-}
-
-#endif
